@@ -1,0 +1,55 @@
+# Compagni di Viaggi - Git Ignore
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Uploaded files
+uploads/profiles/*
+uploads/travels/*
+uploads/verifications/*
+!uploads/profiles/.gitkeep
+!uploads/travels/.gitkeep
+!uploads/verifications/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+error_log
+
+# Temporary files
+tmp/
+temp/
+cache/
+
+# Composer (if used)
+vendor/
+composer.lock
+
+# Node modules (if using any build tools)
+node_modules/
+package-lock.json
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Backup files
+*.bak
+*.backup
+*.sql.gz
+
+# Session files
+sessions/
+
+# Generated files
+*.cache
