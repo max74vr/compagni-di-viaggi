@@ -538,8 +538,8 @@ class CDV_Ajax_Handlers {
         );
 
         wp_send_json_success(array(
-            'message' => 'Viaggio creato con successo! In attesa di approvazione.',
-            'redirect_url' => get_permalink($travel_id),
+            'message' => 'Viaggio creato con successo! In attesa di approvazione da parte degli amministratori.',
+            'redirect_url' => home_url('/dashboard'),
         ));
     }
 }

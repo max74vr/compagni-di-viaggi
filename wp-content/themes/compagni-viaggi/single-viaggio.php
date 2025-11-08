@@ -48,7 +48,7 @@ while (have_posts()) : the_post();
                             <h3>Partecipanti (<?php echo count($participants); ?>)</h3>
                             <div class="participants-grid">
                                 <!-- Organizer First -->
-                                <div class="participant-card organizer">
+                                <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($author_id)); ?>" class="participant-card organizer">
                                     <?php echo get_avatar($author_id, 80); ?>
                                     <div class="participant-info">
                                         <div class="participant-name">
@@ -62,14 +62,14 @@ while (have_posts()) : the_post();
                                         }
                                         ?>
                                     </div>
-                                </div>
+                                </a>
 
                                 <!-- Other Participants -->
                                 <?php foreach ($participants as $participant) :
                                     $user = get_user_by('id', $participant->user_id);
                                     $reputation = get_user_meta($user->ID, 'cdv_reputation_score', true);
                                     ?>
-                                    <div class="participant-card">
+                                    <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($user->ID)); ?>" class="participant-card">
                                         <?php echo get_avatar($user->ID, 80); ?>
                                         <div class="participant-info">
                                             <div class="participant-name"><?php echo esc_html($user->user_login); ?></div>
@@ -77,7 +77,7 @@ while (have_posts()) : the_post();
                                                 cdv_display_stars($reputation);
                                             } ?>
                                         </div>
-                                    </div>
+                                    </a>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -124,7 +124,7 @@ while (have_posts()) : the_post();
                         $reputation = get_user_meta($author_id, 'cdv_reputation_score', true);
                         $bio = get_user_meta($author_id, 'cdv_bio', true);
                         ?>
-                        <div class="organizer-profile">
+                        <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($author_id)); ?>" class="organizer-profile">
                             <?php echo get_avatar($author_id, 100); ?>
                             <div class="organizer-name">
                                 <?php echo esc_html(get_the_author_meta('user_login', $author_id)); ?>
@@ -138,7 +138,7 @@ while (have_posts()) : the_post();
                             <?php if ($bio) : ?>
                                 <p class="organizer-bio"><?php echo esc_html($bio); ?></p>
                             <?php endif; ?>
-                        </div>
+                        </a>
                     </div>
 
                     <!-- Join Card -->
@@ -292,6 +292,16 @@ while (have_posts()) : the_post();
         }
         .organizer-profile {
             text-align: center;
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            transition: opacity 0.2s;
+        }
+        .organizer-profile:hover {
+            opacity: 0.8;
+        }
+        .organizer-profile:hover .organizer-name {
+            color: var(--primary-color);
         }
         .organizer-profile img {
             margin: 0 auto calc(var(--spacing-unit) * 2);
@@ -337,6 +347,16 @@ while (have_posts()) : the_post();
             padding: calc(var(--spacing-unit) * 2);
             border: 1px solid var(--border-color);
             border-radius: var(--border-radius-sm);
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s;
+        }
+        .participant-card:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .participant-card:hover .participant-name {
+            color: var(--primary-color);
         }
         .participant-card img {
             margin-bottom: calc(var(--spacing-unit) * 1.5);

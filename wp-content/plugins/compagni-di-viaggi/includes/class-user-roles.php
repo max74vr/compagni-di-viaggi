@@ -19,7 +19,28 @@ class CDV_User_Roles {
         add_action('admin_init', array(__CLASS__, 'block_admin_access'));
 
         // Hide admin bar for viaggiatore
-        add_action('after_setup_theme', array(__CLASS__, 'hide_admin_bar'));
+        add_filter('show_admin_bar', array(__CLASS__, 'hide_admin_bar'));
+        add_action('after_setup_theme', array(__CLASS__, 'hide_admin_bar_theme'));
+    }
+
+    /**
+     * Check if current user is a viaggiatore
+     */
+    public static function is_viaggiatore($user_id = null) {
+        if (!$user_id) {
+            $user_id = get_current_user_id();
+        }
+
+        if (!$user_id) {
+            return false;
+        }
+
+        $user = get_userdata($user_id);
+        if (!$user) {
+            return false;
+        }
+
+        return in_array('viaggiatore', (array) $user->roles);
     }
 
     /**
@@ -220,17 +241,27 @@ class CDV_User_Roles {
      * Block admin access for viaggiatore role
      */
     public static function block_admin_access() {
-        if (current_user_can('viaggiatore') && !wp_doing_ajax()) {
+        if (self::is_viaggiatore() && !wp_doing_ajax()) {
             wp_redirect(home_url('/dashboard'));
             exit;
         }
     }
 
     /**
-     * Hide admin bar for viaggiatore role
+     * Hide admin bar for viaggiatore role (filter)
      */
-    public static function hide_admin_bar() {
-        if (current_user_can('viaggiatore')) {
+    public static function hide_admin_bar($show_admin_bar) {
+        if (self::is_viaggiatore()) {
+            return false;
+        }
+        return $show_admin_bar;
+    }
+
+    /**
+     * Hide admin bar for viaggiatore role (action)
+     */
+    public static function hide_admin_bar_theme() {
+        if (self::is_viaggiatore()) {
             show_admin_bar(false);
         }
     }
