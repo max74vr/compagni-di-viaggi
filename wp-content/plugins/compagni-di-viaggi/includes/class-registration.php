@@ -119,75 +119,75 @@ class CDV_Registration {
 
             $user_id = get_current_user_id();
 
-        // Personal Info
-        $birth_date = isset($_POST['birth_date']) ? sanitize_text_field($_POST['birth_date']) : '';
-        $gender = isset($_POST['gender']) ? sanitize_text_field($_POST['gender']) : '';
-        $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
-        $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
-        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+            // Personal Info
+            $birth_date = isset($_POST['birth_date']) ? sanitize_text_field($_POST['birth_date']) : '';
+            $gender = isset($_POST['gender']) ? sanitize_text_field($_POST['gender']) : '';
+            $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+            $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+            $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
 
-        // Bio & Interests
-        $bio = isset($_POST['bio']) ? sanitize_textarea_field($_POST['bio']) : '';
-        $languages = isset($_POST['languages']) ? sanitize_text_field($_POST['languages']) : '';
-        $travel_styles = isset($_POST['travel_styles']) ? array_map('sanitize_text_field', $_POST['travel_styles']) : array();
-        $interests = isset($_POST['interests']) ? array_map('sanitize_text_field', $_POST['interests']) : array();
+            // Bio & Interests
+            $bio = isset($_POST['bio']) ? sanitize_textarea_field($_POST['bio']) : '';
+            $languages = isset($_POST['languages']) ? sanitize_text_field($_POST['languages']) : '';
+            $travel_styles = isset($_POST['travel_styles']) ? array_map('sanitize_text_field', $_POST['travel_styles']) : array();
+            $interests = isset($_POST['interests']) ? array_map('sanitize_text_field', $_POST['interests']) : array();
 
-        // Travel Preferences
-        $budget_range = isset($_POST['budget_range']) ? sanitize_text_field($_POST['budget_range']) : '';
-        $travel_frequency = isset($_POST['travel_frequency']) ? sanitize_text_field($_POST['travel_frequency']) : '';
-        $accommodation_preference = isset($_POST['accommodation_preference']) ? sanitize_text_field($_POST['accommodation_preference']) : '';
-        $travel_pace = isset($_POST['travel_pace']) ? sanitize_text_field($_POST['travel_pace']) : '';
+            // Travel Preferences
+            $budget_range = isset($_POST['budget_range']) ? sanitize_text_field($_POST['budget_range']) : '';
+            $travel_frequency = isset($_POST['travel_frequency']) ? sanitize_text_field($_POST['travel_frequency']) : '';
+            $accommodation_preference = isset($_POST['accommodation_preference']) ? sanitize_text_field($_POST['accommodation_preference']) : '';
+            $travel_pace = isset($_POST['travel_pace']) ? sanitize_text_field($_POST['travel_pace']) : '';
 
-        // Social Links (optional)
-        $instagram = isset($_POST['instagram']) ? sanitize_text_field($_POST['instagram']) : '';
-        $facebook = isset($_POST['facebook']) ? sanitize_text_field($_POST['facebook']) : '';
+            // Social Links (optional)
+            $instagram = isset($_POST['instagram']) ? sanitize_text_field($_POST['instagram']) : '';
+            $facebook = isset($_POST['facebook']) ? sanitize_text_field($_POST['facebook']) : '';
 
-        // Privacy Settings
-        $show_age = isset($_POST['show_age']) ? 'yes' : 'no';
-        $show_phone = isset($_POST['show_phone']) ? 'yes' : 'no';
-        $show_email = isset($_POST['show_email']) ? 'yes' : 'no';
-        $show_social = isset($_POST['show_social']) ? 'yes' : 'no';
+            // Privacy Settings
+            $show_age = isset($_POST['show_age']) ? 'yes' : 'no';
+            $show_phone = isset($_POST['show_phone']) ? 'yes' : 'no';
+            $show_email = isset($_POST['show_email']) ? 'yes' : 'no';
+            $show_social = isset($_POST['show_social']) ? 'yes' : 'no';
 
-        // Validation
-        if (empty($birth_date) || empty($bio) || empty($city) || empty($country)) {
-            wp_send_json_error(array('message' => 'Completa tutti i campi obbligatori'));
-        }
-
-        // Check age (min 18) with error handling
-        try {
-            $birth = new DateTime($birth_date);
-            $today = new DateTime();
-            $age = $today->diff($birth)->y;
-
-            if ($age < 18) {
-                wp_send_json_error(array('message' => 'Devi avere almeno 18 anni'));
+            // Validation
+            if (empty($birth_date) || empty($bio) || empty($city) || empty($country)) {
+                wp_send_json_error(array('message' => 'Completa tutti i campi obbligatori'));
             }
-        } catch (Exception $e) {
-            wp_send_json_error(array('message' => 'Data di nascita non valida'));
-        }
 
-        // Save data
-        update_user_meta($user_id, 'cdv_birth_date', $birth_date);
-        update_user_meta($user_id, 'cdv_gender', $gender);
-        update_user_meta($user_id, 'cdv_city', $city);
-        update_user_meta($user_id, 'cdv_country', $country);
-        update_user_meta($user_id, 'cdv_phone', $phone);
-        update_user_meta($user_id, 'cdv_bio', $bio);
-        update_user_meta($user_id, 'cdv_languages', $languages);
-        update_user_meta($user_id, 'cdv_travel_styles', implode(', ', $travel_styles));
-        update_user_meta($user_id, 'cdv_interests', implode(', ', $interests));
-        update_user_meta($user_id, 'cdv_budget_range', $budget_range);
-        update_user_meta($user_id, 'cdv_travel_frequency', $travel_frequency);
-        update_user_meta($user_id, 'cdv_accommodation_preference', $accommodation_preference);
-        update_user_meta($user_id, 'cdv_travel_pace', $travel_pace);
-        update_user_meta($user_id, 'cdv_instagram', $instagram);
-        update_user_meta($user_id, 'cdv_facebook', $facebook);
+            // Check age (min 18) with error handling
+            try {
+                $birth = new DateTime($birth_date);
+                $today = new DateTime();
+                $age = $today->diff($birth)->y;
 
-        // Privacy settings
-        update_user_meta($user_id, 'cdv_show_age', $show_age);
-        update_user_meta($user_id, 'cdv_show_phone', $show_phone);
-        update_user_meta($user_id, 'cdv_show_email', $show_email);
-        update_user_meta($user_id, 'cdv_show_social', $show_social);
+                if ($age < 18) {
+                    wp_send_json_error(array('message' => 'Devi avere almeno 18 anni'));
+                }
+            } catch (Exception $e) {
+                wp_send_json_error(array('message' => 'Data di nascita non valida'));
+            }
+
+            // Save data
+            update_user_meta($user_id, 'cdv_birth_date', $birth_date);
+            update_user_meta($user_id, 'cdv_gender', $gender);
+            update_user_meta($user_id, 'cdv_city', $city);
+            update_user_meta($user_id, 'cdv_country', $country);
+            update_user_meta($user_id, 'cdv_phone', $phone);
+            update_user_meta($user_id, 'cdv_bio', $bio);
+            update_user_meta($user_id, 'cdv_languages', $languages);
+            update_user_meta($user_id, 'cdv_travel_styles', !empty($travel_styles) ? implode(', ', $travel_styles) : '');
+            update_user_meta($user_id, 'cdv_interests', !empty($interests) ? implode(', ', $interests) : '');
+            update_user_meta($user_id, 'cdv_budget_range', $budget_range);
+            update_user_meta($user_id, 'cdv_travel_frequency', $travel_frequency);
+            update_user_meta($user_id, 'cdv_accommodation_preference', $accommodation_preference);
+            update_user_meta($user_id, 'cdv_travel_pace', $travel_pace);
+            update_user_meta($user_id, 'cdv_instagram', $instagram);
+            update_user_meta($user_id, 'cdv_facebook', $facebook);
+
+            // Privacy settings
+            update_user_meta($user_id, 'cdv_show_age', $show_age);
+            update_user_meta($user_id, 'cdv_show_phone', $show_phone);
+            update_user_meta($user_id, 'cdv_show_email', $show_email);
+            update_user_meta($user_id, 'cdv_show_social', $show_social);
 
             // Mark profile as complete
             update_user_meta($user_id, 'cdv_profile_completed', '1');
@@ -198,6 +198,8 @@ class CDV_Registration {
             } catch (Exception $e) {
                 error_log('CDV: Failed to send admin notification: ' . $e->getMessage());
             }
+
+            error_log('CDV: Registration step 2 completed successfully for user ' . $user_id);
 
             wp_send_json_success(array(
                 'message' => 'Profilo completato! Il tuo account è in attesa di approvazione.',
@@ -279,7 +281,14 @@ class CDV_Registration {
      */
     private static function notify_admin_new_user($user_id) {
         $user = get_user_by('id', $user_id);
+        if (!$user) {
+            return false;
+        }
+
         $admin_email = get_option('admin_email');
+        if (!$admin_email) {
+            return false;
+        }
 
         $subject = '[Compagni di Viaggi] Nuovo utente da approvare';
         $message = sprintf(
@@ -290,7 +299,9 @@ class CDV_Registration {
             admin_url('admin.php?page=cdv-pending-users')
         );
 
-        wp_mail($admin_email, $subject, $message);
+        // wp_mail può causare timeout, lo eseguiamo in modo non bloccante
+        @wp_mail($admin_email, $subject, $message);
+        return true;
     }
 
     /**
