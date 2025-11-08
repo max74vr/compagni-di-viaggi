@@ -20,6 +20,10 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_add_review', array(__CLASS__, 'add_review'));
         add_action('wp_ajax_cdv_accept_participant', array(__CLASS__, 'accept_participant'));
         add_action('wp_ajax_cdv_reject_participant', array(__CLASS__, 'reject_participant'));
+        add_action('wp_ajax_cdv_approve_participant', array(__CLASS__, 'accept_participant'));
+        add_action('wp_ajax_cdv_change_travel_status', array(__CLASS__, 'change_travel_status'));
+        add_action('wp_ajax_cdv_delete_travel', array(__CLASS__, 'delete_travel'));
+        add_action('wp_ajax_cdv_resend_verification', array(__CLASS__, 'resend_verification'));
 
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
@@ -238,5 +242,98 @@ class CDV_Ajax_Handlers {
         }
 
         wp_send_json_success(array('message' => 'Partecipante rifiutato'));
+    }
+
+    /**
+     * AJAX: Change travel status
+     */
+    public static function change_travel_status() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error('Devi essere autenticato');
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : '';
+
+        if (!$travel_id || !$status) {
+            wp_send_json_error('Dati non validi');
+        }
+
+        // Check if current user is the author
+        $travel = get_post($travel_id);
+        if (!$travel || $travel->post_author != get_current_user_id()) {
+            wp_send_json_error('Non hai i permessi per modificare questo viaggio');
+        }
+
+        // Validate status
+        $valid_statuses = array('open', 'full', 'closed', 'completed');
+        if (!in_array($status, $valid_statuses)) {
+            wp_send_json_error('Stato non valido');
+        }
+
+        update_post_meta($travel_id, 'cdv_travel_status', $status);
+
+        wp_send_json_success('Stato aggiornato con successo');
+    }
+
+    /**
+     * AJAX: Delete travel
+     */
+    public static function delete_travel() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error('Devi essere autenticato');
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+
+        if (!$travel_id) {
+            wp_send_json_error('ID viaggio non valido');
+        }
+
+        // Check if current user is the author
+        $travel = get_post($travel_id);
+        if (!$travel || $travel->post_author != get_current_user_id()) {
+            wp_send_json_error('Non hai i permessi per eliminare questo viaggio');
+        }
+
+        // Delete the post (moves to trash)
+        $result = wp_trash_post($travel_id);
+
+        if (!$result) {
+            wp_send_json_error('Errore durante l\'eliminazione del viaggio');
+        }
+
+        wp_send_json_success('Viaggio eliminato con successo');
+    }
+
+    /**
+     * AJAX: Resend verification email
+     */
+    public static function resend_verification() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error('Devi essere autenticato');
+        }
+
+        $user_id = get_current_user_id();
+
+        // Controlla se già verificato
+        if (CDV_Email_Verification::is_email_verified($user_id)) {
+            wp_send_json_error('Email già verificata');
+        }
+
+        // Reinvia email
+        $result = CDV_Email_Verification::resend_verification_email($user_id);
+
+        if ($result) {
+            wp_send_json_success('Email di verifica inviata con successo');
+        } else {
+            wp_send_json_error('Errore durante l\'invio dell\'email');
+        }
     }
 }

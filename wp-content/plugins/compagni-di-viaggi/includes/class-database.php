@@ -102,8 +102,24 @@ class CDV_Database {
 
         dbDelta($sql_badges);
 
+        // Table: email_verification_tokens
+        $table_email_tokens = $wpdb->prefix . 'cdv_email_verification';
+        $sql_email_tokens = "CREATE TABLE IF NOT EXISTS $table_email_tokens (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) UNSIGNED NOT NULL,
+            token varchar(64) NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            expires_at datetime NOT NULL,
+            verified_at datetime DEFAULT NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY token (token),
+            KEY user_id (user_id)
+        ) $charset_collate;";
+
+        dbDelta($sql_email_tokens);
+
         // Update version
-        update_option('cdv_db_version', '1.0.0');
+        update_option('cdv_db_version', '1.1.0');
     }
 
     /**
@@ -118,6 +134,7 @@ class CDV_Database {
             $wpdb->prefix . 'cdv_chat_messages',
             $wpdb->prefix . 'cdv_reviews',
             $wpdb->prefix . 'cdv_user_badges',
+            $wpdb->prefix . 'cdv_email_verification',
         );
 
         foreach ($tables as $table) {

@@ -17,6 +17,7 @@ class CDV_Registration {
         add_action('wp_ajax_nopriv_cdv_register_step2', array(__CLASS__, 'ajax_register_step2'));
         add_action('wp_ajax_cdv_update_profile', array(__CLASS__, 'ajax_update_profile'));
         add_action('wp_ajax_cdv_upload_profile_image', array(__CLASS__, 'ajax_upload_profile_image'));
+        add_action('wp_ajax_cdv_create_first_travel', array(__CLASS__, 'ajax_create_first_travel'));
 
         // Prevent backend registration
         add_filter('register_url', array(__CLASS__, 'custom_register_url'));
@@ -82,7 +83,10 @@ class CDV_Registration {
         update_user_meta($user_id, 'cdv_user_approved', 'pending');
         update_user_meta($user_id, 'cdv_registration_date', current_time('mysql'));
 
-        // Auto-login
+        // Invia email di verifica
+        $email_sent = CDV_Email_Verification::send_verification_email($user_id);
+
+        // Auto-login (temporaneo per completare la registrazione)
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
 
@@ -90,8 +94,9 @@ class CDV_Registration {
         CDV_Badges::award_badge($user_id, 'early_adopter');
 
         wp_send_json_success(array(
-            'message' => 'Account creato con successo!',
+            'message' => 'Account creato! Controlla la tua email per confermare l\'indirizzo.',
             'user_id' => $user_id,
+            'email_sent' => $email_sent,
         ));
     }
 
@@ -319,5 +324,86 @@ class CDV_Registration {
         }
 
         return get_avatar_url($user_id);
+    }
+
+    /**
+     * AJAX: Create First Travel (during registration)
+     */
+    public static function ajax_create_first_travel() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $title = sanitize_text_field($_POST['travel_title']);
+        $description = sanitize_textarea_field($_POST['travel_description']);
+        $destination = sanitize_text_field($_POST['travel_destination']);
+        $country = sanitize_text_field($_POST['travel_country']);
+        $start_date = sanitize_text_field($_POST['travel_start_date']);
+        $end_date = sanitize_text_field($_POST['travel_end_date']);
+        $budget = intval($_POST['travel_budget']);
+        $max_participants = intval($_POST['travel_max_participants']);
+        $travel_types = isset($_POST['travel_types']) ? array_map('intval', $_POST['travel_types']) : array();
+
+        // Validation
+        if (empty($title) || empty($description) || empty($destination) || empty($country)) {
+            wp_send_json_error(array('message' => 'Compila tutti i campi obbligatori'));
+        }
+
+        if (empty($start_date) || empty($end_date)) {
+            wp_send_json_error(array('message' => 'Inserisci le date del viaggio'));
+        }
+
+        if (strtotime($start_date) < strtotime('today')) {
+            wp_send_json_error(array('message' => 'La data di inizio deve essere futura'));
+        }
+
+        if (strtotime($end_date) < strtotime($start_date)) {
+            wp_send_json_error(array('message' => 'La data di fine deve essere dopo la data di inizio'));
+        }
+
+        // Create travel post
+        $post_data = array(
+            'post_type' => 'viaggio',
+            'post_title' => $title,
+            'post_content' => $description,
+            'post_status' => 'pending', // Will be moderated
+            'post_author' => get_current_user_id(),
+        );
+
+        $post_id = wp_insert_post($post_data);
+
+        if (is_wp_error($post_id)) {
+            wp_send_json_error(array('message' => 'Errore durante la creazione del viaggio'));
+        }
+
+        // Add meta data
+        update_post_meta($post_id, 'cdv_destination', $destination);
+        update_post_meta($post_id, 'cdv_country', $country);
+        update_post_meta($post_id, 'cdv_start_date', $start_date);
+        update_post_meta($post_id, 'cdv_end_date', $end_date);
+        update_post_meta($post_id, 'cdv_budget', $budget);
+        update_post_meta($post_id, 'cdv_max_participants', $max_participants);
+        update_post_meta($post_id, 'cdv_travel_status', 'open');
+        update_post_meta($post_id, 'cdv_views', 0);
+
+        // Add travel types taxonomy
+        if (!empty($travel_types)) {
+            wp_set_post_terms($post_id, $travel_types, 'tipo_viaggio');
+        }
+
+        // Set destination taxonomy
+        if (!empty($destination)) {
+            wp_set_post_terms($post_id, array($destination), 'destinazione', false);
+        }
+
+        // Award badge for first travel
+        CDV_Badges::award_badge(get_current_user_id(), 'first_travel');
+
+        wp_send_json_success(array(
+            'message' => 'Viaggio creato! Sarà pubblicato dopo l\'approvazione.',
+            'travel_id' => $post_id,
+        ));
     }
 }

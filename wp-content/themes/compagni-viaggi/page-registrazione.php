@@ -38,6 +38,11 @@ get_header();
                     <div class="step-number">3</div>
                     <div class="step-label">Foto</div>
                 </div>
+                <div class="step-connector"></div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Viaggio (Opzionale)</div>
+                </div>
             </div>
 
             <div class="registration-form-container">
@@ -291,7 +296,87 @@ get_header();
                     <div class="form-actions">
                         <button type="button" class="btn-secondary btn-prev">← Indietro</button>
                         <button type="button" class="btn-secondary" id="skip-photo">Salta per ora</button>
-                        <button type="submit" class="btn-primary btn-large">Completa Registrazione ✓</button>
+                        <button type="button" class="btn-primary btn-large" id="continue-to-travel">Continua →</button>
+                    </div>
+                </form>
+
+                <!-- Step 4: Create First Travel (Optional) -->
+                <form id="registration-step-4" class="registration-step">
+                    <h2>Crea il Tuo Primo Viaggio (Opzionale)</h2>
+                    <p class="step-intro">Hai già in mente un viaggio? Crealo ora e inizia a trovare compagni!</p>
+
+                    <div class="form-group">
+                        <label for="travel_title">Titolo del Viaggio <span class="required">*</span></label>
+                        <input type="text" id="travel_title" name="travel_title" placeholder="Es: Weekend a Venezia, Road Trip in Toscana">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="travel_description">Descrizione <span class="required">*</span></label>
+                        <textarea id="travel_description" name="travel_description" rows="5" placeholder="Descrivi il tuo viaggio: destinazioni, attività previste, cosa rende speciale questa esperienza..."></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travel_destination">Destinazione <span class="required">*</span></label>
+                            <input type="text" id="travel_destination" name="travel_destination" placeholder="Es: Venezia, Toscana">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travel_country">Paese <span class="required">*</span></label>
+                            <input type="text" id="travel_country" name="travel_country" placeholder="Es: Italia, Francia">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travel_start_date">Data Inizio <span class="required">*</span></label>
+                            <input type="date" id="travel_start_date" name="travel_start_date">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travel_end_date">Data Fine <span class="required">*</span></label>
+                            <input type="date" id="travel_end_date" name="travel_end_date">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="travel_budget">Budget per Persona (€) <span class="required">*</span></label>
+                            <input type="number" id="travel_budget" name="travel_budget" min="0" placeholder="500">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travel_max_participants">Max Partecipanti <span class="required">*</span></label>
+                            <input type="number" id="travel_max_participants" name="travel_max_participants" min="2" max="50" value="5">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo di Viaggio</label>
+                        <div class="checkbox-group">
+                            <?php
+                            $travel_types = get_terms(array(
+                                'taxonomy' => 'tipo_viaggio',
+                                'hide_empty' => false,
+                            ));
+                            if (!empty($travel_types) && !is_wp_error($travel_types)) :
+                                foreach ($travel_types as $type) :
+                            ?>
+                                <label>
+                                    <input type="checkbox" name="travel_types[]" value="<?php echo esc_attr($type->term_id); ?>">
+                                    <?php echo esc_html($type->name); ?>
+                                </label>
+                            <?php
+                                endforeach;
+                            endif;
+                            ?>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary btn-prev">← Indietro</button>
+                        <button type="button" class="btn-secondary" id="skip-travel">Salta e Completa</button>
+                        <button type="submit" class="btn-primary btn-large">Crea Viaggio e Completa ✓</button>
                     </div>
                 </form>
             </div>
@@ -675,46 +760,80 @@ jQuery(document).ready(function($) {
         }
     });
 
-    $('#registration-step-3').on('submit', function(e) {
-        e.preventDefault();
-
+    // Continue to travel step button
+    $('#continue-to-travel').on('click', function() {
         const file = $('#profile_image')[0].files[0];
 
-        if (!file) {
-            alert('Seleziona un\'immagine');
-            return;
-        }
+        if (file) {
+            // Upload photo first, then go to step 4
+            const formData = new FormData();
+            formData.append('action', 'cdv_upload_profile_image');
+            formData.append('nonce', cdvAjax.nonce);
+            formData.append('profile_image', file);
 
-        const formData = new FormData();
-        formData.append('action', 'cdv_upload_profile_image');
-        formData.append('nonce', cdvAjax.nonce);
-        formData.append('profile_image', file);
+            $('#registration-step-3').addClass('loading');
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        nextStep(); // Go to step 4
+                    } else {
+                        alert(response.data.message || 'Errore durante l\'upload');
+                    }
+                },
+                error: function() {
+                    alert('Errore di connessione');
+                },
+                complete: function() {
+                    $('#registration-step-3').removeClass('loading');
+                }
+            });
+        } else {
+            // Skip photo and go to step 4
+            nextStep();
+        }
+    });
+
+    $('#skip-photo').on('click', function() {
+        nextStep(); // Go to step 4
+    });
+
+    // Step 4: Create Travel (Optional)
+    $('#registration-step-4').on('submit', function(e) {
+        e.preventDefault();
+
+        const formData = $(this).serializeArray();
+        formData.push({ name: 'action', value: 'cdv_create_first_travel' });
+        formData.push({ name: 'nonce', value: cdvAjax.nonce });
 
         $(this).addClass('loading');
 
         $.ajax({
             url: cdvAjax.ajaxurl,
             type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
+            data: $.param(formData),
             success: function(response) {
                 if (response.success) {
                     window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
                 } else {
-                    alert(response.data.message || 'Errore durante l\'upload');
+                    alert(response.data.message || 'Errore durante la creazione del viaggio');
                 }
             },
             error: function() {
                 alert('Errore di connessione');
             },
             complete: function() {
-                $('#registration-step-3').removeClass('loading');
+                $('#registration-step-4').removeClass('loading');
             }
         });
     });
 
-    $('#skip-photo').on('click', function() {
+    $('#skip-travel').on('click', function() {
         window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
     });
 
