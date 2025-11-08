@@ -11,7 +11,17 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Site configuration
 define('SITE_NAME', 'Compagni di Viaggi');
-define('SITE_URL', getenv('SITE_URL') ?: 'http://localhost');
+
+// Auto-detect SITE_URL if not set in environment
+if (getenv('SITE_URL')) {
+    define('SITE_URL', getenv('SITE_URL'));
+} else {
+    // Auto-detect from server variables
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    define('SITE_URL', $protocol . '://' . $host);
+}
+
 define('BASE_PATH', dirname(__DIR__));
 
 // Upload directories
@@ -46,9 +56,18 @@ define('SPAM_THRESHOLD', 10); // messages per minute
 // Timezone
 date_default_timezone_set('Europe/Rome');
 
-// Error reporting (disable in production)
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+// Error reporting (production mode by default)
+// Set ENVIRONMENT=development in .env for development mode
+$environment = getenv('ENVIRONMENT') ?: 'production';
+if ($environment === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    ini_set('error_log', BASE_PATH . '/logs/php-errors.log');
+}
 
 // Include database configuration
 require_once BASE_PATH . '/config/database.php';
