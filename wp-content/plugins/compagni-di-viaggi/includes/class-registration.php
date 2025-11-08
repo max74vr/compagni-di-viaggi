@@ -110,55 +110,60 @@ class CDV_Registration {
      * AJAX: Register Step 2 - Profile Information
      */
     public static function ajax_register_step2() {
-        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+        try {
+            check_ajax_referer('cdv_ajax_nonce', 'nonce');
 
-        if (!is_user_logged_in()) {
-            wp_send_json_error(array('message' => 'Devi essere autenticato'));
-        }
+            if (!is_user_logged_in()) {
+                wp_send_json_error(array('message' => 'Devi essere autenticato'));
+            }
 
-        $user_id = get_current_user_id();
+            $user_id = get_current_user_id();
 
         // Personal Info
-        $birth_date = sanitize_text_field($_POST['birth_date']);
-        $gender = sanitize_text_field($_POST['gender']);
-        $city = sanitize_text_field($_POST['city']);
-        $country = sanitize_text_field($_POST['country']);
-        $phone = sanitize_text_field($_POST['phone']);
+        $birth_date = isset($_POST['birth_date']) ? sanitize_text_field($_POST['birth_date']) : '';
+        $gender = isset($_POST['gender']) ? sanitize_text_field($_POST['gender']) : '';
+        $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+        $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
 
         // Bio & Interests
-        $bio = sanitize_textarea_field($_POST['bio']);
-        $languages = sanitize_text_field($_POST['languages']);
+        $bio = isset($_POST['bio']) ? sanitize_textarea_field($_POST['bio']) : '';
+        $languages = isset($_POST['languages']) ? sanitize_text_field($_POST['languages']) : '';
         $travel_styles = isset($_POST['travel_styles']) ? array_map('sanitize_text_field', $_POST['travel_styles']) : array();
         $interests = isset($_POST['interests']) ? array_map('sanitize_text_field', $_POST['interests']) : array();
 
         // Travel Preferences
-        $budget_range = sanitize_text_field($_POST['budget_range']);
-        $travel_frequency = sanitize_text_field($_POST['travel_frequency']);
-        $accommodation_preference = sanitize_text_field($_POST['accommodation_preference']);
-        $travel_pace = sanitize_text_field($_POST['travel_pace']);
+        $budget_range = isset($_POST['budget_range']) ? sanitize_text_field($_POST['budget_range']) : '';
+        $travel_frequency = isset($_POST['travel_frequency']) ? sanitize_text_field($_POST['travel_frequency']) : '';
+        $accommodation_preference = isset($_POST['accommodation_preference']) ? sanitize_text_field($_POST['accommodation_preference']) : '';
+        $travel_pace = isset($_POST['travel_pace']) ? sanitize_text_field($_POST['travel_pace']) : '';
 
         // Social Links (optional)
-        $instagram = sanitize_text_field($_POST['instagram']);
-        $facebook = sanitize_text_field($_POST['facebook']);
+        $instagram = isset($_POST['instagram']) ? sanitize_text_field($_POST['instagram']) : '';
+        $facebook = isset($_POST['facebook']) ? sanitize_text_field($_POST['facebook']) : '';
 
         // Privacy Settings
-        $show_age = isset($_POST['show_age']) ? '1' : '0';
-        $show_phone = isset($_POST['show_phone']) ? '1' : '0';
-        $show_email = isset($_POST['show_email']) ? '1' : '0';
-        $show_social = isset($_POST['show_social']) ? '1' : '0';
+        $show_age = isset($_POST['show_age']) ? 'yes' : 'no';
+        $show_phone = isset($_POST['show_phone']) ? 'yes' : 'no';
+        $show_email = isset($_POST['show_email']) ? 'yes' : 'no';
+        $show_social = isset($_POST['show_social']) ? 'yes' : 'no';
 
         // Validation
         if (empty($birth_date) || empty($bio) || empty($city) || empty($country)) {
             wp_send_json_error(array('message' => 'Completa tutti i campi obbligatori'));
         }
 
-        // Check age (min 18)
-        $birth = new DateTime($birth_date);
-        $today = new DateTime();
-        $age = $today->diff($birth)->y;
+        // Check age (min 18) with error handling
+        try {
+            $birth = new DateTime($birth_date);
+            $today = new DateTime();
+            $age = $today->diff($birth)->y;
 
-        if ($age < 18) {
-            wp_send_json_error(array('message' => 'Devi avere almeno 18 anni'));
+            if ($age < 18) {
+                wp_send_json_error(array('message' => 'Devi avere almeno 18 anni'));
+            }
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => 'Data di nascita non valida'));
         }
 
         // Save data
@@ -184,16 +189,27 @@ class CDV_Registration {
         update_user_meta($user_id, 'cdv_show_email', $show_email);
         update_user_meta($user_id, 'cdv_show_social', $show_social);
 
-        // Mark profile as complete
-        update_user_meta($user_id, 'cdv_profile_completed', '1');
+            // Mark profile as complete
+            update_user_meta($user_id, 'cdv_profile_completed', '1');
 
-        // Notify admin of new registration
-        self::notify_admin_new_user($user_id);
+            // Notify admin of new registration (non-blocking)
+            try {
+                self::notify_admin_new_user($user_id);
+            } catch (Exception $e) {
+                error_log('CDV: Failed to send admin notification: ' . $e->getMessage());
+            }
 
-        wp_send_json_success(array(
-            'message' => 'Profilo completato! Il tuo account è in attesa di approvazione.',
-            'redirect' => home_url('/profilo-in-attesa'),
-        ));
+            wp_send_json_success(array(
+                'message' => 'Profilo completato! Il tuo account è in attesa di approvazione.',
+                'redirect' => home_url('/profilo-in-attesa'),
+            ));
+
+        } catch (Exception $e) {
+            error_log('CDV: Error in registration step 2: ' . $e->getMessage());
+            wp_send_json_error(array(
+                'message' => 'Si è verificato un errore: ' . $e->getMessage()
+            ));
+        }
     }
 
     /**
