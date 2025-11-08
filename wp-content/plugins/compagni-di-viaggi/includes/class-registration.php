@@ -13,8 +13,14 @@ class CDV_Registration {
      * Initialize
      */
     public static function init() {
+        // Step 1 - only for non-logged users
         add_action('wp_ajax_nopriv_cdv_register_step1', array(__CLASS__, 'ajax_register_step1'));
+
+        // Step 2 - for both (user is auto-logged after step 1)
         add_action('wp_ajax_nopriv_cdv_register_step2', array(__CLASS__, 'ajax_register_step2'));
+        add_action('wp_ajax_cdv_register_step2', array(__CLASS__, 'ajax_register_step2'));
+
+        // Step 3 and beyond - user is logged
         add_action('wp_ajax_cdv_update_profile', array(__CLASS__, 'ajax_update_profile'));
         add_action('wp_ajax_cdv_upload_profile_image', array(__CLASS__, 'ajax_upload_profile_image'));
         add_action('wp_ajax_cdv_create_first_travel', array(__CLASS__, 'ajax_create_first_travel'));

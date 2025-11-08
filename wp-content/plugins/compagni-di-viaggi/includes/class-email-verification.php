@@ -23,17 +23,31 @@ class CDV_Email_Verification {
             return false;
         }
 
+        // Verifica se la tabella esiste
+        $table_name = $wpdb->prefix . 'cdv_email_verification';
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+
+        if (!$table_exists) {
+            // Tabella non esiste, salta verifica email ma non bloccare registrazione
+            error_log('CDV: Email verification table does not exist. Skipping email verification.');
+            return true; // Return true per non bloccare la registrazione
+        }
+
         // Genera token unico
         $token = bin2hex(random_bytes(32));
         $expires_at = date('Y-m-d H:i:s', strtotime('+24 hours'));
 
         // Salva token nel database
-        $table_name = $wpdb->prefix . 'cdv_email_verification';
-        $wpdb->insert($table_name, array(
+        $result = $wpdb->insert($table_name, array(
             'user_id' => $user_id,
             'token' => $token,
             'expires_at' => $expires_at,
         ));
+
+        if (!$result) {
+            error_log('CDV: Failed to insert email verification token for user ' . $user_id);
+            return true; // Return true comunque per non bloccare
+        }
 
         // Crea link di verifica
         $verification_link = home_url('/conferma-email/?token=' . $token);
