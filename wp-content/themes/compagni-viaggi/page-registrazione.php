@@ -733,6 +733,7 @@ jQuery(document).ready(function($) {
         formData.push({ name: 'action', value: 'cdv_register_step2' });
         formData.push({ name: 'nonce', value: cdvAjax.nonce });
 
+        console.log('Step 2 - Current nonce:', cdvAjax.nonce);
         console.log('Step 2 - Sending data:', formData);
         console.log('AJAX URL:', cdvAjax.ajaxurl);
 
