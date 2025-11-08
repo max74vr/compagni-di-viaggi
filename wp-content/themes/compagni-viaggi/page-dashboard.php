@@ -14,10 +14,11 @@ get_header();
 $current_user = wp_get_current_user();
 $user_approved = get_user_meta($current_user->ID, 'cdv_user_approved', true);
 
-if ($user_approved !== 'approved') {
-    wp_redirect(home_url('/profilo-in-attesa/'));
-    exit;
-}
+// Users are now auto-approved (value is '1'), no need to check
+// if ($user_approved !== '1' && $user_approved !== 'approved') {
+//     wp_redirect(home_url('/profilo-in-attesa/'));
+//     exit;
+// }
 
 // Query viaggi organizzati dall'utente
 $my_travels = new WP_Query(array(
@@ -236,9 +237,67 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
         <!-- Tab: Impostazioni -->
         <div class="tab-content" id="tab-settings">
             <h2>Impostazioni Profilo</h2>
+
+            <!-- Edit Profile Form -->
             <div class="settings-section">
-                <p>Qui potrai modificare le tue informazioni personali, privacy e preferenze.</p>
-                <p><em>Funzionalità in arrivo...</em></p>
+                <h3>Informazioni Personali</h3>
+                <form id="edit-profile-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_display_name">Nome e Cognome</label>
+                            <input type="text" id="edit_display_name" name="display_name" value="<?php echo esc_attr($current_user->display_name); ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_email">Email</label>
+                            <input type="email" id="edit_email" name="email" value="<?php echo esc_attr($current_user->user_email); ?>" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_city">Città</label>
+                            <input type="text" id="edit_city" name="city" value="<?php echo esc_attr(get_user_meta($current_user->ID, 'cdv_city', true)); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_phone">Telefono</label>
+                            <input type="tel" id="edit_phone" name="phone" value="<?php echo esc_attr(get_user_meta($current_user->ID, 'cdv_phone', true)); ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_bio">Bio</label>
+                        <textarea id="edit_bio" name="bio" rows="4"><?php echo esc_textarea(get_user_meta($current_user->ID, 'cdv_bio', true)); ?></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Salva Modifiche</button>
+                </form>
+            </div>
+
+            <!-- Change Password -->
+            <div class="settings-section">
+                <h3>Cambia Password</h3>
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label for="current_password">Password Attuale</label>
+                        <input type="password" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">Nuova Password</label>
+                        <input type="password" id="new_password" name="new_password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Conferma Nuova Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Cambia Password</button>
+                </form>
+            </div>
+
+            <!-- Delete Account -->
+            <div class="settings-section danger-zone">
+                <h3>Zona Pericolosa</h3>
+                <p><strong>Elimina Account</strong> - Questa azione è irreversibile. Tutti i tuoi dati, viaggi e messaggi saranno eliminati permanentemente.</p>
+                <button type="button" class="btn btn-danger" id="delete-account-btn">Elimina Account</button>
             </div>
         </div>
     </div>
@@ -549,6 +608,84 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
         justify-content: flex-end;
     }
 }
+
+/* Settings Forms */
+.settings-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.settings-section h3 {
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+}
+
+.settings-section .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-section .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.settings-section label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.settings-section input[type="text"],
+.settings-section input[type="email"],
+.settings-section input[type="tel"],
+.settings-section input[type="password"],
+.settings-section textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.settings-section textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.danger-zone {
+    border: 2px solid #dc3545;
+}
+
+.danger-zone h3 {
+    color: #dc3545;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+}
+
+@media (max-width: 768px) {
+    .settings-section .form-row {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <script>
@@ -698,6 +835,104 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('link-new-travel')?.addEventListener('click', function(e) {
         e.preventDefault();
         alert('Funzionalità in arrivo: form per creare nuovo viaggio');
+    });
+
+    // Edit Profile Form
+    document.getElementById('edit-profile-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        formData.append('action', 'cdv_update_profile');
+        formData.append('nonce', cdvAjax.nonce);
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert('Profilo aggiornato con successo!');
+                    location.reload();
+                } else {
+                    alert(response.data.message || 'Errore durante l\'aggiornamento');
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
+    });
+
+    // Change Password Form
+    document.getElementById('change-password-form')?.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const newPassword = document.getElementById('new_password').value;
+        const confirmPassword = document.getElementById('confirm_password').value;
+
+        if (newPassword !== confirmPassword) {
+            alert('Le nuove password non coincidono');
+            return;
+        }
+
+        const formData = new FormData(this);
+        formData.append('action', 'cdv_change_password');
+        formData.append('nonce', cdvAjax.nonce);
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    alert('Password cambiata con successo!');
+                    document.getElementById('change-password-form').reset();
+                } else {
+                    alert(response.data.message || 'Errore durante il cambio password');
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
+    });
+
+    // Delete Account
+    document.getElementById('delete-account-btn')?.addEventListener('click', function() {
+        const confirmed = confirm('SEI SICURO? Questa azione è IRREVERSIBILE. Tutti i tuoi dati saranno eliminati permanentemente.');
+
+        if (!confirmed) return;
+
+        const doubleConfirm = prompt('Scrivi "ELIMINA" per confermare:');
+
+        if (doubleConfirm !== 'ELIMINA') {
+            alert('Eliminazione annullata');
+            return;
+        }
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_delete_account',
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Account eliminato. Arrivederci!');
+                    window.location.href = '<?php echo home_url(); ?>';
+                } else {
+                    alert(response.data.message || 'Errore durante l\'eliminazione');
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
     });
 });
 </script>

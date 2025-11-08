@@ -25,6 +25,11 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_delete_travel', array(__CLASS__, 'delete_travel'));
         add_action('wp_ajax_cdv_resend_verification', array(__CLASS__, 'resend_verification'));
 
+        // Profile management
+        add_action('wp_ajax_cdv_update_profile', array(__CLASS__, 'update_profile'));
+        add_action('wp_ajax_cdv_change_password', array(__CLASS__, 'change_password'));
+        add_action('wp_ajax_cdv_delete_account', array(__CLASS__, 'delete_account'));
+
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
     }
@@ -335,5 +340,110 @@ class CDV_Ajax_Handlers {
         } else {
             wp_send_json_error('Errore durante l\'invio dell\'email');
         }
+    }
+
+    /**
+     * AJAX: Update Profile
+     */
+    public static function update_profile() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+
+        $display_name = isset($_POST['display_name']) ? sanitize_text_field($_POST['display_name']) : '';
+        $email = isset($_POST['email']) ? sanitize_email($_POST['email']) : '';
+        $city = isset($_POST['city']) ? sanitize_text_field($_POST['city']) : '';
+        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+        $bio = isset($_POST['bio']) ? sanitize_textarea_field($_POST['bio']) : '';
+
+        // Update WordPress user
+        $user_data = array(
+            'ID' => $user_id,
+            'display_name' => $display_name,
+            'user_email' => $email,
+        );
+
+        $result = wp_update_user($user_data);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        // Update user meta
+        update_user_meta($user_id, 'cdv_city', $city);
+        update_user_meta($user_id, 'cdv_phone', $phone);
+        update_user_meta($user_id, 'cdv_bio', $bio);
+
+        wp_send_json_success(array('message' => 'Profilo aggiornato con successo'));
+    }
+
+    /**
+     * AJAX: Change Password
+     */
+    public static function change_password() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+        $user = get_user_by('id', $user_id);
+
+        $current_password = isset($_POST['current_password']) ? $_POST['current_password'] : '';
+        $new_password = isset($_POST['new_password']) ? $_POST['new_password'] : '';
+
+        // Verify current password
+        if (!wp_check_password($current_password, $user->user_pass, $user_id)) {
+            wp_send_json_error(array('message' => 'Password attuale non corretta'));
+        }
+
+        // Update password
+        wp_set_password($new_password, $user_id);
+
+        wp_send_json_success(array('message' => 'Password cambiata con successo'));
+    }
+
+    /**
+     * AJAX: Delete Account
+     */
+    public static function delete_account() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Don't allow admins to delete themselves via frontend
+        if (user_can($user_id, 'manage_options')) {
+            wp_send_json_error(array('message' => 'Gli amministratori non possono eliminare il proprio account'));
+        }
+
+        // Delete user's travels
+        $travels = get_posts(array(
+            'post_type' => 'viaggio',
+            'author' => $user_id,
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+        ));
+
+        foreach ($travels as $travel_id) {
+            wp_delete_post($travel_id, true);
+        }
+
+        // Delete user
+        require_once(ABSPATH . 'wp-admin/includes/user.php');
+        wp_delete_user($user_id);
+
+        // Logout
+        wp_logout();
+
+        wp_send_json_success(array('message' => 'Account eliminato con successo'));
     }
 }
