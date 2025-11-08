@@ -1,9 +1,0 @@
-# Redirect root to public folder
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule ^$ public/index-demo.php [L]
-    RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
-</IfModule>
-
-# Enable directory listing for testing
-Options +Indexes

@@ -1,0 +1,242 @@
+<?php
+/**
+ * AJAX handlers for frontend interactions
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class CDV_Ajax_Handlers {
+
+    /**
+     * Initialize
+     */
+    public static function init() {
+        // For logged-in users
+        add_action('wp_ajax_cdv_join_travel', array(__CLASS__, 'join_travel'));
+        add_action('wp_ajax_cdv_send_message', array(__CLASS__, 'send_message'));
+        add_action('wp_ajax_cdv_get_new_messages', array(__CLASS__, 'get_new_messages'));
+        add_action('wp_ajax_cdv_add_review', array(__CLASS__, 'add_review'));
+        add_action('wp_ajax_cdv_accept_participant', array(__CLASS__, 'accept_participant'));
+        add_action('wp_ajax_cdv_reject_participant', array(__CLASS__, 'reject_participant'));
+
+        // For non-logged-in users (if needed)
+        // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
+    }
+
+    /**
+     * AJAX: Join travel
+     */
+    public static function join_travel() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
+
+        if (!$travel_id) {
+            wp_send_json_error(array('message' => 'ID viaggio non valido'));
+        }
+
+        $result = CDV_Participants::request_join($travel_id, get_current_user_id(), $message);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array(
+            'message' => 'Richiesta inviata con successo',
+            'id' => $result,
+        ));
+    }
+
+    /**
+     * AJAX: Send chat message
+     */
+    public static function send_message() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $chat_group_id = isset($_POST['chat_group_id']) ? intval($_POST['chat_group_id']) : 0;
+        $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
+
+        if (!$chat_group_id || empty($message)) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        // Check access
+        if (!CDV_Chat::can_user_access_chat($chat_group_id, get_current_user_id())) {
+            wp_send_json_error(array('message' => 'Non hai accesso a questa chat'));
+        }
+
+        $result = CDV_Chat::send_message($chat_group_id, get_current_user_id(), $message);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        $user = wp_get_current_user();
+
+        wp_send_json_success(array(
+            'message' => array(
+                'id' => $result,
+                'user' => array(
+                    'id' => $user->ID,
+                    'name' => $user->display_name,
+                    'avatar' => get_avatar_url($user->ID, array('size' => 40)),
+                ),
+                'message' => $message,
+                'created_at' => current_time('mysql'),
+            ),
+        ));
+    }
+
+    /**
+     * AJAX: Get new chat messages
+     */
+    public static function get_new_messages() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $chat_group_id = isset($_POST['chat_group_id']) ? intval($_POST['chat_group_id']) : 0;
+        $since = isset($_POST['since']) ? sanitize_text_field($_POST['since']) : '';
+
+        if (!$chat_group_id) {
+            wp_send_json_error(array('message' => 'ID chat non valido'));
+        }
+
+        // Check access
+        if (!CDV_Chat::can_user_access_chat($chat_group_id, get_current_user_id())) {
+            wp_send_json_error(array('message' => 'Non hai accesso a questa chat'));
+        }
+
+        $messages = CDV_Chat::get_new_messages($chat_group_id, $since);
+
+        $formatted = array();
+        foreach ($messages as $msg) {
+            $user = get_user_by('id', $msg->user_id);
+            $formatted[] = array(
+                'id' => $msg->id,
+                'user' => array(
+                    'id' => $user->ID,
+                    'name' => $user->display_name,
+                    'avatar' => get_avatar_url($user->ID, array('size' => 40)),
+                ),
+                'message' => $msg->message,
+                'created_at' => $msg->created_at,
+            );
+        }
+
+        wp_send_json_success(array('messages' => $formatted));
+    }
+
+    /**
+     * AJAX: Add review
+     */
+    public static function add_review() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $reviewed_id = isset($_POST['reviewed_id']) ? intval($_POST['reviewed_id']) : 0;
+        $scores = array(
+            'punctuality' => isset($_POST['punctuality']) ? intval($_POST['punctuality']) : 0,
+            'group_spirit' => isset($_POST['group_spirit']) ? intval($_POST['group_spirit']) : 0,
+            'respect' => isset($_POST['respect']) ? intval($_POST['respect']) : 0,
+            'adaptability' => isset($_POST['adaptability']) ? intval($_POST['adaptability']) : 0,
+        );
+        $comment = isset($_POST['comment']) ? sanitize_textarea_field($_POST['comment']) : '';
+
+        if (!$travel_id || !$reviewed_id) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        $result = CDV_Reviews::add_review($travel_id, get_current_user_id(), $reviewed_id, $scores, $comment);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array(
+            'message' => 'Recensione aggiunta con successo',
+            'id' => $result,
+        ));
+    }
+
+    /**
+     * AJAX: Accept participant
+     */
+    public static function accept_participant() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+
+        if (!$travel_id || !$user_id) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        // Check if current user is the organizer
+        $travel = get_post($travel_id);
+        if ($travel->post_author != get_current_user_id()) {
+            wp_send_json_error(array('message' => 'Solo l\'organizzatore può accettare partecipanti'));
+        }
+
+        $result = CDV_Participants::accept_participant($travel_id, $user_id);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array('message' => 'Partecipante accettato'));
+    }
+
+    /**
+     * AJAX: Reject participant
+     */
+    public static function reject_participant() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+
+        if (!$travel_id || !$user_id) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        // Check if current user is the organizer
+        $travel = get_post($travel_id);
+        if ($travel->post_author != get_current_user_id()) {
+            wp_send_json_error(array('message' => 'Solo l\'organizzatore può rifiutare partecipanti'));
+        }
+
+        $result = CDV_Participants::reject_participant($travel_id, $user_id);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array('message' => 'Partecipante rifiutato'));
+    }
+}

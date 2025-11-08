@@ -1,371 +1,551 @@
 # Compagni di Viaggi ✈️
 
-Una piattaforma web per trovare compagni di viaggio e organizzare avventure insieme. Non solo "cerco compagno di viaggio", ma una vera community viva di viaggiatori.
+**Piattaforma WordPress per trovare compagni di viaggio e organizzare avventure insieme.**
+
+Una community viva di viaggiatori con funzionalità complete: profili utente, sistema di recensioni, chat di gruppo, badge e REST API per app mobile.
+
+🌐 **Sito Live**: [www.compagnidiviaggi.com](https://www.compagnidiviaggi.com)
+
+---
 
 ## 🌟 Caratteristiche Principali
 
 ### Per gli Utenti
-- **Profili Viaggiatori**: Crea il tuo profilo con foto, bio, stili di viaggio, lingue parlate e preferenze
-- **Sistema di Verifica**: Verifica la tua identità per aumentare la fiducia nella community
-- **Badge e Reputazione**: Ottieni badge e costruisci la tua reputazione tramite recensioni
-- **Ricerca Avanzata**: Trova viaggi per destinazione, date, tipo di viaggio e budget
+- **Profili Viaggiatori Completi**: Bio, foto, stili di viaggio, lingue parlate e preferenze
+- **Sistema di Verifica**: Badge di verifica identità per aumentare la fiducia
+- **Badge e Reputazione**: Sistema di gamification con badge ottenibili e punteggio reputazione
+- **Ricerca Avanzata**: Filtra viaggi per destinazione, date, tipo di viaggio e budget
 
-### Bacheca Viaggi
-- **Crea Viaggi**: Pubblica i tuoi piani di viaggio con tutti i dettagli
-- **Unisciti ai Viaggi**: Partecipa a viaggi già pianificati da altri utenti
-- **Filtri Intelligenti**: Cerca per destinazione, periodo, budget, tipo di viaggio
-- **Gestione Partecipanti**: Sistema di richieste e accettazioni per mantenere il controllo
+### Gestione Viaggi
+- **Custom Post Type "Viaggio"**: Sistema completo per creare e gestire viaggi
+- **Tassonomie**: Tipi di viaggio (Avventura, Mare, Montagna, etc.) e destinazioni
+- **Sistema Partecipanti**: Richieste di partecipazione con approvazione organizzatore
+- **Stati Viaggio**: Aperto, Completo, In Corso, Completato, Annullato
 
-### Sistema di Recensioni
-- **Valutazioni a 4 Dimensioni**:
+### Sistema Recensioni
+- **Valutazioni Multi-dimensionali**:
   - Puntualità
   - Spirito di gruppo
   - Rispetto degli altri
   - Capacità di adattamento
-- **Commenti Opzionali**: Aggiungi feedback dettagliati
-- **Reputazione Automatica**: Il punteggio viene calcolato automaticamente
+- **Commenti Opzionali**: Feedback dettagliato
+- **Calcolo Automatico Reputazione**: Aggiornamento real-time del punteggio
 
 ### Chat Integrata
-- **Chat di Gruppo**: Ogni viaggio ha la sua chat dedicata
-- **Messaggi in Tempo Reale**: Sistema di polling per aggiornamenti automatici
-- **Anti-Spam**: Protezione contro messaggi eccessivi
-- **Notifiche**: Badge per messaggi non letti
+- **Chat di Gruppo per Viaggio**: Comunicazione tra partecipanti
+- **AJAX Real-time**: Aggiornamenti automatici
+- **Anti-spam**: Protezione contro messaggi eccessivi
+- **Controllo Accessi**: Solo organizzatore e partecipanti accettati
 
-### Homepage Dinamica
-- **Ricerca Veloce**: Cerca viaggi direttamente dalla homepage
-- **Storie in Evidenza**: Scopri esperienze di altri viaggiatori
-- **Profili Consigliati**: Trova viaggiatori con interessi simili
-- **Viaggi Recenti**: Visualizza le ultime opportunità di viaggio
+### REST API per App Mobile
+- **Autenticazione JWT**: Token sicuri per app mobile
+- **Endpoint Completi**: Viaggi, profili, chat, recensioni, partecipanti
+- **Database Condiviso**: Web e mobile usano lo stesso database WordPress
+- **Documentazione API**: Endpoint pronti per React Native, Flutter, etc.
 
-## 🛠 Tecnologie Utilizzate
+---
 
-- **Backend**: PHP 7.4+ (Pattern MVC)
-- **Database**: MySQL 5.7+
-- **Frontend**: HTML5, CSS3 (Flexbox/Grid), JavaScript (Vanilla)
+## 🛠 Stack Tecnologico
+
+- **CMS**: WordPress 6.0+
+- **Backend**: PHP 7.4+
+- **Database**: MySQL 5.7+ / MariaDB 10.3+
+- **Frontend**: HTML5, CSS3 (CSS Variables), Vanilla JavaScript + jQuery
 - **Design**: Responsive, Mobile-First
-- **Sicurezza**: Password hashing (bcrypt), CSRF protection, SQL injection prevention
+- **REST API**: WordPress REST API + Custom Endpoints
+- **Autenticazione**: JWT per app mobile
+- **Sicurezza**: Password hashing, CSRF protection, SQL injection prevention
+
+---
 
 ## 📋 Requisiti di Sistema
 
-- PHP 7.4 o superiore
-- MySQL 5.7 o superiore
-- Apache 2.4+ con mod_rewrite abilitato
-- PHP Extensions richieste:
-  - PDO
-  - pdo_mysql
-  - mbstring
-  - fileinfo
-  - gd (per la manipolazione immagini)
+### Server Requirements
+- **PHP**: 7.4 o superiore
+- **Database**: MySQL 5.7+ o MariaDB 10.3+
+- **Web Server**: Apache 2.4+ o Nginx 1.18+
+- **HTTPS**: Certificato SSL (Let's Encrypt consigliato)
 
-## 🚀 Installazione
+### PHP Extensions Richieste
+- `pdo`
+- `pdo_mysql`
+- `mysqli`
+- `mbstring`
+- `json`
+- `curl`
+- `gd` o `imagick` (per manipolazione immagini)
+- `xml`
+- `zip`
 
-### 1. Clona il Repository
+### Raccomandazioni
+- **PHP Memory Limit**: 256M o superiore
+- **Max Upload Size**: 64M o superiore
+- **Max Execution Time**: 300 secondi
+
+---
+
+## 🚀 Installazione su CloudPanel
+
+### 1. Preparazione Database
+
+Accedi a CloudPanel e crea un nuovo database MySQL:
+
+```
+Nome Database: compagni_di_viaggi
+Charset: utf8mb4
+Collation: utf8mb4_unicode_ci
+```
+
+Annota le credenziali del database (host, nome, username, password).
+
+### 2. Scarica WordPress
+
+Sul tuo server CloudPanel:
 
 ```bash
-git clone https://github.com/max74vr/compagni-di-viaggi.git
-cd compagni-di-viaggi
+cd /home/cloudpanel/htdocs/www.compagnidiviaggi.com
+wget https://wordpress.org/latest.tar.gz
+tar -xzf latest.tar.gz
+mv wordpress/* .
+rmdir wordpress
+rm latest.tar.gz
 ```
 
-### 2. Configura il Database
-
-Crea un database MySQL:
-
-```sql
-CREATE DATABASE compagni_di_viaggi CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-Importa lo schema del database:
+### 3. Clona il Repository
 
 ```bash
-mysql -u root -p compagni_di_viaggi < database/schema.sql
+cd /home/cloudpanel/htdocs/www.compagnidiviaggi.com
+
+# Rimuovi i file wp-content predefiniti
+rm -rf wp-content/plugins/akismet wp-content/plugins/hello.php
+rm -rf wp-content/themes/twenty*
+
+# Clona il repository
+git clone https://github.com/max74vr/compagni-di-viaggi.git temp
+mv temp/wp-content/* wp-content/
+rm -rf temp
 ```
 
-### 3. Configurazione
+### 4. Configura WordPress
 
-Copia e modifica il file di configurazione:
+Crea il file `wp-config.php`:
 
 ```bash
-# Modifica config/database.php con le tue credenziali MySQL
+cp wp-config-sample.php wp-config.php
+nano wp-config.php
 ```
 
-Oppure usa le variabili d'ambiente:
+Modifica le credenziali del database:
+
+```php
+define( 'DB_NAME', 'compagni_di_viaggi' );
+define( 'DB_USER', 'tuo_utente_db' );
+define( 'DB_PASSWORD', 'tua_password_db' );
+define( 'DB_HOST', 'localhost' );
+define( 'DB_CHARSET', 'utf8mb4' );
+define( 'DB_COLLATE', 'utf8mb4_unicode_ci' );
+```
+
+Genera le chiavi di sicurezza da [https://api.wordpress.org/secret-key/1.1/salt/](https://api.wordpress.org/secret-key/1.1/salt/) e sostituiscile nel file.
+
+Aggiungi queste righe prima di `/* That's all, stop editing! */`:
+
+```php
+// Abilita debug solo in sviluppo
+define( 'WP_DEBUG', false );
+define( 'WP_DEBUG_LOG', true );
+define( 'WP_DEBUG_DISPLAY', false );
+
+// URL del sito
+define( 'WP_HOME', 'https://www.compagnidiviaggi.com' );
+define( 'WP_SITEURL', 'https://www.compagnidiviaggi.com' );
+
+// Limiti di memoria
+define( 'WP_MEMORY_LIMIT', '256M' );
+define( 'WP_MAX_MEMORY_LIMIT', '512M' );
+```
+
+### 5. Imposta i Permessi
 
 ```bash
-export DB_HOST=localhost
-export DB_NAME=compagni_di_viaggi
-export DB_USER=your_username
-export DB_PASS=your_password
-export SITE_URL=http://localhost
+cd /home/cloudpanel/htdocs/www.compagnidiviaggi.com
+
+# Proprietario corretto
+chown -R clp:clp .
+
+# Permessi directory
+find . -type d -exec chmod 755 {} \;
+
+# Permessi file
+find . -type f -exec chmod 644 {} \;
+
+# wp-config.php più restrittivo
+chmod 600 wp-config.php
+
+# Directory scrivibili
+chmod -R 775 wp-content/uploads
 ```
 
-### 4. Permessi
+### 6. Installa WordPress
 
-Assicurati che la cartella uploads sia scrivibile:
+Visita `https://www.compagnidiviaggi.com/wp-admin/install.php` e completa l'installazione guidata:
 
-```bash
-chmod -R 755 uploads/
-chown -R www-data:www-data uploads/
+1. Scegli la lingua (Italiano)
+2. Inserisci:
+   - Titolo del sito: **Compagni di Viaggi**
+   - Username amministratore
+   - Password sicura
+   - Email amministratore
+3. Clicca su "Installa WordPress"
+
+### 7. Attiva Plugin e Tema
+
+Dopo l'installazione, accedi alla dashboard WordPress:
+
+1. **Attiva il Plugin**:
+   - Vai su `Plugin` → `Plugin installati`
+   - Trova "Compagni di Viaggi"
+   - Clicca su "Attiva"
+
+2. **Attiva il Tema**:
+   - Vai su `Aspetto` → `Temi`
+   - Trova "Compagni di Viaggi"
+   - Clicca su "Attiva"
+
+3. **Verifica Installazione**:
+   - Vai su `Compagni di Viaggi` nel menu admin
+   - Dovresti vedere la dashboard con le statistiche
+
+### 8. Configurazione Iniziale
+
+#### Impostazioni Plugin
+Vai su `Compagni di Viaggi` → `Impostazioni`:
+- Max partecipanti default: `10`
+- Età minima: `18`
+- Abilita chat: ✓
+- Abilita recensioni: ✓
+
+#### Permalink
+Vai su `Impostazioni` → `Permalink`:
+- Seleziona "Nome articolo" per URL friendly
+- Clicca "Salva modifiche"
+
+#### Menu di Navigazione
+Vai su `Aspetto` → `Menu`:
+1. Crea un nuovo menu "Menu Principale"
+2. Aggiungi voci:
+   - Home
+   - Viaggi
+   - (opzionale) Dashboard, Profilo, etc.
+3. Assegna al menu "Menu Principale"
+4. Salva
+
+---
+
+## 📱 Configurazione REST API per App Mobile
+
+### Endpoint Disponibili
+
+Base URL: `https://www.compagnidiviaggi.com/wp-json/cdv/v1/`
+
+#### Autenticazione
+
+**Registrazione**
 ```
-
-### 5. Configurazione Apache
-
-Il file `.htaccess` è già presente nella cartella `public/`. Assicurati che `mod_rewrite` sia abilitato:
-
-```bash
-sudo a2enmod rewrite
-sudo systemctl restart apache2
-```
-
-Configura il VirtualHost per puntare alla cartella `public/`:
-
-```apache
-<VirtualHost *:80>
-    ServerName compagni-di-viaggi.local
-    DocumentRoot /path/to/compagni-di-viaggi/public
-
-    <Directory /path/to/compagni-di-viaggi/public>
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-### 6. Avvia l'Applicazione
-
-Apri il browser e visita:
-```
-http://localhost/compagni-di-viaggi/public/
-```
-
-Oppure con il tuo VirtualHost:
-```
-http://compagni-di-viaggi.local/
-```
-
-## 📁 Struttura del Progetto
-
-```
-compagni-di-viaggi/
-├── config/                 # Configurazione
-│   ├── config.php         # Configurazione generale
-│   └── database.php       # Connessione database
-├── database/              # Database
-│   └── schema.sql         # Schema SQL
-├── includes/              # File comuni
-│   └── helpers.php        # Funzioni helper
-├── public/                # Documenti pubblici (Document Root)
-│   ├── css/              # Fogli di stile
-│   │   └── style.css
-│   ├── js/               # JavaScript
-│   │   └── main.js
-│   ├── index.php         # Homepage
-│   ├── login.php         # Login
-│   ├── register.php      # Registrazione
-│   ├── dashboard.php     # Dashboard utente
-│   ├── travels.php       # Lista viaggi
-│   ├── travel.php        # Dettaglio viaggio
-│   ├── profile.php       # Profilo utente
-│   ├── chats.php         # Lista chat
-│   └── .htaccess         # Configurazione Apache
-├── src/                   # Codice sorgente
-│   ├── Controllers/       # Controller MVC
-│   │   ├── AuthController.php
-│   │   ├── TravelController.php
-│   │   ├── ProfileController.php
-│   │   ├── ReviewController.php
-│   │   └── ChatController.php
-│   ├── Models/            # Modelli database
-│   │   ├── User.php
-│   │   ├── TravelPost.php
-│   │   ├── Review.php
-│   │   └── Chat.php
-│   └── Views/             # Template HTML
-│       ├── layouts/
-│       │   ├── header.php
-│       │   └── footer.php
-│       └── auth/
-│           ├── login.php
-│           └── register.php
-├── uploads/               # File caricati
-│   ├── profiles/         # Foto profilo
-│   ├── travels/          # Foto viaggi
-│   └── verifications/    # Documenti verifica
-└── README.md             # Questo file
-```
-
-## 🎯 Come Usare l'Applicazione
-
-### Registrazione e Login
-
-1. Vai su `/register.php`
-2. Compila il form di registrazione (minimo 18 anni)
-3. Riceverai automaticamente il badge "Early Adopter"
-4. Completa il tuo profilo aggiungendo:
-   - Bio personale
-   - Stili di viaggio preferiti
-   - Lingue parlate
-   - Preferenze di viaggio
-
-### Creare un Viaggio
-
-1. Accedi al tuo account
-2. Clicca su "Crea viaggio"
-3. Compila tutti i dettagli:
-   - Destinazione e paese
-   - Date (inizio e fine)
-   - Tipo di viaggio (avventura, mare, città, ecc.)
-   - Budget stimato
-   - Numero massimo di partecipanti
-   - Descrizione dettagliata
-4. Carica una foto di copertina (opzionale)
-5. Pubblica il viaggio
-
-### Unirsi a un Viaggio
-
-1. Naviga su `/travels.php`
-2. Usa i filtri per trovare il viaggio ideale
-3. Clicca su "Vedi dettagli"
-4. Leggi la descrizione e visualizza il profilo dell'organizzatore
-5. Clicca su "Richiedi di partecipare"
-6. Scrivi un messaggio di presentazione
-7. Attendi l'approvazione dell'organizzatore
-
-### Chat di Gruppo
-
-1. Una volta accettato in un viaggio, accedi alla chat
-2. Comunica con gli altri partecipanti
-3. Organizza i dettagli del viaggio
-4. Il sistema previene lo spam automaticamente
-
-### Lasciare Recensioni
-
-1. Al termine del viaggio, l'organizzatore cambia lo stato in "Completato"
-2. Vai su "Recensioni da fare" nel menu
-3. Valuta ogni partecipante su 4 criteri (1-5 stelle):
-   - Puntualità
-   - Spirito di gruppo
-   - Rispetto degli altri
-   - Capacità di adattamento
-4. Aggiungi un commento (opzionale)
-5. La reputazione viene aggiornata automaticamente
-
-## 🔒 Sicurezza
-
-- **Password**: Hash con bcrypt
-- **SQL Injection**: Prepared statements PDO
-- **XSS**: Sanitizzazione input e output
-- **CSRF**: Token di protezione per form critici
-- **File Upload**: Validazione tipo e dimensione
-- **Session**: Gestione sicura delle sessioni
-- **Headers**: Security headers configurati
-
-## 🎨 Personalizzazione
-
-### Colori
-
-Modifica le variabili CSS in `public/css/style.css`:
-
-```css
-:root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --success-color: #48bb78;
-    --error-color: #f56565;
+POST /auth/register
+Body: {
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "display_name": "string"
+}
+Response: {
+  "token": "jwt_token",
+  "user": { ... }
 }
 ```
 
-### Upload Limits
-
-Modifica in `config/config.php`:
-
-```php
-define('ITEMS_PER_PAGE', 12);
-define('MAX_MESSAGE_LENGTH', 2000);
-define('SPAM_THRESHOLD', 10);
+**Login**
 ```
+POST /auth/login
+Body: {
+  "username": "string",
+  "password": "string"
+}
+Response: {
+  "token": "jwt_token",
+  "user": { ... }
+}
+```
+
+**Validazione Token**
+```
+POST /auth/validate
+Body: {
+  "token": "jwt_token"
+}
+```
+
+#### Viaggi
+
+**Lista Viaggi**
+```
+GET /travels?per_page=12&page=1&tipo_viaggio=avventura&search=roma
+```
+
+**Dettaglio Viaggio**
+```
+GET /travels/{id}
+```
+
+**Richiedi Partecipazione**
+```
+POST /travels/{id}/join
+Headers: Authorization: Bearer {token}
+Body: {
+  "message": "Presentazione"
+}
+```
+
+**Partecipanti**
+```
+GET /travels/{id}/participants
+```
+
+#### Chat
+
+**Messaggi Chat**
+```
+GET /chats/{chat_group_id}/messages
+POST /chats/{chat_group_id}/messages
+Headers: Authorization: Bearer {token}
+Body: {
+  "message": "Testo messaggio"
+}
+```
+
+#### Profili
+
+**Profilo Utente**
+```
+GET /users/{id}/profile
+```
+
+**Badge Utente**
+```
+GET /users/{id}/badges
+```
+
+**Recensioni Utente**
+```
+GET /users/{id}/reviews
+```
+
+#### Dashboard
+
+**I Miei Viaggi**
+```
+GET /dashboard/my-travels
+Headers: Authorization: Bearer {token}
+Response: {
+  "organized": [...],
+  "participating": [...]
+}
+```
+
+### Autenticazione JWT nell'App
+
+**React Native Example:**
+```javascript
+// Login
+const response = await fetch('https://www.compagnidiviaggi.com/wp-json/cdv/v1/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ username: 'user', password: 'pass' })
+});
+const { token } = await response.json();
+
+// Store token
+await AsyncStorage.setItem('jwt_token', token);
+
+// Use token for authenticated requests
+const travels = await fetch('https://www.compagnidiviaggi.com/wp-json/cdv/v1/travels/123/join', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ message: 'Ciao!' })
+});
+```
+
+---
+
+## 🎨 Personalizzazione
+
+### Colori del Tema
+
+Modifica `/wp-content/themes/compagni-viaggi/style.css`:
+
+```css
+:root {
+    --primary-color: #667eea;      /* Colore primario */
+    --secondary-color: #764ba2;    /* Colore secondario */
+    --success-color: #48bb78;      /* Verde successo */
+    --error-color: #f56565;        /* Rosso errore */
+    --warning-color: #ed8936;      /* Arancione warning */
+}
+```
+
+### Logo
+
+1. Vai su `Aspetto` → `Personalizza`
+2. Seleziona "Identità del sito"
+3. Carica il tuo logo
+4. Salva
+
+### Widget Footer
+
+Vai su `Aspetto` → `Widget`:
+- Footer 1: Aggiungi widget per prima colonna
+- Footer 2: Aggiungi widget per seconda colonna
+- Footer 3: Aggiungi widget per terza colonna
+
+---
+
+## 🔒 Sicurezza
+
+### Implementazioni di Sicurezza
+
+- ✅ Password hashing con bcrypt (WordPress default)
+- ✅ Prepared statements PDO per prevenire SQL injection
+- ✅ Nonce validation per CSRF protection
+- ✅ Sanitizzazione input e output
+- ✅ Validazione file upload
+- ✅ JWT sicuri per autenticazione API
+- ✅ HTTPS obbligatorio per produzione
+
+### Raccomandazioni Aggiuntive
+
+1. **Installa un plugin di sicurezza**:
+   - Wordfence Security
+   - iThemes Security
+   - Sucuri Security
+
+2. **Backup Automatici**:
+   - UpdraftPlus
+   - BackWPup
+   - CloudPanel Backup (se disponibile)
+
+3. **Limita tentativi di login**:
+   - Limit Login Attempts Reloaded
+
+4. **Firewall**:
+   - Cloudflare (consigliato)
+   - ModSecurity su server
+
+---
 
 ## 📊 Database Schema
 
-Il database è composto da 13 tabelle principali:
+Il plugin crea 5 tabelle custom:
 
-- **users**: Profili utenti
-- **user_preferences**: Preferenze di viaggio
-- **user_languages**: Lingue parlate
-- **user_badges**: Badge ottenuti
-- **travel_posts**: Post dei viaggi
-- **travel_participants**: Partecipanti ai viaggi
-- **reviews**: Recensioni reciproche
-- **chat_groups**: Gruppi chat
-- **chat_group_members**: Membri dei gruppi
-- **chat_messages**: Messaggi
-- **featured_stories**: Storie in evidenza
+- **wp_cdv_travel_participants**: Partecipanti ai viaggi
+- **wp_cdv_chat_groups**: Gruppi chat
+- **wp_cdv_chat_messages**: Messaggi chat
+- **wp_cdv_reviews**: Recensioni utenti
+- **wp_cdv_user_badges**: Badge ottenuti
 
-Vedi `database/schema.sql` per i dettagli completi.
+Usa anche tabelle WordPress standard:
+- **wp_users**: Utenti
+- **wp_usermeta**: Metadati utenti (profili estesi)
+- **wp_posts**: Viaggi (custom post type)
+- **wp_postmeta**: Metadati viaggi
+- **wp_terms**: Tassonomie (tipi viaggio, destinazioni)
+
+---
 
 ## 🐛 Troubleshooting
 
-### Errore di connessione al database
+### Errore "Headers already sent"
+Controlla che `wp-config.php` non abbia spazi prima di `<?php`
 
-Verifica le credenziali in `config/database.php` o le variabili d'ambiente.
+### Errore 404 su pagine viaggi
+Vai su `Impostazioni` → `Permalink` e clicca "Salva modifiche"
 
-### Errore 404 sulle pagine
-
-Assicurati che `mod_rewrite` sia abilitato e che `.htaccess` sia presente in `public/`.
+### Plugin non si attiva
+Verifica i requisiti PHP e controlla i log:
+```bash
+tail -f /var/log/php-fpm/error.log
+```
 
 ### Upload falliti
-
-Verifica i permessi della cartella `uploads/`:
 ```bash
-chmod -R 755 uploads/
+chmod -R 775 /home/cloudpanel/htdocs/www.compagnidiviaggi.com/wp-content/uploads
 ```
 
-### Sessione non funziona
-
-Verifica che PHP possa scrivere nella directory delle sessioni:
+### Database connection error
+Verifica credenziali in `wp-config.php` e che il database esista:
 ```bash
-sudo chmod 1733 /var/lib/php/sessions
+mysql -u root -p
+SHOW DATABASES;
 ```
+
+### REST API non funziona
+Verifica che i permalink siano configurati e che `.htaccess` esista:
+```bash
+ls -la /home/cloudpanel/htdocs/www.compagnidiviaggi.com/.htaccess
+```
+
+---
+
+## 📝 To-Do / Roadmap
+
+- [ ] Sistema di notifiche email
+- [ ] App mobile (React Native / Flutter)
+- [ ] Integrazione pagamenti per viaggi a pagamento
+- [ ] Gallery foto per viaggi
+- [ ] Blog/storie di viaggio
+- [ ] Mappa interattiva con destinazioni
+- [ ] Social login (Google, Facebook)
+- [ ] Sistema referral/inviti
+- [ ] Admin panel moderazione avanzata
+- [ ] Messaggi diretti (DM) tra utenti
+- [ ] Calendario eventi/viaggi
+
+---
 
 ## 🤝 Contribuire
 
-Questo è un progetto di esempio. Per contribuire:
+Questo è un progetto open source. Per contribuire:
 
 1. Fork il repository
-2. Crea un branch per la tua feature (`git checkout -b feature/AmazingFeature`)
+2. Crea un branch (`git checkout -b feature/AmazingFeature`)
 3. Commit le modifiche (`git commit -m 'Add some AmazingFeature'`)
 4. Push al branch (`git push origin feature/AmazingFeature`)
 5. Apri una Pull Request
 
-## 📝 To-Do / Funzionalità Future
-
-- [ ] Sistema di notifiche push
-- [ ] App mobile (React Native / Flutter)
-- [ ] Integrazione con API di prenotazione voli/hotel
-- [ ] Sistema di pagamento per viaggi organizzati
-- [ ] Foto gallery per ogni viaggio
-- [ ] Blog/storie di viaggio
-- [ ] Mappa interattiva delle destinazioni
-- [ ] Integrazione social login (Google, Facebook)
-- [ ] Sistema di referral/inviti
-- [ ] Admin panel per moderazione
+---
 
 ## 📄 Licenza
 
-Questo progetto è open source. Sentiti libero di usarlo, modificarlo e distribuirlo.
+GNU General Public License v2 or later
 
-## 👥 Autori
+---
 
-- **Max74vr** - *Initial work* - [GitHub](https://github.com/max74vr)
+## 👥 Autore
 
-## 📧 Supporto
+**Max74vr**
+- GitHub: [@max74vr](https://github.com/max74vr)
+- Website: [www.compagnidiviaggi.com](https://www.compagnidiviaggi.com)
 
-Per domande o supporto, apri un issue su GitHub.
+---
 
-## 🙏 Ringraziamenti
+## 🙏 Supporto
 
-- Grazie alla community dei viaggiatori per l'ispirazione
-- Font: Google Fonts (Poppins)
-- Icone: Emoji Unicode
+Per domande o supporto:
+- Apri un [Issue su GitHub](https://github.com/max74vr/compagni-di-viaggi/issues)
+- Email: (la tua email)
 
 ---
 

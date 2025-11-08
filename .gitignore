@@ -1,55 +1,84 @@
-# Compagni di Viaggi - Git Ignore
+# Compagni di Viaggi - WordPress Version
 
-# Environment files
-.env
-.env.local
-.env.production
+# WordPress Core Files - NON VERSIONARE
+# Solo plugin e tema custom sono versionati
 
-# Uploaded files
-uploads/profiles/*
-uploads/travels/*
-uploads/verifications/*
-!uploads/profiles/.gitkeep
-!uploads/travels/.gitkeep
-!uploads/verifications/.gitkeep
+# Configurazione WordPress
+wp-config.php
+.htaccess
 
-# IDE files
+# WordPress Core (scaricabile)
+/index.php
+/license.txt
+/readme.html
+/wp-activate.php
+/wp-blog-header.php
+/wp-comments-post.php
+/wp-config-sample.php
+/wp-cron.php
+/wp-links-opml.php
+/wp-load.php
+/wp-login.php
+/wp-mail.php
+/wp-settings.php
+/wp-signup.php
+/wp-trackback.php
+/xmlrpc.php
+/wp-admin/
+/wp-includes/
+
+# Plugin e Temi di terze parti
+wp-content/plugins/*
+!wp-content/plugins/compagni-di-viaggi/
+
+wp-content/themes/*
+!wp-content/themes/compagni-viaggi/
+
+# Upload, cache e temporary WordPress
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/backups/
+wp-content/upgrade/
+wp-content/upgrade-temp-backup/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# Database e backup
+*.sql
+*.sql.gz
+*.bak
+*.backup
+
+# Logs
+*.log
+debug.log
+error_log
+
+# IDE e Editor
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+
+# OS files
 .DS_Store
+Thumbs.db
 
-# Logs
-*.log
-logs/
-error_log
+# Node e Composer
+node_modules/
+vendor/
+package-lock.json
+composer.lock
 
-# Temporary files
+# Temporary
 tmp/
 temp/
 cache/
-
-# Composer (if used)
-vendor/
-composer.lock
-
-# Node modules (if using any build tools)
-node_modules/
-package-lock.json
-
-# OS files
-Thumbs.db
-.DS_Store
-
-# Backup files
-*.bak
-*.backup
-*.sql.gz
-
-# Session files
-sessions/
-
-# Generated files
+*.tmp
 *.cache
+
+# Archive
+*.tar.gz
+*.zip
