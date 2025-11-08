@@ -809,6 +809,9 @@ jQuery(document).ready(function($) {
             formData.append('nonce', cdvAjax.nonce);
             formData.append('profile_image', file);
 
+            console.log('Step 3 - Uploading image:', file.name, 'Size:', file.size, 'Type:', file.type);
+            console.log('Step 3 - Nonce:', cdvAjax.nonce);
+
             $('#registration-step-3').addClass('loading');
 
             $.ajax({
@@ -818,14 +821,33 @@ jQuery(document).ready(function($) {
                 processData: false,
                 contentType: false,
                 success: function(response) {
+                    console.log('Step 3 - Upload response:', response);
                     if (response.success) {
+                        console.log('Step 3 - Image uploaded successfully');
                         nextStep(); // Go to step 4
                     } else {
                         alert(response.data.message || 'Errore durante l\'upload');
                     }
                 },
-                error: function() {
-                    alert('Errore di connessione');
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Step 3 - Upload error:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText
+                    });
+
+                    let errorMsg = 'Errore di connessione';
+                    if (jqXHR.status === 500) {
+                        errorMsg = 'Errore del server (500). Controlla i log PHP.';
+                    } else if (jqXHR.status === 403) {
+                        errorMsg = 'Accesso negato (403). Problema con il nonce.';
+                    } else if (jqXHR.status === 413) {
+                        errorMsg = 'File troppo grande (413). Riduci le dimensioni dell\'immagine.';
+                    } else if (jqXHR.responseText) {
+                        errorMsg = 'Errore: ' + jqXHR.responseText.substring(0, 100);
+                    }
+
+                    alert(errorMsg);
                 },
                 complete: function() {
                     $('#registration-step-3').removeClass('loading');
@@ -833,6 +855,7 @@ jQuery(document).ready(function($) {
             });
         } else {
             // Skip photo and go to step 4
+            console.log('Step 3 - No image selected, skipping');
             nextStep();
         }
     });
