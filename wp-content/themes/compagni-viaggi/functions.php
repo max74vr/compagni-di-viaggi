@@ -49,6 +49,15 @@ function cdv_theme_setup() {
 
     // Add support for responsive embeds
     add_theme_support('responsive-embeds');
+
+    // Add support for custom logo
+    add_theme_support('custom-logo', array(
+        'height'      => 100,
+        'width'       => 400,
+        'flex-height' => true,
+        'flex-width'  => true,
+        'header-text' => array('site-name', 'site-description'),
+    ));
 }
 add_action('after_setup_theme', 'cdv_theme_setup');
 
@@ -347,3 +356,213 @@ function cdv_reading_time($post_id = null) {
 
     return max($reading_time, 1); // Minimum 1 minute
 }
+
+/**
+ * Theme Customizer
+ */
+function cdv_customize_register($wp_customize) {
+    // Hero Section
+    $wp_customize->add_section('cdv_hero_section', array(
+        'title'    => __('Hero / Banner Home', 'compagni-viaggi'),
+        'priority' => 30,
+    ));
+
+    // Hero Background Image
+    $wp_customize->add_setting('cdv_hero_image', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Media_Control($wp_customize, 'cdv_hero_image', array(
+        'label'       => __('Immagine Hero', 'compagni-viaggi'),
+        'description' => __('Carica l\'immagine di sfondo per la hero section della home', 'compagni-viaggi'),
+        'section'     => 'cdv_hero_section',
+        'mime_type'   => 'image',
+    )));
+
+    // Hero Overlay Color
+    $wp_customize->add_setting('cdv_hero_overlay_color', array(
+        'default'           => '#000000',
+        'sanitize_callback' => 'sanitize_hex_color',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'cdv_hero_overlay_color', array(
+        'label'   => __('Colore Overlay', 'compagni-viaggi'),
+        'section' => 'cdv_hero_section',
+    )));
+
+    // Hero Overlay Opacity
+    $wp_customize->add_setting('cdv_hero_overlay_opacity', array(
+        'default'           => '0.5',
+        'sanitize_callback' => 'cdv_sanitize_float',
+    ));
+
+    $wp_customize->add_control('cdv_hero_overlay_opacity', array(
+        'type'        => 'number',
+        'label'       => __('Opacità Overlay (0-1)', 'compagni-viaggi'),
+        'description' => __('0 = trasparente, 1 = opaco', 'compagni-viaggi'),
+        'section'     => 'cdv_hero_section',
+        'input_attrs' => array(
+            'min'  => '0',
+            'max'  => '1',
+            'step' => '0.1',
+        ),
+    ));
+
+    // Hero Title
+    $wp_customize->add_setting('cdv_hero_title', array(
+        'default'           => 'Trova i tuoi Compagni di Viaggio',
+        'sanitize_callback' => 'sanitize_text_field',
+    ));
+
+    $wp_customize->add_control('cdv_hero_title', array(
+        'type'    => 'text',
+        'label'   => __('Titolo Hero', 'compagni-viaggi'),
+        'section' => 'cdv_hero_section',
+    ));
+
+    // Hero Subtitle
+    $wp_customize->add_setting('cdv_hero_subtitle', array(
+        'default'           => 'Esplora il mondo con persone che condividono la tua passione per l\'avventura',
+        'sanitize_callback' => 'sanitize_textarea_field',
+    ));
+
+    $wp_customize->add_control('cdv_hero_subtitle', array(
+        'type'    => 'textarea',
+        'label'   => __('Sottotitolo Hero', 'compagni-viaggi'),
+        'section' => 'cdv_hero_section',
+    ));
+}
+add_action('customize_register', 'cdv_customize_register');
+
+/**
+ * Sanitize float value
+ */
+function cdv_sanitize_float($value) {
+    return floatval($value);
+}
+
+/**
+ * Output custom CSS from Customizer
+ */
+function cdv_customizer_css() {
+    $hero_overlay_color = get_theme_mod('cdv_hero_overlay_color', '#000000');
+    $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
+
+    ?>
+    <style type="text/css">
+        .site-header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .site-header .site-logo a {
+            color: var(--primary-color);
+        }
+
+        .site-header .main-nav a {
+            color: #2c3e50;
+        }
+
+        .site-header .main-nav a:hover {
+            color: var(--primary-color);
+        }
+
+        .site-header .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .site-header .btn-secondary {
+            background: transparent;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+
+        .site-header .btn-secondary:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        <?php if (get_theme_mod('cdv_hero_image')) : ?>
+        .hero-section::before {
+            background-color: <?php echo esc_attr($hero_overlay_color); ?>;
+            opacity: <?php echo esc_attr($hero_overlay_opacity); ?>;
+        }
+        <?php endif; ?>
+    </style>
+    <?php
+}
+add_action('wp_head', 'cdv_customizer_css');
+
+/**
+ * Add Custom CSS meta box for pages
+ */
+function cdv_add_custom_css_meta_box() {
+    add_meta_box(
+        'cdv_custom_css',
+        'CSS Personalizzato',
+        'cdv_custom_css_meta_box_callback',
+        array('page', 'post', 'viaggio'),
+        'normal',
+        'low'
+    );
+}
+add_action('add_meta_boxes', 'cdv_add_custom_css_meta_box');
+
+/**
+ * Custom CSS meta box callback
+ */
+function cdv_custom_css_meta_box_callback($post) {
+    wp_nonce_field('cdv_custom_css_nonce', 'cdv_custom_css_nonce_field');
+    $custom_css = get_post_meta($post->ID, '_cdv_custom_css', true);
+    ?>
+    <p>
+        <label for="cdv_custom_css"><strong>CSS per questa pagina:</strong></label>
+        <small style="display: block; margin-top: 5px; color: #666;">
+            Non è necessario aggiungere i tag &lt;style&gt;. Il CSS verrà applicato solo a questa pagina.
+        </small>
+    </p>
+    <textarea id="cdv_custom_css" name="cdv_custom_css" rows="10" style="width: 100%; font-family: monospace; font-size: 13px;"><?php echo esc_textarea($custom_css); ?></textarea>
+    <?php
+}
+
+/**
+ * Save Custom CSS meta box
+ */
+function cdv_save_custom_css_meta_box($post_id) {
+    // Check nonce
+    if (!isset($_POST['cdv_custom_css_nonce_field']) ||
+        !wp_verify_nonce($_POST['cdv_custom_css_nonce_field'], 'cdv_custom_css_nonce')) {
+        return;
+    }
+
+    // Check autosave
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+        return;
+    }
+
+    // Check permissions
+    if (!current_user_can('edit_post', $post_id)) {
+        return;
+    }
+
+    // Save CSS
+    if (isset($_POST['cdv_custom_css'])) {
+        update_post_meta($post_id, '_cdv_custom_css', wp_kses_post($_POST['cdv_custom_css']));
+    }
+}
+add_action('save_post', 'cdv_save_custom_css_meta_box');
+
+/**
+ * Output custom CSS for current page
+ */
+function cdv_output_page_custom_css() {
+    if (is_singular()) {
+        $custom_css = get_post_meta(get_the_ID(), '_cdv_custom_css', true);
+        if (!empty($custom_css)) {
+            echo '<style type="text/css" id="page-custom-css">' . wp_kses_post($custom_css) . '</style>';
+        }
+    }
+}
+add_action('wp_head', 'cdv_output_page_custom_css', 100);

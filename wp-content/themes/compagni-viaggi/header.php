@@ -14,8 +14,14 @@
     <div class="container">
         <div class="site-logo">
             <a href="<?php echo esc_url(home_url('/')); ?>">
-                <span>✈️</span>
-                <span><?php bloginfo('name'); ?></span>
+                <?php
+                if (has_custom_logo()) {
+                    the_custom_logo();
+                } else {
+                    echo '<span class="logo-icon">✈️</span>';
+                    echo '<span class="site-name">' . get_bloginfo('name') . '</span>';
+                }
+                ?>
             </a>
         </div>
 
