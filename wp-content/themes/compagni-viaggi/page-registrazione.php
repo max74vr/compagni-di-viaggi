@@ -720,21 +720,45 @@ jQuery(document).ready(function($) {
         formData.push({ name: 'action', value: 'cdv_register_step2' });
         formData.push({ name: 'nonce', value: cdvAjax.nonce });
 
+        console.log('Step 2 - Sending data:', formData);
+        console.log('AJAX URL:', cdvAjax.ajaxurl);
+
         $(this).addClass('loading');
 
         $.ajax({
             url: cdvAjax.ajaxurl,
             type: 'POST',
             data: $.param(formData),
+            dataType: 'json',
             success: function(response) {
+                console.log('Step 2 - Success response:', response);
                 if (response.success) {
                     nextStep();
                 } else {
                     alert(response.data.message || 'Errore durante il salvataggio');
                 }
             },
-            error: function() {
-                alert('Errore di connessione');
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Step 2 - Error details:', {
+                    status: jqXHR.status,
+                    statusText: jqXHR.statusText,
+                    textStatus: textStatus,
+                    errorThrown: errorThrown,
+                    responseText: jqXHR.responseText
+                });
+
+                let errorMsg = 'Errore di connessione';
+                if (jqXHR.status === 500) {
+                    errorMsg = 'Errore del server (500). Controlla i log PHP.';
+                } else if (jqXHR.status === 403) {
+                    errorMsg = 'Accesso negato (403). Problema con il nonce.';
+                } else if (jqXHR.status === 404) {
+                    errorMsg = 'Endpoint non trovato (404).';
+                } else if (jqXHR.responseText) {
+                    errorMsg = 'Errore: ' + jqXHR.responseText.substring(0, 100);
+                }
+
+                alert(errorMsg);
             },
             complete: function() {
                 $('#registration-step-2').removeClass('loading');
