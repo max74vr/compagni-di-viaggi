@@ -33,6 +33,32 @@ class CDV_Admin {
             6
         );
 
+        // Pending users submenu
+        $pending_users = CDV_User_Roles::get_pending_users_count();
+        $users_badge = $pending_users > 0 ? ' <span class="awaiting-mod">' . $pending_users . '</span>' : '';
+
+        add_submenu_page(
+            'cdv-dashboard',
+            'Utenti in Attesa',
+            'Utenti in Attesa' . $users_badge,
+            'approve_users',
+            'cdv-pending-users',
+            array(__CLASS__, 'pending_users_page')
+        );
+
+        // Pending travels submenu
+        $pending_travels = CDV_Travel_Moderation::get_pending_travels_count();
+        $travels_badge = $pending_travels > 0 ? ' <span class="awaiting-mod">' . $pending_travels . '</span>' : '';
+
+        add_submenu_page(
+            'cdv-dashboard',
+            'Viaggi in Attesa',
+            'Viaggi in Attesa' . $travels_badge,
+            'approve_viaggi',
+            'cdv-pending-travels',
+            array(__CLASS__, 'pending_travels_page')
+        );
+
         add_submenu_page(
             'cdv-dashboard',
             'Impostazioni',
@@ -328,6 +354,217 @@ class CDV_Admin {
             if (isset($_POST[$field])) {
                 update_post_meta($post_id, $field, sanitize_text_field($_POST[$field]));
             }
+        }
+    }
+
+    /**
+     * Pending users page
+     */
+    public static function pending_users_page() {
+        $pending_users = CDV_User_Roles::get_pending_users();
+
+        ?>
+        <div class="wrap">
+            <h1>Utenti in Attesa di Approvazione</h1>
+
+            <?php if (isset($_GET['approved'])) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>Utente approvato con successo!</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['rejected'])) : ?>
+                <div class="notice notice-info is-dismissible">
+                    <p>Utente rifiutato.</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($pending_users)) : ?>
+                <p>Nessun utente in attesa di approvazione.</p>
+            <?php else : ?>
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Utente</th>
+                            <th>Email</th>
+                            <th>Registrato il</th>
+                            <th>Profilo</th>
+                            <th>Completamento</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pending_users as $user) :
+                            $profile_completion = CDV_User_Roles::get_profile_completion($user->ID);
+                            $registration_date = get_user_meta($user->ID, 'cdv_registration_date', true);
+                            $bio = get_user_meta($user->ID, 'cdv_bio', true);
+                            $city = get_user_meta($user->ID, 'cdv_city', true);
+                            ?>
+                            <tr>
+                                <td>
+                                    <?php echo get_avatar($user->ID, 50); ?>
+                                    <strong><?php echo esc_html($user->display_name); ?></strong><br>
+                                    <small>@<?php echo esc_html($user->user_login); ?></small>
+                                </td>
+                                <td><?php echo esc_html($user->user_email); ?></td>
+                                <td><?php echo $registration_date ? date_i18n('d/m/Y H:i', strtotime($registration_date)) : '-'; ?></td>
+                                <td>
+                                    <?php if ($city) : ?>
+                                        📍 <?php echo esc_html($city); ?><br>
+                                    <?php endif; ?>
+                                    <?php if ($bio) : ?>
+                                        <small><?php echo esc_html(wp_trim_words($bio, 15)); ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="progress-bar" style="width: 100%; background: #f0f0f0; height: 20px; border-radius: 10px; overflow: hidden;">
+                                        <div style="width: <?php echo $profile_completion; ?>%; background: #667eea; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-size: 11px; font-weight: bold;">
+                                            <?php echo $profile_completion; ?>%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="<?php echo admin_url('user-edit.php?user_id=' . $user->ID); ?>" class="button" target="_blank">Vedi Profilo</a>
+                                    <form method="post" style="display: inline;">
+                                        <?php wp_nonce_field('cdv_approve_user_' . $user->ID); ?>
+                                        <input type="hidden" name="user_id" value="<?php echo $user->ID; ?>">
+                                        <button type="submit" name="approve_user" class="button button-primary">✓ Approva</button>
+                                        <button type="submit" name="reject_user" class="button button-link-delete" onclick="return confirm('Sei sicuro di voler rifiutare questo utente?');">✗ Rifiuta</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <?php
+        // Handle form submissions
+        if (isset($_POST['approve_user']) && isset($_POST['user_id'])) {
+            $user_id = intval($_POST['user_id']);
+            check_admin_referer('cdv_approve_user_' . $user_id);
+
+            CDV_User_Roles::approve_user($user_id);
+            wp_redirect(add_query_arg('approved', '1', admin_url('admin.php?page=cdv-pending-users')));
+            exit;
+        }
+
+        if (isset($_POST['reject_user']) && isset($_POST['user_id'])) {
+            $user_id = intval($_POST['user_id']);
+            check_admin_referer('cdv_approve_user_' . $user_id);
+
+            CDV_User_Roles::reject_user($user_id, 'Profilo non conforme alle linee guida');
+            wp_redirect(add_query_arg('rejected', '1', admin_url('admin.php?page=cdv-pending-users')));
+            exit;
+        }
+    }
+
+    /**
+     * Pending travels page
+     */
+    public static function pending_travels_page() {
+        $args = array(
+            'post_type' => 'viaggio',
+            'post_status' => 'pending',
+            'posts_per_page' => -1,
+        );
+
+        $pending_travels = get_posts($args);
+
+        ?>
+        <div class="wrap">
+            <h1>Viaggi in Attesa di Approvazione</h1>
+
+            <?php if (isset($_GET['approved'])) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>Viaggio approvato con successo!</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['rejected'])) : ?>
+                <div class="notice notice-info is-dismissible">
+                    <p>Viaggio rifiutato.</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($pending_travels)) : ?>
+                <p>Nessun viaggio in attesa di approvazione.</p>
+            <?php else : ?>
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Viaggio</th>
+                            <th>Organizzatore</th>
+                            <th>Destinazione</th>
+                            <th>Date</th>
+                            <th>Budget</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pending_travels as $travel) :
+                            $author = get_user_by('id', $travel->post_author);
+                            $destination = get_post_meta($travel->ID, 'cdv_destination', true);
+                            $country = get_post_meta($travel->ID, 'cdv_country', true);
+                            $start_date = get_post_meta($travel->ID, 'cdv_start_date', true);
+                            $end_date = get_post_meta($travel->ID, 'cdv_end_date', true);
+                            $budget = get_post_meta($travel->ID, 'cdv_budget', true);
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo esc_html($travel->post_title); ?></strong><br>
+                                    <small><?php echo esc_html(wp_trim_words($travel->post_content, 20)); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo get_avatar($author->ID, 40); ?>
+                                    <?php echo esc_html($author->display_name); ?><br>
+                                    <?php if (!CDV_User_Roles::is_user_approved($author->ID)) : ?>
+                                        <span style="color: orange;">⚠️ Utente non approvato</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo esc_html($destination . ', ' . $country); ?></td>
+                                <td>
+                                    <?php if ($start_date) : ?>
+                                        <?php echo date_i18n('d/m/Y', strtotime($start_date)); ?><br>
+                                        <?php echo date_i18n('d/m/Y', strtotime($end_date)); ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo $budget ? '€' . number_format($budget, 0, ',', '.') : '-'; ?></td>
+                                <td>
+                                    <a href="<?php echo get_edit_post_link($travel->ID); ?>" class="button" target="_blank">Vedi/Modifica</a>
+                                    <form method="post" style="display: inline;">
+                                        <?php wp_nonce_field('cdv_approve_travel_' . $travel->ID); ?>
+                                        <input type="hidden" name="travel_id" value="<?php echo $travel->ID; ?>">
+                                        <button type="submit" name="approve_travel" class="button button-primary">✓ Approva</button>
+                                        <button type="submit" name="reject_travel" class="button button-link-delete" onclick="return confirm('Sei sicuro di voler rifiutare questo viaggio?');">✗ Rifiuta</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <?php
+        // Handle form submissions
+        if (isset($_POST['approve_travel']) && isset($_POST['travel_id'])) {
+            $travel_id = intval($_POST['travel_id']);
+            check_admin_referer('cdv_approve_travel_' . $travel_id);
+
+            CDV_Travel_Moderation::approve_travel($travel_id);
+            wp_redirect(add_query_arg('approved', '1', admin_url('admin.php?page=cdv-pending-travels')));
+            exit;
+        }
+
+        if (isset($_POST['reject_travel']) && isset($_POST['travel_id'])) {
+            $travel_id = intval($_POST['travel_id']);
+            check_admin_referer('cdv_approve_travel_' . $travel_id);
+
+            CDV_Travel_Moderation::reject_travel($travel_id, 'Contenuto non conforme alle linee guida');
+            wp_redirect(add_query_arg('rejected', '1', admin_url('admin.php?page=cdv-pending-travels')));
+            exit;
         }
     }
 
