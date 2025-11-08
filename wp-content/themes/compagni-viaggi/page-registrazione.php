@@ -308,8 +308,18 @@ get_header();
 
                 <!-- Step 4: Create First Travel (Optional) -->
                 <form id="registration-step-4" class="registration-step">
-                    <h2>Crea il Tuo Primo Viaggio (Opzionale)</h2>
-                    <p class="step-intro">Hai già in mente un viaggio? Crealo ora e inizia a trovare compagni!</p>
+                    <h2>Vuoi inserire la tua prima proposta di viaggio e cercare compagni con cui viaggiare?</h2>
+                    <p class="step-intro">Questo passaggio è completamente <strong>opzionale</strong>. Puoi saltare e aggiungere viaggi in seguito dalla tua dashboard.</p>
+
+                    <div class="optional-choice" style="text-align: center; margin: 30px 0; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <p style="font-size: 1.1rem; margin-bottom: 20px;">Cosa vuoi fare?</p>
+                        <div style="display: flex; gap: 15px; justify-content: center;">
+                            <button type="button" class="btn-primary" id="show-travel-form">Sì, voglio creare un viaggio</button>
+                            <button type="button" class="btn-secondary" id="skip-travel-direct">No, completa la registrazione</button>
+                        </div>
+                    </div>
+
+                    <div id="travel-form-fields" style="display: none;">
 
                     <div class="form-group">
                         <label for="travel_title">Titolo del Viaggio <span class="required">*</span></label>
@@ -380,10 +390,12 @@ get_header();
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="btn-secondary btn-prev">← Indietro</button>
-                        <button type="button" class="btn-secondary" id="skip-travel">Salta e Completa</button>
+                        <button type="button" class="btn-secondary btn-prev-travel">← Indietro</button>
+                        <button type="button" class="btn-secondary" id="skip-travel-from-form">Salta e Completa</button>
                         <button type="submit" class="btn-primary btn-large">Crea Viaggio e Completa ✓</button>
                     </div>
+
+                    </div><!-- End travel-form-fields -->
                 </form>
             </div>
         </div>
@@ -864,6 +876,29 @@ jQuery(document).ready(function($) {
         nextStep(); // Go to step 4
     });
 
+    // Step 4: Show/hide travel form
+    $('#show-travel-form').on('click', function() {
+        console.log('Step 4 - User wants to create travel');
+        $('.optional-choice').hide();
+        $('#travel-form-fields').fadeIn();
+    });
+
+    $('#skip-travel-direct').on('click', function() {
+        console.log('Step 4 - User skipped travel creation');
+        window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
+    });
+
+    $('#skip-travel-from-form').on('click', function() {
+        console.log('Step 4 - User skipped from form');
+        window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
+    });
+
+    $('.btn-prev-travel').on('click', function() {
+        console.log('Step 4 - Going back, hiding travel form');
+        $('#travel-form-fields').hide();
+        $('.optional-choice').fadeIn();
+    });
+
     // Step 4: Create Travel (Optional)
     $('#registration-step-4').on('submit', function(e) {
         e.preventDefault();
@@ -872,30 +907,47 @@ jQuery(document).ready(function($) {
         formData.push({ name: 'action', value: 'cdv_create_first_travel' });
         formData.push({ name: 'nonce', value: cdvAjax.nonce });
 
+        console.log('Step 4 - Creating travel:', formData);
+        console.log('Step 4 - Nonce:', cdvAjax.nonce);
+
         $(this).addClass('loading');
 
         $.ajax({
             url: cdvAjax.ajaxurl,
             type: 'POST',
             data: $.param(formData),
+            dataType: 'json',
             success: function(response) {
+                console.log('Step 4 - Response:', response);
                 if (response.success) {
+                    console.log('Step 4 - Travel created successfully');
                     window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
                 } else {
                     alert(response.data.message || 'Errore durante la creazione del viaggio');
                 }
             },
-            error: function() {
-                alert('Errore di connessione');
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error('Step 4 - Error details:', {
+                    status: jqXHR.status,
+                    statusText: jqXHR.statusText,
+                    responseText: jqXHR.responseText
+                });
+
+                let errorMsg = 'Errore di connessione';
+                if (jqXHR.status === 500) {
+                    errorMsg = 'Errore del server (500). Controlla i log PHP.';
+                } else if (jqXHR.status === 403) {
+                    errorMsg = 'Accesso negato (403). Problema con il nonce.';
+                } else if (jqXHR.responseText) {
+                    errorMsg = 'Errore: ' + jqXHR.responseText.substring(0, 100);
+                }
+
+                alert(errorMsg);
             },
             complete: function() {
                 $('#registration-step-4').removeClass('loading');
             }
         });
-    });
-
-    $('#skip-travel').on('click', function() {
-        window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
     });
 
     // Previous buttons
