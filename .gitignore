@@ -30,6 +30,7 @@ wp-config.php
 # Plugin e Temi di terze parti
 wp-content/plugins/*
 !wp-content/plugins/compagni-di-viaggi/
+!wp-content/plugins/cdv-travel-importer/
 
 wp-content/themes/*
 !wp-content/themes/compagni-viaggi/
