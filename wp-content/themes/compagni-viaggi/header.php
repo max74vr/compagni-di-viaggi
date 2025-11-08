@@ -41,6 +41,9 @@
                 <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-secondary">
                     Dashboard
                 </a>
+                <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary">
+                    Crea Viaggio
+                </a>
                 <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="btn-secondary">
                     Esci
                 </a>

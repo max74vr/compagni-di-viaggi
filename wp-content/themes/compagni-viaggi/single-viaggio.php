@@ -52,7 +52,7 @@ while (have_posts()) : the_post();
                                     <?php echo get_avatar($author_id, 80); ?>
                                     <div class="participant-info">
                                         <div class="participant-name">
-                                            <?php echo esc_html(get_the_author_meta('display_name', $author_id)); ?>
+                                            <?php echo esc_html(get_the_author_meta('user_login', $author_id)); ?>
                                             <span class="organizer-badge">Organizzatore</span>
                                         </div>
                                         <?php
@@ -72,7 +72,7 @@ while (have_posts()) : the_post();
                                     <div class="participant-card">
                                         <?php echo get_avatar($user->ID, 80); ?>
                                         <div class="participant-info">
-                                            <div class="participant-name"><?php echo esc_html($user->display_name); ?></div>
+                                            <div class="participant-name"><?php echo esc_html($user->user_login); ?></div>
                                             <?php if ($reputation) {
                                                 cdv_display_stars($reputation);
                                             } ?>
@@ -94,7 +94,7 @@ while (have_posts()) : the_post();
                                     <div class="request-card" data-user-id="<?php echo $user->ID; ?>">
                                         <?php echo get_avatar($user->ID, 60); ?>
                                         <div class="request-info">
-                                            <div class="request-name"><?php echo esc_html($user->display_name); ?></div>
+                                            <div class="request-name"><?php echo esc_html($user->user_login); ?></div>
                                             <?php if ($request->message) : ?>
                                                 <div class="request-message"><?php echo esc_html($request->message); ?></div>
                                             <?php endif; ?>
@@ -127,7 +127,7 @@ while (have_posts()) : the_post();
                         <div class="organizer-profile">
                             <?php echo get_avatar($author_id, 100); ?>
                             <div class="organizer-name">
-                                <?php echo esc_html(get_the_author_meta('display_name', $author_id)); ?>
+                                <?php echo esc_html(get_the_author_meta('user_login', $author_id)); ?>
                                 <?php if ($verified === '1') : ?>
                                     <span class="verified-badge" title="Verificato">✓</span>
                                 <?php endif; ?>

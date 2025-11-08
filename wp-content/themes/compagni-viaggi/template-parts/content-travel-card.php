@@ -5,16 +5,6 @@
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
-    <?php if (has_post_thumbnail()) : ?>
-        <a href="<?php the_permalink(); ?>">
-            <?php the_post_thumbnail('travel-card', array('class' => 'card-image')); ?>
-        </a>
-    <?php else : ?>
-        <div class="card-image" style="background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem;">
-            ✈️
-        </div>
-    <?php endif; ?>
-
     <div class="card-content">
         <div class="card-header">
             <?php cdv_travel_type_badges(); ?>
@@ -122,5 +112,22 @@
 .organizer-name {
     display: flex;
     align-items: center;
+}
+
+.organizer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s;
+}
+
+.organizer-info:hover {
+    opacity: 0.8;
+}
+
+.organizer-info:hover .organizer-name {
+    color: var(--primary-color);
 }
 </style>

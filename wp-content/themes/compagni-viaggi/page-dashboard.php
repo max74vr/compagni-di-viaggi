@@ -64,7 +64,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     <div class="container">
         <div class="dashboard-header">
             <div>
-                <h1>Benvenuto, <?php echo esc_html($current_user->display_name); ?>!</h1>
+                <h1>Benvenuto, <?php echo esc_html($current_user->user_login); ?>!</h1>
                 <p>Gestisci i tuoi viaggi e le richieste di partecipazione</p>
             </div>
             <a href="<?php echo CDV_User_Profiles::get_profile_url($current_user->ID); ?>" class="btn btn-secondary">
@@ -96,7 +96,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
         <div class="tab-content active" id="tab-my-travels">
             <div class="section-header">
                 <h2>I Miei Viaggi</h2>
-                <a href="#" class="btn btn-primary" id="btn-new-travel">
+                <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn btn-primary" id="btn-new-travel">
                     <i class="icon-plus"></i> Nuovo Viaggio
                 </a>
             </div>
@@ -171,7 +171,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
                     <?php wp_reset_postdata(); ?>
                 </div>
             <?php else : ?>
-                <p class="no-content">Non hai ancora creato nessun viaggio. <a href="#" id="link-new-travel">Crea il tuo primo viaggio!</a></p>
+                <p class="no-content">Non hai ancora creato nessun viaggio. <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" id="link-new-travel">Crea il tuo primo viaggio!</a></p>
             <?php endif; ?>
         </div>
 
@@ -188,7 +188,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
                                 <div class="request-user-info">
                                     <h4>
                                         <a href="<?php echo CDV_User_Profiles::get_profile_url($request->user_id); ?>" target="_blank">
-                                            <?php echo esc_html($request->display_name); ?>
+                                            <?php echo esc_html($request->user_login); ?>
                                         </a>
                                     </h4>
                                     <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
@@ -237,6 +237,22 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
         <!-- Tab: Impostazioni -->
         <div class="tab-content" id="tab-settings">
             <h2>Impostazioni Profilo</h2>
+
+            <!-- Profile Image Upload -->
+            <div class="settings-section">
+                <h3>Foto Profilo</h3>
+                <div class="profile-image-upload">
+                    <div class="current-avatar">
+                        <?php echo get_avatar($current_user->ID, 120); ?>
+                    </div>
+                    <div class="upload-controls">
+                        <input type="file" id="dashboard_profile_image" name="profile_image" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                        <button type="button" class="btn btn-secondary" id="dashboard-upload-btn">Cambia Foto</button>
+                        <small>JPG o PNG, max 5MB</small>
+                        <div id="upload-status" style="margin-top: 10px;"></div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Edit Profile Form -->
             <div class="settings-section">
@@ -681,7 +697,33 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     background: #c82333;
 }
 
+.profile-image-upload {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.current-avatar img {
+    border-radius: 50%;
+    border: 3px solid var(--border-color);
+}
+
+.upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.upload-controls small {
+    color: var(--text-medium);
+}
+
 @media (max-width: 768px) {
+    .profile-image-upload {
+        flex-direction: column;
+        text-align: center;
+    }
+
     .settings-section .form-row {
         grid-template-columns: 1fr;
     }
@@ -826,15 +868,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // New travel button
-    document.getElementById('btn-new-travel')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        alert('Funzionalità in arrivo: form per creare nuovo viaggio');
+    // Dashboard Profile Image Upload
+    document.getElementById('dashboard-upload-btn')?.addEventListener('click', function() {
+        document.getElementById('dashboard_profile_image').click();
     });
 
-    document.getElementById('link-new-travel')?.addEventListener('click', function(e) {
-        e.preventDefault();
-        alert('Funzionalità in arrivo: form per creare nuovo viaggio');
+    document.getElementById('dashboard_profile_image')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            document.getElementById('upload-status').innerHTML = '<div class="error-message">Formato non valido. Usa JPG o PNG.</div>';
+            return;
+        }
+
+        // Validate file size (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            document.getElementById('upload-status').innerHTML = '<div class="error-message">File troppo grande. Massimo 5MB.</div>';
+            return;
+        }
+
+        // Upload file
+        const formData = new FormData();
+        formData.append('profile_image', file);
+        formData.append('action', 'cdv_upload_profile_image');
+        formData.append('nonce', cdvAjax.nonce);
+
+        document.getElementById('upload-status').innerHTML = '<div style="color: #666;">Caricamento in corso...</div>';
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    document.getElementById('upload-status').innerHTML = '<div class="success-message">Foto caricata con successo!</div>';
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    document.getElementById('upload-status').innerHTML = '<div class="error-message">' + (response.data.message || 'Errore durante il caricamento') + '</div>';
+                }
+            },
+            error: function() {
+                document.getElementById('upload-status').innerHTML = '<div class="error-message">Errore di connessione</div>';
+            }
+        });
     });
 
     // Edit Profile Form

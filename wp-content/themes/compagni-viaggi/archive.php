@@ -31,7 +31,7 @@ get_header();
                 echo '<div class="author-archive-header">';
                 echo get_avatar($author->ID, 120);
                 echo '<div class="author-info">';
-                echo '<h1 class="archive-title">Articoli di ' . esc_html($author->display_name) . '</h1>';
+                echo '<h1 class="archive-title">Articoli di ' . esc_html($author->user_login) . '</h1>';
                 if ($author->description) :
                     echo '<p class="archive-description">' . esc_html($author->description) . '</p>';
                 endif;

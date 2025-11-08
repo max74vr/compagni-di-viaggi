@@ -75,7 +75,7 @@ get_header();
                 else :
                     ?>
                     <div class="no-travels">
-                        <p>Nessun viaggio disponibile al momento. <?php if (is_user_logged_in()) : ?><a href="<?php echo esc_url(admin_url('post-new.php?post_type=viaggio')); ?>">Crea il primo viaggio!</a><?php endif; ?></p>
+                        <p>Nessun viaggio disponibile al momento. <?php if (is_user_logged_in()) : ?><a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>">Crea il primo viaggio!</a><?php endif; ?></p>
                     </div>
                     <?php
                 endif;
@@ -196,7 +196,7 @@ get_header();
                 Unisciti a migliaia di viaggiatori che hanno già trovato i loro compagni di viaggio perfetti.
             </p>
             <?php if (is_user_logged_in()) : ?>
-                <a href="<?php echo esc_url(admin_url('post-new.php?post_type=viaggio')); ?>" class="btn-primary">
+                <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary">
                     Crea il Tuo Viaggio
                 </a>
             <?php else : ?>

@@ -200,12 +200,13 @@ function cdv_organizer_info($author_id = null) {
     $reputation = get_user_meta($author_id, 'cdv_reputation_score', true);
     $verified = get_user_meta($author_id, 'cdv_verified', true);
 
+    $profile_url = CDV_User_Profiles::get_profile_url($author_id);
     ?>
-    <div class="organizer-info">
+    <a href="<?php echo esc_url($profile_url); ?>" class="organizer-info">
         <?php echo get_avatar($author_id, 40, '', '', array('class' => 'organizer-avatar')); ?>
         <div class="organizer-details">
             <div class="organizer-name">
-                <?php echo esc_html($author->display_name); ?>
+                <?php echo esc_html($author->user_login); ?>
                 <?php if ($verified === '1') : ?>
                     <span class="verified-badge" title="Verificato">✓</span>
                 <?php endif; ?>
@@ -216,7 +217,7 @@ function cdv_organizer_info($author_id = null) {
                 </div>
             <?php endif; ?>
         </div>
-    </div>
+    </a>
     <?php
 }
 
@@ -448,6 +449,7 @@ function cdv_sanitize_float($value) {
 function cdv_customizer_css() {
     $hero_overlay_color = get_theme_mod('cdv_hero_overlay_color', '#000000');
     $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
+    $hero_image_id = get_theme_mod('cdv_hero_image');
 
     ?>
     <style type="text/css">
@@ -484,12 +486,25 @@ function cdv_customizer_css() {
             color: white;
         }
 
-        <?php if (get_theme_mod('cdv_hero_image')) : ?>
+        <?php if ($hero_image_id) :
+            $hero_image_url = wp_get_attachment_url($hero_image_id);
+            if ($hero_image_url) :
+        ?>
+        .hero-section {
+            background-image: url('<?php echo esc_url($hero_image_url); ?>');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
         .hero-section::before {
             background-color: <?php echo esc_attr($hero_overlay_color); ?>;
+            background-image: none;
             opacity: <?php echo esc_attr($hero_overlay_opacity); ?>;
         }
-        <?php endif; ?>
+        <?php
+            endif;
+        endif; ?>
     </style>
     <?php
 }

@@ -30,6 +30,9 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_change_password', array(__CLASS__, 'change_password'));
         add_action('wp_ajax_cdv_delete_account', array(__CLASS__, 'delete_account'));
 
+        // Travel creation
+        add_action('wp_ajax_cdv_create_travel', array(__CLASS__, 'create_travel'));
+
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
     }
@@ -445,5 +448,98 @@ class CDV_Ajax_Handlers {
         wp_logout();
 
         wp_send_json_success(array('message' => 'Account eliminato con successo'));
+    }
+
+    /**
+     * AJAX: Create Travel
+     */
+    public static function create_travel() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Check if user has capability
+        if (!current_user_can('create_viaggi')) {
+            wp_send_json_error(array('message' => 'Non hai i permessi per creare viaggi'));
+        }
+
+        // Validate required fields
+        $title = isset($_POST['title']) ? sanitize_text_field($_POST['title']) : '';
+        $description = isset($_POST['description']) ? wp_kses_post($_POST['description']) : '';
+        $destination = isset($_POST['destination']) ? sanitize_text_field($_POST['destination']) : '';
+        $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+        $start_date = isset($_POST['start_date']) ? sanitize_text_field($_POST['start_date']) : '';
+        $end_date = isset($_POST['end_date']) ? sanitize_text_field($_POST['end_date']) : '';
+        $budget = isset($_POST['budget']) ? intval($_POST['budget']) : 0;
+        $max_participants = isset($_POST['max_participants']) ? intval($_POST['max_participants']) : 5;
+
+        if (empty($title) || empty($description) || empty($destination) || empty($country) ||
+            empty($start_date) || empty($end_date) || $budget <= 0 || $max_participants < 2) {
+            wp_send_json_error(array('message' => 'Compila tutti i campi obbligatori'));
+        }
+
+        // Validate dates
+        if (strtotime($end_date) <= strtotime($start_date)) {
+            wp_send_json_error(array('message' => 'La data di fine deve essere successiva alla data di inizio'));
+        }
+
+        if (strtotime($start_date) < strtotime('today')) {
+            wp_send_json_error(array('message' => 'La data di inizio non può essere nel passato'));
+        }
+
+        // Create travel post
+        $post_data = array(
+            'post_type' => 'viaggio',
+            'post_title' => $title,
+            'post_content' => $description,
+            'post_status' => 'pending', // Pending approval
+            'post_author' => $user_id,
+        );
+
+        $travel_id = wp_insert_post($post_data);
+
+        if (is_wp_error($travel_id)) {
+            wp_send_json_error(array('message' => 'Errore durante la creazione del viaggio'));
+        }
+
+        // Save meta data
+        update_post_meta($travel_id, 'cdv_destination', $destination);
+        update_post_meta($travel_id, 'cdv_country', $country);
+        update_post_meta($travel_id, 'cdv_start_date', $start_date);
+        update_post_meta($travel_id, 'cdv_end_date', $end_date);
+        update_post_meta($travel_id, 'cdv_budget', $budget);
+        update_post_meta($travel_id, 'cdv_max_participants', $max_participants);
+        update_post_meta($travel_id, 'cdv_travel_status', 'open');
+
+        // Set travel types
+        if (isset($_POST['travel_types']) && is_array($_POST['travel_types'])) {
+            $travel_types = array_map('intval', $_POST['travel_types']);
+            wp_set_post_terms($travel_id, $travel_types, 'tipo_viaggio');
+        }
+
+        // Add organizer as first participant
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'cdv_travel_participants';
+
+        $wpdb->insert(
+            $table_name,
+            array(
+                'travel_id' => $travel_id,
+                'user_id' => $user_id,
+                'status' => 'accepted',
+                'is_organizer' => 1,
+                'created_at' => current_time('mysql'),
+            ),
+            array('%d', '%d', '%s', '%d', '%s')
+        );
+
+        wp_send_json_success(array(
+            'message' => 'Viaggio creato con successo! In attesa di approvazione.',
+            'redirect_url' => get_permalink($travel_id),
+        ));
     }
 }

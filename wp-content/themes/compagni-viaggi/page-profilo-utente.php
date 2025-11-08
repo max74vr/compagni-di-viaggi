@@ -26,11 +26,11 @@ $is_own_profile = is_user_logged_in() && get_current_user_id() == $user->ID;
         <!-- Header Profilo -->
         <div class="profile-header">
             <div class="profile-avatar">
-                <img src="<?php echo esc_url($profile['avatar_url']); ?>" alt="<?php echo esc_attr($profile['display_name']); ?>">
+                <img src="<?php echo esc_url($profile['avatar_url']); ?>" alt="<?php echo esc_attr($profile['username']); ?>">
             </div>
 
             <div class="profile-info">
-                <h1><?php echo esc_html($profile['display_name']); ?></h1>
+                <h1><?php echo esc_html($profile['username']); ?></h1>
 
                 <?php if (!empty($profile['city']) || !empty($profile['country'])) : ?>
                     <p class="profile-location">
