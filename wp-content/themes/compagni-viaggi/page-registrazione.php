@@ -698,6 +698,13 @@ jQuery(document).ready(function($) {
             success: function(response) {
                 if (response.success) {
                     userId = response.data.user_id;
+
+                    // Update nonce for logged-in user
+                    if (response.data.new_nonce) {
+                        cdvAjax.nonce = response.data.new_nonce;
+                        console.log('Nonce updated for logged-in user');
+                    }
+
                     nextStep();
                 } else {
                     alert(response.data.message || 'Errore durante la registrazione');

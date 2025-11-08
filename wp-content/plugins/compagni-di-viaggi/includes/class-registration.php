@@ -99,10 +99,14 @@ class CDV_Registration {
         // Award early adopter badge
         CDV_Badges::award_badge($user_id, 'early_adopter');
 
+        // Generate new nonce for logged-in user
+        $new_nonce = wp_create_nonce('cdv_ajax_nonce');
+
         wp_send_json_success(array(
             'message' => 'Account creato! Controlla la tua email per confermare l\'indirizzo.',
             'user_id' => $user_id,
             'email_sent' => $email_sent,
+            'new_nonce' => $new_nonce, // Fresh nonce for logged-in user
         ));
     }
 
