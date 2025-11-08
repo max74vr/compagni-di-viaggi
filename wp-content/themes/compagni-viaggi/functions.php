@@ -332,3 +332,18 @@ function cdv_body_classes($classes) {
     return $classes;
 }
 add_filter('body_class', 'cdv_body_classes');
+
+/**
+ * Calculate reading time for post
+ */
+function cdv_reading_time($post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+
+    $content = get_post_field('post_content', $post_id);
+    $word_count = str_word_count(strip_tags($content));
+    $reading_time = ceil($word_count / 200); // Average reading speed: 200 words per minute
+
+    return max($reading_time, 1); // Minimum 1 minute
+}
