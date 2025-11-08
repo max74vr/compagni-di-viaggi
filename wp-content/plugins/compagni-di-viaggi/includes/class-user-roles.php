@@ -14,6 +14,12 @@ class CDV_User_Roles {
      */
     public static function init() {
         add_action('init', array(__CLASS__, 'register_roles'));
+
+        // Block backend access for viaggiatore
+        add_action('admin_init', array(__CLASS__, 'block_admin_access'));
+
+        // Hide admin bar for viaggiatore
+        add_action('after_setup_theme', array(__CLASS__, 'hide_admin_bar'));
     }
 
     /**
@@ -208,5 +214,24 @@ class CDV_User_Roles {
 
         $total = count($required_fields) + 1; // +1 for avatar
         return round(($completed / $total) * 100);
+    }
+
+    /**
+     * Block admin access for viaggiatore role
+     */
+    public static function block_admin_access() {
+        if (current_user_can('viaggiatore') && !wp_doing_ajax()) {
+            wp_redirect(home_url('/dashboard'));
+            exit;
+        }
+    }
+
+    /**
+     * Hide admin bar for viaggiatore role
+     */
+    public static function hide_admin_bar() {
+        if (current_user_can('viaggiatore')) {
+            show_admin_bar(false);
+        }
     }
 }

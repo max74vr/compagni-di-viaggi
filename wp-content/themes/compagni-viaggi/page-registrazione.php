@@ -80,7 +80,10 @@ get_header();
                         <div class="form-group">
                             <label for="password">Password <span class="required">*</span></label>
                             <input type="password" id="password" name="password" required minlength="8">
-                            <small>Minimo 8 caratteri</small>
+                            <div class="password-strength-meter">
+                                <div class="password-strength-bar"></div>
+                            </div>
+                            <small id="password-strength-text">La password deve contenere almeno 8 caratteri, lettere maiuscole, minuscole, numeri e simboli</small>
                         </div>
 
                         <div class="form-group">
@@ -644,6 +647,56 @@ get_header();
     color: var(--text-medium);
 }
 
+/* Password Strength Meter */
+.password-strength-meter {
+    width: 100%;
+    height: 4px;
+    background: var(--bg-gray);
+    border-radius: 2px;
+    margin-top: calc(var(--spacing-unit) * 1);
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: all var(--transition-base);
+    border-radius: 2px;
+}
+
+.password-strength-bar.weak {
+    width: 33%;
+    background: var(--error-color);
+}
+
+.password-strength-bar.medium {
+    width: 66%;
+    background: #f39c12;
+}
+
+.password-strength-bar.strong {
+    width: 100%;
+    background: var(--success-color);
+}
+
+#password-strength-text {
+    display: block;
+    margin-top: calc(var(--spacing-unit) * 0.5);
+    font-size: 0.85rem;
+}
+
+#password-strength-text.weak {
+    color: var(--error-color);
+}
+
+#password-strength-text.medium {
+    color: #f39c12;
+}
+
+#password-strength-text.strong {
+    color: var(--success-color);
+}
+
 /* Loading State */
 .loading {
     opacity: 0.6;
@@ -680,6 +733,56 @@ jQuery(document).ready(function($) {
         }
     });
 
+    // Password strength checker
+    function checkPasswordStrength(password) {
+        let strength = 0;
+        const feedback = [];
+
+        if (password.length >= 8) strength++;
+        else feedback.push('almeno 8 caratteri');
+
+        if (password.length >= 12) strength++;
+
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        else feedback.push('lettere maiuscole e minuscole');
+
+        if (/[0-9]/.test(password)) strength++;
+        else feedback.push('numeri');
+
+        if (/[^a-zA-Z0-9]/.test(password)) strength++;
+        else feedback.push('simboli speciali');
+
+        return { strength, feedback };
+    }
+
+    $('#password').on('input', function() {
+        const password = $(this).val();
+        const result = checkPasswordStrength(password);
+        const $bar = $('.password-strength-bar');
+        const $text = $('#password-strength-text');
+
+        // Remove all classes
+        $bar.removeClass('weak medium strong');
+        $text.removeClass('weak medium strong');
+
+        if (password.length === 0) {
+            $bar.css('width', '0%');
+            $text.text('La password deve contenere almeno 8 caratteri, lettere maiuscole, minuscole, numeri e simboli');
+            return;
+        }
+
+        if (result.strength <= 2) {
+            $bar.addClass('weak');
+            $text.addClass('weak').text('Password debole. Manca: ' + result.feedback.join(', '));
+        } else if (result.strength <= 3) {
+            $bar.addClass('medium');
+            $text.addClass('medium').text('Password media. Manca: ' + result.feedback.join(', '));
+        } else {
+            $bar.addClass('strong');
+            $text.addClass('strong').text('Password forte!');
+        }
+    });
+
     // Step 1: Account Creation
     $('#registration-step-1').on('submit', function(e) {
         e.preventDefault();
@@ -690,6 +793,14 @@ jQuery(document).ready(function($) {
         if (password !== confirm) {
             alert('Le password non coincidono');
             return;
+        }
+
+        // Check password strength
+        const result = checkPasswordStrength(password);
+        if (result.strength < 3) {
+            if (!confirm('La password è debole. Vuoi continuare comunque?')) {
+                return;
+            }
         }
 
         const formData = {
@@ -885,12 +996,12 @@ jQuery(document).ready(function($) {
 
     $('#skip-travel-direct').on('click', function() {
         console.log('Step 4 - User skipped travel creation');
-        window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
+        window.location.href = '<?php echo home_url('/dashboard'); ?>';
     });
 
     $('#skip-travel-from-form').on('click', function() {
         console.log('Step 4 - User skipped from form');
-        window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
+        window.location.href = '<?php echo home_url('/dashboard'); ?>';
     });
 
     $('.btn-prev-travel').on('click', function() {
@@ -921,7 +1032,7 @@ jQuery(document).ready(function($) {
                 console.log('Step 4 - Response:', response);
                 if (response.success) {
                     console.log('Step 4 - Travel created successfully');
-                    window.location.href = '<?php echo home_url('/profilo-in-attesa'); ?>';
+                    window.location.href = '<?php echo home_url('/dashboard'); ?>';
                 } else {
                     alert(response.data.message || 'Errore durante la creazione del viaggio');
                 }

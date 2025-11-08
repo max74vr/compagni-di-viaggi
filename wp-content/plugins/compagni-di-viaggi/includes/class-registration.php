@@ -85,8 +85,8 @@ class CDV_Registration {
             'display_name' => $display_name,
         ));
 
-        // Set pending approval
-        update_user_meta($user_id, 'cdv_user_approved', 'pending');
+        // Auto-approve users (only travels need moderation)
+        update_user_meta($user_id, 'cdv_user_approved', '1');
         update_user_meta($user_id, 'cdv_registration_date', current_time('mysql'));
 
         // Invia email di verifica
@@ -102,8 +102,13 @@ class CDV_Registration {
         // Generate new nonce for logged-in user
         $new_nonce = wp_create_nonce('cdv_ajax_nonce');
 
+        $message = 'Account creato con successo!';
+        if ($email_sent) {
+            $message .= ' Ti abbiamo inviato un\'email di verifica. Controlla la tua casella di posta (anche spam) e clicca sul link per confermare il tuo indirizzo email.';
+        }
+
         wp_send_json_success(array(
-            'message' => 'Account creato! Controlla la tua email per confermare l\'indirizzo.',
+            'message' => $message,
             'user_id' => $user_id,
             'email_sent' => $email_sent,
             'new_nonce' => $new_nonce, // Fresh nonce for logged-in user
@@ -230,18 +235,11 @@ class CDV_Registration {
             // Mark profile as complete
             update_user_meta($user_id, 'cdv_profile_completed', '1');
 
-            // Notify admin of new registration (non-blocking)
-            try {
-                self::notify_admin_new_user($user_id);
-            } catch (Exception $e) {
-                error_log('CDV: Failed to send admin notification: ' . $e->getMessage());
-            }
-
             error_log('CDV: Registration step 2 completed successfully for user ' . $user_id);
 
             wp_send_json_success(array(
-                'message' => 'Profilo completato! Il tuo account è in attesa di approvazione.',
-                'redirect' => home_url('/profilo-in-attesa'),
+                'message' => 'Profilo completato con successo!',
+                'redirect' => home_url('/dashboard'),
             ));
 
         } catch (Exception $e) {

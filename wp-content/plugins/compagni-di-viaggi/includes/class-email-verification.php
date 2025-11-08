@@ -124,27 +124,11 @@ Il team di Compagni di Viaggi
     }
 
     /**
-     * Blocca login per utenti non verificati
+     * Blocca login per utenti non verificati (DISABILITATO - verifica email opzionale)
      */
     public static function block_unverified_login($user, $username, $password) {
-        // Ignora se non è un oggetto WP_User valido
-        if (!is_a($user, 'WP_User')) {
-            return $user;
-        }
-
-        // Gli admin possono sempre accedere
-        if (user_can($user->ID, 'manage_options')) {
-            return $user;
-        }
-
-        // Controlla se l'email è verificata
-        if (!self::is_email_verified($user->ID)) {
-            return new WP_Error(
-                'email_not_verified',
-                __('Devi confermare il tuo indirizzo email prima di accedere. Controlla la tua casella di posta.', 'compagni-di-viaggi')
-            );
-        }
-
+        // Email verification è opzionale - permettiamo login anche senza email verificata
+        // TODO: Riabilitare se si configura SMTP correttamente
         return $user;
     }
 
