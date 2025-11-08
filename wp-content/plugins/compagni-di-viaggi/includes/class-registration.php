@@ -110,14 +110,20 @@ class CDV_Registration {
      * AJAX: Register Step 2 - Profile Information
      */
     public static function ajax_register_step2() {
+        error_log('CDV: Starting registration step 2');
+        error_log('CDV: POST data: ' . print_r($_POST, true));
+
         try {
             check_ajax_referer('cdv_ajax_nonce', 'nonce');
+            error_log('CDV: Nonce verified successfully');
 
             if (!is_user_logged_in()) {
+                error_log('CDV: User not logged in');
                 wp_send_json_error(array('message' => 'Devi essere autenticato'));
             }
 
             $user_id = get_current_user_id();
+            error_log('CDV: User ID: ' . $user_id);
 
             // Personal Info
             $birth_date = isset($_POST['birth_date']) ? sanitize_text_field($_POST['birth_date']) : '';

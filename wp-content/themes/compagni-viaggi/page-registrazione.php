@@ -5,10 +5,16 @@
  * Multi-step registration form
  */
 
-// Redirect if already logged in
+// Redirect if already logged in AND profile is complete
 if (is_user_logged_in()) {
-    wp_redirect(home_url('/dashboard'));
-    exit;
+    $user_id = get_current_user_id();
+    $profile_completed = get_user_meta($user_id, 'cdv_profile_completed', true);
+
+    // Only redirect if registration is fully complete
+    if ($profile_completed === '1') {
+        wp_redirect(home_url('/dashboard'));
+        exit;
+    }
 }
 
 get_header();
