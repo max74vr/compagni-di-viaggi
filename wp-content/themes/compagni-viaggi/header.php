@@ -52,16 +52,16 @@
         <div class="header-actions desktop-only">
             <?php if (is_user_logged_in()) : ?>
                 <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-header btn-header-secondary">
-                    👤 Dashboard
+                    Dashboard
                 </a>
                 <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-header btn-header-primary">
-                    ✈️ Crea Annuncio
+                    Crea Annuncio
                 </a>
                 <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="btn-header btn-header-ghost">
                     Esci
                 </a>
             <?php else : ?>
-                <a href="<?php echo esc_url(home_url('/accedi')); ?>" class="btn-header btn-header-ghost">
+                <a href="<?php echo esc_url(home_url('/accedi')); ?>" class="btn-header btn-header-secondary">
                     Accedi
                 </a>
                 <a href="<?php echo esc_url(home_url('/registrazione')); ?>" class="btn-header btn-header-primary">

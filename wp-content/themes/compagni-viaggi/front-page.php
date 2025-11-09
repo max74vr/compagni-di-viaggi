@@ -11,8 +11,8 @@ get_header();
     <section class="hero-section">
         <div class="container">
             <div class="hero-content">
-                <h1>Trova il Tuo Compagno di Viaggio</h1>
-                <p>Unisciti alla community di viaggiatori. Scopri nuove destinazioni, trova compagni di viaggio e crea ricordi indimenticabili insieme.</p>
+                <h1><?php echo esc_html(get_theme_mod('cdv_hero_title', 'Trova i Tuoi Compagni di Viaggio')); ?></h1>
+                <p><?php echo esc_html(get_theme_mod('cdv_hero_subtitle', 'Connettiti con viaggiatori che condividono le tue passioni. Organizza avventure indimenticabili insieme.')); ?></p>
 
                 <!-- Search Box -->
                 <div class="search-box">
@@ -43,8 +43,8 @@ get_header();
 
                     <!-- CTA Button -->
                     <div class="hero-cta" style="text-align: center; margin-top: calc(var(--spacing-unit) * 4);">
-                        <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary btn-large" style="font-size: 1.1rem; padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4); display: inline-flex; align-items: center; gap: calc(var(--spacing-unit) * 1); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-                            ✨ Inserisci il Tuo Annuncio
+                        <a href="<?php echo esc_url(get_theme_mod('cdv_hero_button_url', '/crea-viaggio')); ?>" class="btn-primary btn-large" style="font-size: 1.1rem; padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4); display: inline-flex; align-items: center; gap: calc(var(--spacing-unit) * 1); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                            <?php echo esc_html(get_theme_mod('cdv_hero_button_text', 'Inserisci il Tuo Annuncio')); ?>
                         </a>
                     </div>
                 </div>
@@ -56,8 +56,8 @@ get_header();
     <section class="section">
         <div class="container">
             <div class="section-title">
-                <h2>Proposte di Viaggi</h2>
-                <p>Scopri i viaggi più popolari della community</p>
+                <h2><?php echo esc_html(get_theme_mod('cdv_travels_title', 'Proposte di Viaggi')); ?></h2>
+                <p><?php echo esc_html(get_theme_mod('cdv_travels_subtitle', 'Scopri le prossime avventure e unisciti ai viaggiatori')); ?></p>
             </div>
 
             <div class="grid">
@@ -97,7 +97,7 @@ get_header();
 
             <div class="text-center mt-3">
                 <a href="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="btn-primary">
-                    Vedi Tutti i Viaggi →
+                    <?php echo esc_html(get_theme_mod('cdv_travels_button_text', 'Vedi Tutti i Viaggi')); ?> →
                 </a>
             </div>
         </div>
@@ -107,27 +107,27 @@ get_header();
     <section class="section" style="background-color: white;">
         <div class="container">
             <div class="section-title">
-                <h2>Come Funziona</h2>
-                <p>In pochi semplici passi puoi trovare i tuoi compagni di viaggio</p>
+                <h2><?php echo esc_html(get_theme_mod('cdv_how_title', 'Come Funziona')); ?></h2>
+                <p><?php echo esc_html(get_theme_mod('cdv_how_subtitle', 'In pochi semplici passi puoi trovare i tuoi compagni di viaggio')); ?></p>
             </div>
 
             <div class="grid">
                 <div class="feature-card">
                     <div class="feature-icon">👤</div>
-                    <h3>1. Crea il Tuo Profilo</h3>
-                    <p>Registrati e completa il tuo profilo con interessi, lingue parlate e stili di viaggio preferiti.</p>
+                    <h3><?php echo esc_html(get_theme_mod('cdv_step1_title', '1. Crea il Tuo Profilo')); ?></h3>
+                    <p><?php echo esc_html(get_theme_mod('cdv_step1_text', 'Registrati e completa il tuo profilo con interessi, lingue parlate e stili di viaggio preferiti.')); ?></p>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">🔍</div>
-                    <h3>2. Cerca o Crea un Viaggio</h3>
-                    <p>Cerca tra i viaggi disponibili o crea il tuo e aspetta che altri viaggiatori si uniscano.</p>
+                    <h3><?php echo esc_html(get_theme_mod('cdv_step2_title', '2. Cerca o Crea un Viaggio')); ?></h3>
+                    <p><?php echo esc_html(get_theme_mod('cdv_step2_text', 'Cerca tra i viaggi disponibili o crea il tuo e aspetta che altri viaggiatori si uniscano.')); ?></p>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">💬</div>
-                    <h3>3. Connettiti e Organizza</h3>
-                    <p>Usa la chat di gruppo per conoscere i compagni di viaggio e organizzare i dettagli insieme.</p>
+                    <h3><?php echo esc_html(get_theme_mod('cdv_step3_title', '3. Connettiti e Organizza')); ?></h3>
+                    <p><?php echo esc_html(get_theme_mod('cdv_step3_text', 'Usa la chat di gruppo per conoscere i compagni di viaggio e organizzare i dettagli insieme.')); ?></p>
                 </div>
             </div>
 
@@ -152,8 +152,8 @@ get_header();
     <section class="section" style="background-color: white;">
         <div class="container">
             <div class="section-title">
-                <h2>📖 Racconti di Viaggio</h2>
-                <p>Lasciati ispirare dalle esperienze dei nostri viaggiatori</p>
+                <h2>📖 <?php echo esc_html(get_theme_mod('cdv_stories_title', 'Racconti di Viaggio')); ?></h2>
+                <p><?php echo esc_html(get_theme_mod('cdv_stories_subtitle', 'Lasciati ispirare dalle esperienze dei nostri viaggiatori')); ?></p>
             </div>
 
             <div class="stories-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: calc(var(--spacing-unit) * 4);">
@@ -184,7 +184,7 @@ get_header();
             <?php if ($recent_stories->found_posts > 0) : ?>
                 <div class="text-center mt-3">
                     <a href="<?php echo esc_url(home_url('/racconti')); ?>" class="btn-primary">
-                        Vedi Tutti i Racconti →
+                        <?php echo esc_html(get_theme_mod('cdv_stories_button_text', 'Vedi Tutti i Racconti')); ?> →
                     </a>
                 </div>
             <?php endif; ?>
