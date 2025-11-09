@@ -40,6 +40,13 @@ get_header();
 
                         <button type="submit" class="btn-search">Cerca Viaggi</button>
                     </form>
+
+                    <!-- CTA Button -->
+                    <div class="hero-cta" style="text-align: center; margin-top: calc(var(--spacing-unit) * 4);">
+                        <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary btn-large" style="font-size: 1.1rem; padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4); display: inline-flex; align-items: center; gap: calc(var(--spacing-unit) * 1); box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                            ✨ Inserisci il Tuo Annuncio
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -49,7 +56,7 @@ get_header();
     <section class="section">
         <div class="container">
             <div class="section-title">
-                <h2>Viaggi in Evidenza</h2>
+                <h2>Proposte di Viaggi</h2>
                 <p>Scopri i viaggi più popolari della community</p>
             </div>
 
@@ -64,6 +71,12 @@ get_header();
                             'value' => 'open',
                             'compare' => '=',
                         ),
+                        array(
+                            'key' => 'cdv_end_date',
+                            'value' => date('Y-m-d'),
+                            'compare' => '>=',
+                            'type' => 'DATE',
+                        ),
                     ),
                 ));
 
@@ -75,7 +88,7 @@ get_header();
                 else :
                     ?>
                     <div class="no-travels">
-                        <p>Nessun viaggio disponibile al momento. <?php if (is_user_logged_in()) : ?><a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>">Crea il primo viaggio!</a><?php endif; ?></p>
+                        <p>Nessun viaggio disponibile al momento. <?php if (is_user_logged_in()) : ?><a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>">Crea il primo annuncio!</a><?php endif; ?></p>
                     </div>
                     <?php
                 endif;
@@ -197,10 +210,10 @@ get_header();
             </p>
             <?php if (is_user_logged_in()) : ?>
                 <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary">
-                    Crea il Tuo Viaggio
+                    Crea il Tuo Annuncio
                 </a>
             <?php else : ?>
-                <a href="<?php echo esc_url(wp_registration_url()); ?>" class="btn-primary">
+                <a href="<?php echo esc_url(home_url('/registrazione')); ?>" class="btn-primary">
                     Registrati Gratis
                 </a>
             <?php endif; ?>

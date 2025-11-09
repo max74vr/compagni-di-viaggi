@@ -395,7 +395,7 @@ get_header();
                     <div class="form-actions">
                         <button type="button" class="btn-secondary btn-prev-travel">← Indietro</button>
                         <button type="button" class="btn-secondary" id="skip-travel-from-form">Salta e Completa</button>
-                        <button type="submit" class="btn-primary btn-large">Crea Viaggio e Completa ✓</button>
+                        <button type="submit" class="btn-primary btn-large">Crea Annuncio e Completa ✓</button>
                     </div>
 
                     </div><!-- End travel-form-fields -->

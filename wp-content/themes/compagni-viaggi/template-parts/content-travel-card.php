@@ -7,8 +7,16 @@
 <article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
     <div class="card-content">
         <div class="card-header">
+            <?php
+            $is_expired = get_query_var('is_expired', false);
+            if ($is_expired) :
+            ?>
+                <span class="badge badge-expired" style="background: #dc3545; color: white; padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5); border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                    Scaduto
+                </span>
+            <?php endif; ?>
             <?php cdv_travel_type_badges(); ?>
-            <?php echo cdv_get_travel_status_label(); ?>
+            <?php if (!$is_expired) echo cdv_get_travel_status_label(); ?>
         </div>
 
         <h3 class="card-title">

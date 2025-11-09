@@ -72,21 +72,47 @@ get_header();
 
             <!-- Travels Grid -->
             <div class="travels-content">
-                <?php if (have_posts()) : ?>
+                <?php
+                // Separate active and expired travels
+                $active_travels = array();
+                $expired_travels = array();
+                $today = date('Y-m-d');
+
+                if (have_posts()) :
+                    while (have_posts()) : the_post();
+                        $end_date = get_post_meta(get_the_ID(), 'cdv_end_date', true);
+                        if ($end_date && $end_date < $today) {
+                            $expired_travels[] = $post;
+                        } else {
+                            $active_travels[] = $post;
+                        }
+                    endwhile;
+                    wp_reset_postdata();
+
+                    $total_travels = count($active_travels) + count($expired_travels);
+                    ?>
                     <div class="results-header">
                         <p>
-                            <?php
-                            global $wp_query;
-                            echo $wp_query->found_posts . ' ' . ($wp_query->found_posts === 1 ? 'viaggio trovato' : 'viaggi trovati');
-                            ?>
+                            <?php echo $total_travels . ' ' . ($total_travels === 1 ? 'viaggio trovato' : 'viaggi trovati'); ?>
                         </p>
                     </div>
 
                     <div class="grid">
                         <?php
-                        while (have_posts()) : the_post();
+                        // Show active travels first
+                        foreach ($active_travels as $post) :
+                            setup_postdata($post);
                             get_template_part('template-parts/content', 'travel-card');
-                        endwhile;
+                        endforeach;
+
+                        // Show expired travels with badge
+                        foreach ($expired_travels as $post) :
+                            setup_postdata($post);
+                            set_query_var('is_expired', true);
+                            get_template_part('template-parts/content', 'travel-card');
+                            set_query_var('is_expired', false);
+                        endforeach;
+                        wp_reset_postdata();
                         ?>
                     </div>
 

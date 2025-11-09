@@ -112,7 +112,7 @@ get_header();
 
                     <div class="form-actions">
                         <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-secondary">Annulla</a>
-                        <button type="submit" class="btn-primary btn-large">Crea Viaggio 🚀</button>
+                        <button type="submit" class="btn-primary btn-large">Crea Annuncio 🚀</button>
                     </div>
 
                     <div id="form-messages" style="margin-top: 20px;"></div>
@@ -292,12 +292,12 @@ jQuery(document).ready(function($) {
                     }, 1500);
                 } else {
                     $messages.html('<div class="error-message">' + response.data.message + '</div>');
-                    $submitBtn.prop('disabled', false).text('Crea Viaggio 🚀');
+                    $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
                 }
             },
             error: function() {
                 $messages.html('<div class="error-message">Si è verificato un errore. Riprova più tardi.</div>');
-                $submitBtn.prop('disabled', false).text('Crea Viaggio 🚀');
+                $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
             }
         });
     });

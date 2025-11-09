@@ -55,7 +55,7 @@
                     👤 Dashboard
                 </a>
                 <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-header btn-header-primary">
-                    ✈️ Crea Viaggio
+                    ✈️ Crea Annuncio
                 </a>
                 <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="btn-header btn-header-ghost">
                     Esci
@@ -96,7 +96,7 @@ function cdv_fallback_mobile_menu() {
     echo '<li><a href="' . esc_url(home_url('/racconti')) . '">📖 Racconti</a></li>';
     if (is_user_logged_in()) {
         echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">👤 Dashboard</a></li>';
-        echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">➕ Crea Viaggio</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">➕ Crea Annuncio</a></li>';
         echo '<li><a href="' . esc_url(wp_logout_url(home_url())) . '" style="background: rgba(220, 53, 69, 0.2); color: #ff6b6b;">Esci</a></li>';
     } else {
         echo '<li><a href="' . esc_url(home_url('/accedi')) . '">🔐 Accedi</a></li>';

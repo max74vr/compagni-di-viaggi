@@ -553,6 +553,25 @@ class CDV_Admin {
      * Pending travels page
      */
     public static function pending_travels_page() {
+        // Handle form submissions FIRST, before any output
+        if (isset($_POST['approve_travel']) && isset($_POST['travel_id'])) {
+            $travel_id = intval($_POST['travel_id']);
+            check_admin_referer('cdv_approve_travel_' . $travel_id);
+
+            CDV_Travel_Moderation::approve_travel($travel_id);
+            wp_redirect(add_query_arg('approved', '1', admin_url('admin.php?page=cdv-pending-travels')));
+            exit;
+        }
+
+        if (isset($_POST['reject_travel']) && isset($_POST['travel_id'])) {
+            $travel_id = intval($_POST['travel_id']);
+            check_admin_referer('cdv_approve_travel_' . $travel_id);
+
+            CDV_Travel_Moderation::reject_travel($travel_id, 'Contenuto non conforme alle linee guida');
+            wp_redirect(add_query_arg('rejected', '1', admin_url('admin.php?page=cdv-pending-travels')));
+            exit;
+        }
+
         $args = array(
             'post_type' => 'viaggio',
             'post_status' => 'pending',
@@ -635,26 +654,7 @@ class CDV_Admin {
                 </table>
             <?php endif; ?>
         </div>
-
         <?php
-        // Handle form submissions
-        if (isset($_POST['approve_travel']) && isset($_POST['travel_id'])) {
-            $travel_id = intval($_POST['travel_id']);
-            check_admin_referer('cdv_approve_travel_' . $travel_id);
-
-            CDV_Travel_Moderation::approve_travel($travel_id);
-            wp_redirect(add_query_arg('approved', '1', admin_url('admin.php?page=cdv-pending-travels')));
-            exit;
-        }
-
-        if (isset($_POST['reject_travel']) && isset($_POST['travel_id'])) {
-            $travel_id = intval($_POST['travel_id']);
-            check_admin_referer('cdv_approve_travel_' . $travel_id);
-
-            CDV_Travel_Moderation::reject_travel($travel_id, 'Contenuto non conforme alle linee guida');
-            wp_redirect(add_query_arg('rejected', '1', admin_url('admin.php?page=cdv-pending-travels')));
-            exit;
-        }
     }
 
     /**
