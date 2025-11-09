@@ -29,6 +29,7 @@ function cdv_theme_setup() {
     // Register navigation menus
     register_nav_menus(array(
         'primary' => __('Menu Principale', 'compagni-viaggi'),
+        'mobile' => __('Menu Mobile', 'compagni-viaggi'),
         'footer' => __('Menu Footer', 'compagni-viaggi'),
     ));
 
@@ -433,6 +434,30 @@ function cdv_customize_register($wp_customize) {
         'label'   => __('Sottotitolo Hero', 'compagni-viaggi'),
         'section' => 'cdv_hero_section',
     ));
+
+    // Header / Menu Section
+    $wp_customize->add_section('cdv_header_section', array(
+        'title'    => __('Header e Menu', 'compagni-viaggi'),
+        'priority' => 25,
+    ));
+
+    // Menu Items Gap
+    $wp_customize->add_setting('cdv_menu_gap', array(
+        'default'           => '24',
+        'sanitize_callback' => 'absint',
+    ));
+
+    $wp_customize->add_control('cdv_menu_gap', array(
+        'type'        => 'number',
+        'label'       => __('Distanza tra voci menu (px)', 'compagni-viaggi'),
+        'description' => __('Imposta la distanza tra le voci del menu principale', 'compagni-viaggi'),
+        'section'     => 'cdv_header_section',
+        'input_attrs' => array(
+            'min'  => '8',
+            'max'  => '48',
+            'step' => '4',
+        ),
+    ));
 }
 add_action('customize_register', 'cdv_customize_register');
 
@@ -450,12 +475,17 @@ function cdv_customizer_css() {
     $hero_overlay_color = get_theme_mod('cdv_hero_overlay_color', '#000000');
     $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
     $hero_image_id = get_theme_mod('cdv_hero_image');
+    $menu_gap = get_theme_mod('cdv_menu_gap', '24');
 
     ?>
     <style type="text/css">
         .site-header {
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .main-nav ul {
+            gap: <?php echo esc_attr($menu_gap); ?>px;
         }
 
         .site-header .site-logo a {

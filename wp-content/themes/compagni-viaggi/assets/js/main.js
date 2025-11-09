@@ -9,19 +9,21 @@
      * Mobile menu toggle
      */
     function initMobileMenu() {
-        // Add mobile menu button
-        const nav = document.querySelector('.main-nav');
-        if (nav) {
-            const button = document.createElement('button');
-            button.className = 'mobile-menu-toggle';
-            button.innerHTML = '☰';
-            button.setAttribute('aria-label', 'Toggle menu');
+        const button = document.querySelector('.mobile-menu-toggle');
+        const mobileNav = document.querySelector('.mobile-nav');
 
-            nav.parentNode.insertBefore(button, nav);
-
+        if (button && mobileNav) {
             button.addEventListener('click', function() {
-                nav.classList.toggle('active');
+                mobileNav.classList.toggle('active');
                 this.classList.toggle('active');
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!button.contains(event.target) && !mobileNav.contains(event.target)) {
+                    mobileNav.classList.remove('active');
+                    button.classList.remove('active');
+                }
             });
         }
     }

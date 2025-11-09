@@ -25,7 +25,9 @@
             </a>
         </div>
 
-        <nav class="main-nav">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+
+        <nav class="main-nav desktop-only">
             <?php
             wp_nav_menu(array(
                 'theme_location' => 'primary',
@@ -36,7 +38,18 @@
             ?>
         </nav>
 
-        <div class="header-actions">
+        <nav class="mobile-nav">
+            <?php
+            wp_nav_menu(array(
+                'theme_location' => 'mobile',
+                'menu_class'     => 'mobile-menu',
+                'container'      => false,
+                'fallback_cb'    => 'cdv_fallback_mobile_menu',
+            ));
+            ?>
+        </nav>
+
+        <div class="header-actions desktop-only">
             <?php if (is_user_logged_in()) : ?>
                 <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-secondary">
                     Dashboard
@@ -69,6 +82,24 @@ function cdv_fallback_menu() {
     echo '<li><a href="' . esc_url(home_url('/viaggi')) . '">Viaggi</a></li>';
     if (is_user_logged_in()) {
         echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">Dashboard</a></li>';
+    }
+    echo '</ul>';
+}
+
+/**
+ * Fallback mobile menu if no menu is set
+ */
+function cdv_fallback_mobile_menu() {
+    echo '<ul class="mobile-menu">';
+    echo '<li><a href="' . esc_url(home_url('/')) . '">Home</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/viaggi')) . '">Viaggi</a></li>';
+    if (is_user_logged_in()) {
+        echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">Dashboard</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">Crea Viaggio</a></li>';
+        echo '<li><a href="' . esc_url(wp_logout_url(home_url())) . '">Esci</a></li>';
+    } else {
+        echo '<li><a href="' . esc_url(wp_login_url()) . '">Accedi</a></li>';
+        echo '<li><a href="' . esc_url(wp_registration_url()) . '">Registrati</a></li>';
     }
     echo '</ul>';
 }
