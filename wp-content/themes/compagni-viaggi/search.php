@@ -11,7 +11,6 @@ $search_query = get_search_query();
 <main class="site-main search-results">
     <div class="container">
         <header class="search-header">
-            <div class="search-icon">🔍</div>
             <h1 class="search-title">
                 Risultati per: "<span class="search-query"><?php echo esc_html($search_query); ?></span>"
             </h1>
@@ -21,18 +20,6 @@ $search_query = get_search_query();
                     Trovati <strong><?php echo $wp_query->found_posts; ?></strong> risultat<?php echo $wp_query->found_posts != 1 ? 'i' : 'o'; ?>
                 </p>
             <?php endif; ?>
-
-            <!-- Search form -->
-            <form role="search" method="get" class="search-form-box" action="<?php echo home_url('/'); ?>">
-                <input type="search"
-                       class="search-field"
-                       placeholder="Prova con un'altra ricerca..."
-                       name="s"
-                       value="<?php echo esc_attr($search_query); ?>">
-                <button type="submit" class="search-submit">
-                    Cerca
-                </button>
-            </form>
         </header>
 
         <?php if (have_posts()) : ?>
@@ -50,9 +37,33 @@ $search_query = get_search_query();
                 <?php while (have_posts()) : the_post(); ?>
                     <article id="post-<?php the_ID(); ?>" <?php post_class('search-result-item'); ?> data-post-type="<?php echo get_post_type(); ?>">
                         <div class="result-layout">
-                            <?php if (has_post_thumbnail()) : ?>
+                            <?php
+                            $has_thumbnail = has_post_thumbnail();
+                            $taxonomy_image_url = false;
+
+                            // Se non ha immagine e è un viaggio, cerca l'immagine del tipo di viaggio
+                            if (!$has_thumbnail && get_post_type() === 'viaggio' && class_exists('CDV_Taxonomy_Images')) {
+                                $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
+                                if (!empty($travel_types)) {
+                                    // Ottieni immagine random se ci sono più tipi
+                                    $taxonomy_image_url = CDV_Taxonomy_Images::get_random_term_image($travel_types, 'medium');
+                                }
+                            }
+                            ?>
+
+                            <?php if ($has_thumbnail) : ?>
                                 <a href="<?php the_permalink(); ?>" class="result-thumbnail">
                                     <?php the_post_thumbnail('medium'); ?>
+                                </a>
+                            <?php elseif ($taxonomy_image_url) : ?>
+                                <a href="<?php the_permalink(); ?>" class="result-thumbnail">
+                                    <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
+                                </a>
+                            <?php elseif (get_post_type() === 'viaggio') : ?>
+                                <a href="<?php the_permalink(); ?>" class="result-thumbnail result-thumbnail-placeholder">
+                                    <div class="placeholder-content">
+                                        <span class="placeholder-icon">✈️</span>
+                                    </div>
                                 </a>
                             <?php endif; ?>
 
@@ -202,22 +213,14 @@ $search_query = get_search_query();
 }
 
 .search-header {
-    text-align: center;
-    padding: 3rem 2rem;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 2rem 0 1.5rem 0;
     margin-bottom: 2rem;
-}
-
-.search-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+    border-bottom: 2px solid #e0e0e0;
 }
 
 .search-title {
-    font-size: 2rem;
-    margin: 0 0 1rem 0;
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem 0;
     color: #333;
 }
 
@@ -228,38 +231,8 @@ $search_query = get_search_query();
 
 .search-count {
     color: #666;
-    margin-bottom: 2rem;
-}
-
-.search-form-box {
-    max-width: 600px;
-    margin: 0 auto;
-    display: flex;
-    gap: 0.5rem;
-}
-
-.search-field {
-    flex: 1;
-    padding: 1rem 1.5rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-}
-
-.search-submit {
-    padding: 1rem 2rem;
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 600;
-    transition: background 0.3s;
-}
-
-.search-submit:hover {
-    background: var(--accent-color);
+    margin: 0;
+    font-size: 0.95rem;
 }
 
 /* Filters */
@@ -340,6 +313,34 @@ $search_query = get_search_query();
 
 .search-result-item:hover .result-thumbnail img {
     transform: scale(1.1);
+}
+
+.result-thumbnail-placeholder {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.result-thumbnail-placeholder .placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.result-thumbnail-placeholder .placeholder-icon {
+    font-size: 3rem;
+    opacity: 0.8;
+}
+
+/* Adatta layout quando non c'è thumbnail */
+.result-layout:has(> :first-child:not(.result-thumbnail)) {
+    grid-template-columns: 1fr;
+}
+
+.search-result-item:not(:has(.result-thumbnail)) .result-content {
+    padding: 1.5rem 2rem;
 }
 
 .result-content {
@@ -564,19 +565,15 @@ $search_query = get_search_query();
 /* Responsive */
 @media (max-width: 768px) {
     .search-results {
-        padding: 2rem 0;
+        padding: 1.5rem 0;
     }
 
     .search-header {
-        padding: 2rem 1.5rem;
+        padding: 1.5rem 0 1rem 0;
     }
 
     .search-title {
-        font-size: 1.5rem;
-    }
-
-    .search-form-box {
-        flex-direction: column;
+        font-size: 1.35rem;
     }
 
     .result-layout {
@@ -596,12 +593,22 @@ $search_query = get_search_query();
         font-size: 1.25rem;
     }
 
+    .result-meta {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
     .alternatives-grid {
         grid-template-columns: 1fr;
     }
 
     .search-filters {
-        justify-content: center;
+        justify-content: flex-start;
+    }
+
+    .filter-label {
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
 }
 </style>
