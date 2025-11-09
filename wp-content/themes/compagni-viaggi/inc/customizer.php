@@ -319,6 +319,41 @@ function cdv_customize_register($wp_customize) {
         'type'     => 'url',
     ));
 
+    // Hero Background Image
+    $wp_customize->add_setting('cdv_hero_bg_image', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Media_Control($wp_customize, 'cdv_hero_bg_image', array(
+        'label'       => 'Immagine di Sfondo Hero',
+        'description' => 'Carica un\'immagine di sfondo per la sezione hero',
+        'section'     => 'cdv_hero',
+        'settings'    => 'cdv_hero_bg_image',
+        'mime_type'   => 'image',
+    )));
+
+    // Hero Overlay Opacity
+    $wp_customize->add_setting('cdv_hero_overlay_opacity', array(
+        'default'           => '0.5',
+        'sanitize_callback' => 'cdv_sanitize_float',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_hero_overlay_opacity', array(
+        'label'       => 'Opacità Overlay Hero (0-1)',
+        'description' => '0 = trasparente, 1 = completamente scuro',
+        'section'     => 'cdv_hero',
+        'settings'    => 'cdv_hero_overlay_opacity',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min'  => '0',
+            'max'  => '1',
+            'step' => '0.1',
+        ),
+    ));
+
     // ========================================
     // SECTION: Sezione Viaggi
     // ========================================
@@ -542,6 +577,13 @@ function cdv_customize_register($wp_customize) {
 add_action('customize_register', 'cdv_customize_register');
 
 /**
+ * Sanitize float value
+ */
+function cdv_sanitize_float($value) {
+    return floatval($value);
+}
+
+/**
  * Enqueue Google Fonts
  */
 function cdv_enqueue_google_fonts() {
@@ -585,6 +627,10 @@ function cdv_customizer_css() {
     $button_font = get_theme_mod('cdv_button_font', 'Poppins');
     $body_font_size = get_theme_mod('cdv_body_font_size', '16');
     $heading_font_weight = get_theme_mod('cdv_heading_font_weight', '700');
+
+    // Hero settings
+    $hero_bg_image_id = get_theme_mod('cdv_hero_bg_image', '');
+    $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
     ?>
     <style type="text/css">
         :root {
@@ -634,7 +680,7 @@ function cdv_customizer_css() {
 
         /* Header */
         .site-header {
-            background: linear-gradient(135deg, <?php echo esc_attr($header_bg_color); ?> 0%, <?php echo esc_attr($secondary_color); ?> 100%);
+            background: <?php echo esc_attr($header_bg_color); ?>;
         }
 
         .custom-logo {
@@ -657,6 +703,45 @@ function cdv_customizer_css() {
         .btn-header-primary:hover {
             background: <?php echo esc_attr($secondary_color); ?>;
         }
+
+        /* Hero Section Background */
+        <?php if ($hero_bg_image_id) :
+            $hero_bg_url = wp_get_attachment_url($hero_bg_image_id);
+            if ($hero_bg_url) :
+        ?>
+        .hero-section {
+            background-image: url('<?php echo esc_url($hero_bg_url); ?>');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, <?php echo esc_attr($hero_overlay_opacity); ?>);
+            z-index: 1;
+        }
+
+        .hero-section .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-section h1,
+        .hero-section p,
+        .hero-section label {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        <?php
+            endif;
+        endif; ?>
     </style>
     <?php
 }
