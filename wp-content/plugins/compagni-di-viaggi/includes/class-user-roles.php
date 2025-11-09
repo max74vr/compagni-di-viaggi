@@ -27,6 +27,10 @@ class CDV_User_Roles {
 
         // Also filter for ajax requests (Quick Edit uses AJAX)
         add_action('wp_ajax_inline-save', array(__CLASS__, 'ajax_inline_save_allow_viaggiatori'), 0);
+
+        // Replace author metabox for viaggio post type
+        add_action('add_meta_boxes', array(__CLASS__, 'replace_author_metabox'));
+        add_action('save_post_viaggio', array(__CLASS__, 'save_custom_author'), 10, 2);
     }
 
     /**
@@ -354,5 +358,74 @@ class CDV_User_Roles {
         }
 
         return $query_args;
+    }
+
+    /**
+     * Replace default author metabox with custom one for viaggio
+     */
+    public static function replace_author_metabox() {
+        remove_meta_box('authordiv', 'viaggio', 'normal');
+
+        add_meta_box(
+            'cdv_authordiv',
+            __('Autore', 'compagni-di-viaggi'),
+            array(__CLASS__, 'render_author_metabox'),
+            'viaggio',
+            'side',
+            'default'
+        );
+    }
+
+    /**
+     * Render custom author metabox
+     */
+    public static function render_author_metabox($post) {
+        global $user_ID;
+
+        // Get all users with appropriate roles
+        $users = get_users(array(
+            'role__in' => array('administrator', 'editor', 'viaggiatore'),
+            'orderby' => 'display_name',
+            'order' => 'ASC',
+        ));
+
+        ?>
+        <label class="screen-reader-text" for="post_author_override"><?php _e('Autore'); ?></label>
+        <?php
+        wp_dropdown_users(array(
+            'who' => 'all',
+            'name' => 'post_author_override',
+            'selected' => empty($post->ID) ? $user_ID : $post->post_author,
+            'include_selected' => true,
+            'show' => 'display_name_with_login',
+            'role__in' => array('administrator', 'editor', 'viaggiatore'),
+        ));
+    }
+
+    /**
+     * Save custom author field
+     */
+    public static function save_custom_author($post_id, $post) {
+        // Check permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        // Check if post_author_override is set
+        if (isset($_POST['post_author_override'])) {
+            $author_id = absint($_POST['post_author_override']);
+
+            // Verify the user exists and has appropriate role
+            $user = get_userdata($author_id);
+            if ($user && array_intersect($user->roles, array('administrator', 'editor', 'viaggiatore'))) {
+                // Update post author
+                remove_action('save_post_viaggio', array(__CLASS__, 'save_custom_author'), 10);
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_author' => $author_id,
+                ));
+                add_action('save_post_viaggio', array(__CLASS__, 'save_custom_author'), 10, 2);
+            }
+        }
     }
 }
