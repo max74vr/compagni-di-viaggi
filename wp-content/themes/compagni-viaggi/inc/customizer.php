@@ -75,6 +75,145 @@ function cdv_customize_register($wp_customize) {
     )));
 
     // ========================================
+    // SECTION: Tipografia / Font
+    // ========================================
+    $wp_customize->add_section('cdv_typography', array(
+        'title'       => 'Tipografia e Font',
+        'description' => 'Personalizza i font del sito scegliendo da Google Fonts',
+        'priority'    => 32,
+    ));
+
+    // Available Google Fonts
+    $google_fonts = array(
+        'Poppins' => 'Poppins',
+        'Roboto' => 'Roboto',
+        'Open Sans' => 'Open Sans',
+        'Lato' => 'Lato',
+        'Montserrat' => 'Montserrat',
+        'Raleway' => 'Raleway',
+        'Playfair Display' => 'Playfair Display',
+        'Merriweather' => 'Merriweather',
+        'Nunito' => 'Nunito',
+        'Inter' => 'Inter',
+        'Work Sans' => 'Work Sans',
+        'DM Sans' => 'DM Sans',
+        'Outfit' => 'Outfit',
+        'Plus Jakarta Sans' => 'Plus Jakarta Sans',
+        'Manrope' => 'Manrope',
+        'Space Grotesk' => 'Space Grotesk',
+        'Quicksand' => 'Quicksand',
+        'Josefin Sans' => 'Josefin Sans',
+        'PT Sans' => 'PT Sans',
+        'Ubuntu' => 'Ubuntu',
+    );
+
+    // Body Font
+    $wp_customize->add_setting('cdv_body_font', array(
+        'default'           => 'Poppins',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_body_font', array(
+        'label'       => 'Font Corpo Testo',
+        'description' => 'Font principale per il contenuto del sito',
+        'section'     => 'cdv_typography',
+        'settings'    => 'cdv_body_font',
+        'type'        => 'select',
+        'choices'     => $google_fonts,
+    ));
+
+    // Heading Font
+    $wp_customize->add_setting('cdv_heading_font', array(
+        'default'           => 'Poppins',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_heading_font', array(
+        'label'       => 'Font Titoli (H1-H6)',
+        'description' => 'Font per tutti i titoli del sito',
+        'section'     => 'cdv_typography',
+        'settings'    => 'cdv_heading_font',
+        'type'        => 'select',
+        'choices'     => $google_fonts,
+    ));
+
+    // Menu Font
+    $wp_customize->add_setting('cdv_menu_font', array(
+        'default'           => 'Poppins',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_menu_font', array(
+        'label'       => 'Font Menu',
+        'description' => 'Font per il menu di navigazione',
+        'section'     => 'cdv_typography',
+        'settings'    => 'cdv_menu_font',
+        'type'        => 'select',
+        'choices'     => $google_fonts,
+    ));
+
+    // Button Font
+    $wp_customize->add_setting('cdv_button_font', array(
+        'default'           => 'Poppins',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_button_font', array(
+        'label'       => 'Font Pulsanti',
+        'description' => 'Font per tutti i pulsanti',
+        'section'     => 'cdv_typography',
+        'settings'    => 'cdv_button_font',
+        'type'        => 'select',
+        'choices'     => $google_fonts,
+    ));
+
+    // Body Font Size
+    $wp_customize->add_setting('cdv_body_font_size', array(
+        'default'           => '16',
+        'sanitize_callback' => 'absint',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_body_font_size', array(
+        'label'       => 'Dimensione Font Corpo (px)',
+        'description' => 'Dimensione base del testo (consigliato 14-18px)',
+        'section'     => 'cdv_typography',
+        'settings'    => 'cdv_body_font_size',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min'  => 12,
+            'max'  => 24,
+            'step' => 1,
+        ),
+    ));
+
+    // Heading Font Weight
+    $wp_customize->add_setting('cdv_heading_font_weight', array(
+        'default'           => '700',
+        'sanitize_callback' => 'sanitize_text_field',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_heading_font_weight', array(
+        'label'    => 'Peso Font Titoli',
+        'section'  => 'cdv_typography',
+        'settings' => 'cdv_heading_font_weight',
+        'type'     => 'select',
+        'choices'  => array(
+            '300' => 'Leggero (300)',
+            '400' => 'Normale (400)',
+            '500' => 'Medio (500)',
+            '600' => 'Semi-grassetto (600)',
+            '700' => 'Grassetto (700)',
+            '800' => 'Extra-grassetto (800)',
+        ),
+    ));
+
+    // ========================================
     // SECTION: Logo & Header
     // ========================================
     $wp_customize->add_section('cdv_header', array(
@@ -403,6 +542,32 @@ function cdv_customize_register($wp_customize) {
 add_action('customize_register', 'cdv_customize_register');
 
 /**
+ * Enqueue Google Fonts
+ */
+function cdv_enqueue_google_fonts() {
+    $body_font = get_theme_mod('cdv_body_font', 'Poppins');
+    $heading_font = get_theme_mod('cdv_heading_font', 'Poppins');
+    $menu_font = get_theme_mod('cdv_menu_font', 'Poppins');
+    $button_font = get_theme_mod('cdv_button_font', 'Poppins');
+
+    // Collect unique fonts
+    $fonts = array_unique(array($body_font, $heading_font, $menu_font, $button_font));
+
+    // Build Google Fonts URL
+    $font_families = array();
+    foreach ($fonts as $font) {
+        // Request multiple weights for each font
+        $font_families[] = str_replace(' ', '+', $font) . ':wght@300;400;500;600;700;800';
+    }
+
+    if (!empty($font_families)) {
+        $fonts_url = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $font_families) . '&display=swap';
+        wp_enqueue_style('cdv-google-fonts', $fonts_url, array(), null);
+    }
+}
+add_action('wp_enqueue_scripts', 'cdv_enqueue_google_fonts', 5);
+
+/**
  * Output custom CSS
  */
 function cdv_customizer_css() {
@@ -412,6 +577,14 @@ function cdv_customizer_css() {
     $link_color = get_theme_mod('cdv_link_color', '#667eea');
     $logo_height = get_theme_mod('cdv_logo_height', '50');
     $header_bg_color = get_theme_mod('cdv_header_bg_color', '#667eea');
+
+    // Font settings
+    $body_font = get_theme_mod('cdv_body_font', 'Poppins');
+    $heading_font = get_theme_mod('cdv_heading_font', 'Poppins');
+    $menu_font = get_theme_mod('cdv_menu_font', 'Poppins');
+    $button_font = get_theme_mod('cdv_button_font', 'Poppins');
+    $body_font_size = get_theme_mod('cdv_body_font_size', '16');
+    $heading_font_weight = get_theme_mod('cdv_heading_font_weight', '700');
     ?>
     <style type="text/css">
         :root {
@@ -419,8 +592,47 @@ function cdv_customizer_css() {
             --secondary-color: <?php echo esc_attr($secondary_color); ?>;
             --text-dark: <?php echo esc_attr($text_color); ?>;
             --link-color: <?php echo esc_attr($link_color); ?>;
+            --body-font: '<?php echo esc_attr($body_font); ?>', sans-serif;
+            --heading-font: '<?php echo esc_attr($heading_font); ?>', sans-serif;
+            --menu-font: '<?php echo esc_attr($menu_font); ?>', sans-serif;
+            --button-font: '<?php echo esc_attr($button_font); ?>', sans-serif;
         }
 
+        /* Body and Base Typography */
+        body {
+            font-family: var(--body-font);
+            font-size: <?php echo esc_attr($body_font_size); ?>px;
+            color: <?php echo esc_attr($text_color); ?>;
+        }
+
+        /* Headings */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: var(--heading-font);
+            font-weight: <?php echo esc_attr($heading_font_weight); ?>;
+        }
+
+        /* Navigation Menu */
+        .main-nav,
+        .main-nav a,
+        .mobile-nav,
+        .mobile-nav a {
+            font-family: var(--menu-font);
+        }
+
+        /* Buttons */
+        .btn-primary,
+        .btn-secondary,
+        .btn-header,
+        .btn-header-primary,
+        .btn-header-secondary,
+        .btn-header-ghost,
+        button,
+        input[type="submit"],
+        input[type="button"] {
+            font-family: var(--button-font);
+        }
+
+        /* Header */
         .site-header {
             background: linear-gradient(135deg, <?php echo esc_attr($header_bg_color); ?> 0%, <?php echo esc_attr($secondary_color); ?> 100%);
         }
@@ -430,10 +642,12 @@ function cdv_customizer_css() {
             width: auto;
         }
 
+        /* Links */
         a {
             color: <?php echo esc_attr($link_color); ?>;
         }
 
+        /* Buttons Colors */
         .btn-primary,
         .btn-header-primary {
             background: <?php echo esc_attr($primary_color); ?>;

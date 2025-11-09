@@ -66,9 +66,6 @@ add_action('after_setup_theme', 'cdv_theme_setup');
  * Enqueue scripts and styles
  */
 function cdv_enqueue_scripts() {
-    // Google Fonts
-    wp_enqueue_style('cdv-google-fonts', 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap', array(), null);
-
     // Theme stylesheet
     wp_enqueue_style('cdv-style', get_stylesheet_uri(), array(), CDV_THEME_VERSION);
 
