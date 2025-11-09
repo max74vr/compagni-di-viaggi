@@ -154,7 +154,7 @@ class CDV_Travel_Stories {
                 'post_type'    => 'racconto',
                 'post_title'   => $title,
                 'post_content' => $content,
-                'post_status'  => 'publish',
+                'post_status'  => $story_id > 0 ? get_post_status($story_id) : 'pending', // New stories are pending
                 'post_author'  => $user_id,
             );
 
@@ -210,10 +210,21 @@ class CDV_Travel_Stories {
                 }
             }
 
+            // Get the final post status
+            $final_status = get_post_status($post_id);
+            $is_pending = $final_status === 'pending';
+
+            $message = $story_id > 0
+                ? 'Racconto aggiornato con successo!'
+                : ($is_pending
+                    ? 'Racconto inviato con successo! Sarà pubblicato dopo l\'approvazione da parte dell\'amministratore.'
+                    : 'Racconto pubblicato con successo!');
+
             wp_send_json_success(array(
-                'message' => $story_id > 0 ? 'Racconto aggiornato con successo!' : 'Racconto pubblicato con successo!',
+                'message' => $message,
                 'story_id' => $post_id,
                 'story_url' => get_permalink($post_id),
+                'is_pending' => $is_pending,
             ));
 
         } catch (Exception $e) {

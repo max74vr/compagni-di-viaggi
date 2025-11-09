@@ -148,6 +148,49 @@ get_header();
         </div>
     </section>
 
+    <!-- Travel Stories Section -->
+    <section class="section" style="background-color: white;">
+        <div class="container">
+            <div class="section-title">
+                <h2>📖 Racconti di Viaggio</h2>
+                <p>Lasciati ispirare dalle esperienze dei nostri viaggiatori</p>
+            </div>
+
+            <div class="stories-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: calc(var(--spacing-unit) * 4);">
+                <?php
+                $recent_stories = new WP_Query(array(
+                    'post_type' => 'racconto',
+                    'posts_per_page' => 3,
+                    'post_status' => 'publish',
+                    'orderby' => 'date',
+                    'order' => 'DESC',
+                ));
+
+                if ($recent_stories->have_posts()) :
+                    while ($recent_stories->have_posts()) : $recent_stories->the_post();
+                        get_template_part('template-parts/content', 'story-card');
+                    endwhile;
+                    wp_reset_postdata();
+                else :
+                    ?>
+                    <div class="no-stories" style="grid-column: 1 / -1; text-align: center; padding: calc(var(--spacing-unit) * 4) 0;">
+                        <p style="color: var(--text-medium);">Nessun racconto disponibile al momento.</p>
+                    </div>
+                    <?php
+                endif;
+                ?>
+            </div>
+
+            <?php if ($recent_stories->found_posts > 0) : ?>
+                <div class="text-center mt-3">
+                    <a href="<?php echo esc_url(home_url('/racconti')); ?>" class="btn-primary">
+                        Vedi Tutti i Racconti →
+                    </a>
+                </div>
+            <?php endif; ?>
+        </div>
+    </section>
+
     <!-- Stats Section -->
     <section class="section">
         <div class="container">

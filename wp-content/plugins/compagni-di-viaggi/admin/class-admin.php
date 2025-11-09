@@ -59,6 +59,19 @@ class CDV_Admin {
             array(__CLASS__, 'pending_travels_page')
         );
 
+        // Pending stories submenu
+        $pending_stories = self::get_pending_stories_count();
+        $stories_badge = $pending_stories > 0 ? ' <span class="awaiting-mod">' . $pending_stories . '</span>' : '';
+
+        add_submenu_page(
+            'cdv-dashboard',
+            'Racconti in Attesa',
+            'Racconti in Attesa' . $stories_badge,
+            'manage_options',
+            'cdv-pending-stories',
+            array(__CLASS__, 'pending_stories_page')
+        );
+
         add_submenu_page(
             'cdv-dashboard',
             'Impostazioni',
@@ -655,6 +668,137 @@ class CDV_Admin {
             <?php endif; ?>
         </div>
         <?php
+    }
+
+    /**
+     * Pending stories page
+     */
+    public static function pending_stories_page() {
+        // Handle form submissions FIRST, before any output
+        if (isset($_POST['approve_story']) && isset($_POST['story_id'])) {
+            $story_id = intval($_POST['story_id']);
+            check_admin_referer('cdv_approve_story_' . $story_id);
+
+            wp_update_post(array(
+                'ID' => $story_id,
+                'post_status' => 'publish',
+            ));
+
+            wp_redirect(add_query_arg('approved', '1', admin_url('admin.php?page=cdv-pending-stories')));
+            exit;
+        }
+
+        if (isset($_POST['reject_story']) && isset($_POST['story_id'])) {
+            $story_id = intval($_POST['story_id']);
+            check_admin_referer('cdv_approve_story_' . $story_id);
+
+            wp_delete_post($story_id, true);
+
+            wp_redirect(add_query_arg('rejected', '1', admin_url('admin.php?page=cdv-pending-stories')));
+            exit;
+        }
+
+        $args = array(
+            'post_type' => 'racconto',
+            'post_status' => 'pending',
+            'posts_per_page' => -1,
+            'orderby' => 'date',
+            'order' => 'DESC',
+        );
+
+        $pending_stories = get_posts($args);
+
+        ?>
+        <div class="wrap">
+            <h1>Racconti in Attesa di Approvazione</h1>
+
+            <?php if (isset($_GET['approved'])) : ?>
+                <div class="notice notice-success is-dismissible">
+                    <p>Racconto approvato con successo!</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (isset($_GET['rejected'])) : ?>
+                <div class="notice notice-info is-dismissible">
+                    <p>Racconto rifiutato.</p>
+                </div>
+            <?php endif; ?>
+
+            <?php if (empty($pending_stories)) : ?>
+                <p>Nessun racconto in attesa di approvazione.</p>
+            <?php else : ?>
+                <table class="wp-list-table widefat fixed striped">
+                    <thead>
+                        <tr>
+                            <th>Racconto</th>
+                            <th>Autore</th>
+                            <th>Destinazione</th>
+                            <th>Data Viaggio</th>
+                            <th>Data Invio</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pending_stories as $story) :
+                            $author = get_user_by('id', $story->post_author);
+                            $destination = get_post_meta($story->ID, 'cdv_destination', true);
+                            $travel_date = get_post_meta($story->ID, 'cdv_travel_date', true);
+                            $categories = get_the_terms($story->ID, 'categoria_racconto');
+                            ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo esc_html($story->post_title); ?></strong><br>
+                                    <small><?php echo esc_html(wp_trim_words($story->post_content, 30)); ?></small>
+                                    <?php if (!empty($categories)) : ?>
+                                        <br><span class="dashicons dashicons-category"></span>
+                                        <em><?php echo esc_html($categories[0]->name); ?></em>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php echo get_avatar($author->ID, 40); ?>
+                                    <strong><?php echo esc_html($author->display_name); ?></strong><br>
+                                    <small><?php echo esc_html($author->user_email); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo $destination ? esc_html($destination) : '<em>Non specificata</em>'; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    if ($travel_date) {
+                                        $date = DateTime::createFromFormat('Y-m', $travel_date);
+                                        echo $date ? $date->format('F Y') : esc_html($travel_date);
+                                    } else {
+                                        echo '<em>Non specificata</em>';
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php echo date_i18n('d/m/Y H:i', strtotime($story->post_date)); ?>
+                                </td>
+                                <td>
+                                    <a href="<?php echo get_edit_post_link($story->ID); ?>" class="button button-small">Visualizza</a><br><br>
+                                    <form method="post" style="display: inline;">
+                                        <?php wp_nonce_field('cdv_approve_story_' . $story->ID); ?>
+                                        <input type="hidden" name="story_id" value="<?php echo $story->ID; ?>">
+                                        <button type="submit" name="approve_story" class="button button-primary">✓ Approva</button>
+                                        <button type="submit" name="reject_story" class="button button-link-delete" onclick="return confirm('Sei sicuro di voler rifiutare questo racconto? Sarà eliminato definitivamente.');">✗ Rifiuta</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * Get pending stories count
+     */
+    public static function get_pending_stories_count() {
+        $count = wp_count_posts('racconto');
+        return isset($count->pending) ? intval($count->pending) : 0;
     }
 
     /**
