@@ -5,6 +5,23 @@
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
+    <?php if (has_post_thumbnail()) : ?>
+        <div class="card-image">
+            <a href="<?php the_permalink(); ?>">
+                <?php the_post_thumbnail('travel-card'); ?>
+            </a>
+        </div>
+    <?php else : ?>
+        <div class="card-image card-image-placeholder">
+            <a href="<?php the_permalink(); ?>">
+                <div class="placeholder-content">
+                    <span class="placeholder-icon">✈️</span>
+                    <span class="placeholder-text">Nessuna immagine</span>
+                </div>
+            </a>
+        </div>
+    <?php endif; ?>
+
     <div class="card-content">
         <div class="card-header">
             <?php
@@ -40,6 +57,60 @@
 </article>
 
 <style>
+.card-image {
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    border-radius: 8px 8px 0 0;
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.card:hover .card-image img {
+    transform: scale(1.05);
+}
+
+.card-image-placeholder {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-image-placeholder a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+}
+
+.placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 1);
+    color: white;
+    text-align: center;
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    opacity: 0.8;
+}
+
+.placeholder-text {
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.9;
+}
+
 .card-header {
     display: flex;
     gap: calc(var(--spacing-unit) * 1);

@@ -334,6 +334,20 @@ function cdv_customize_register($wp_customize) {
         'mime_type'   => 'image',
     )));
 
+    // Hero Overlay Color
+    $wp_customize->add_setting('cdv_hero_overlay_color', array(
+        'default'           => '#000000',
+        'sanitize_callback' => 'sanitize_hex_color',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'cdv_hero_overlay_color', array(
+        'label'       => 'Colore Overlay Hero',
+        'description' => 'Colore della sovrapposizione sull\'immagine',
+        'section'     => 'cdv_hero',
+        'settings'    => 'cdv_hero_overlay_color',
+    )));
+
     // Hero Overlay Opacity
     $wp_customize->add_setting('cdv_hero_overlay_opacity', array(
         'default'           => '0.5',
@@ -630,6 +644,7 @@ function cdv_customizer_css() {
 
     // Hero settings
     $hero_bg_image_id = get_theme_mod('cdv_hero_bg_image', '');
+    $hero_overlay_color = get_theme_mod('cdv_hero_overlay_color', '#000000');
     $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
     ?>
     <style type="text/css">
@@ -724,7 +739,8 @@ function cdv_customizer_css() {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, <?php echo esc_attr($hero_overlay_opacity); ?>);
+            background: <?php echo esc_attr($hero_overlay_color); ?>;
+            opacity: <?php echo esc_attr($hero_overlay_opacity); ?>;
             z-index: 1;
         }
 
