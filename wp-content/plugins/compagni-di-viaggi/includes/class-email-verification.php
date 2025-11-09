@@ -122,8 +122,10 @@ Il team di Compagni di Viaggi
             array('id' => $record->id)
         );
 
-        // Aggiorna user meta
+        // Aggiorna user meta e approva l'utente
         update_user_meta($record->user_id, 'cdv_email_verified', 'yes');
+        update_user_meta($record->user_id, 'cdv_user_approved', '1');
+        update_user_meta($record->user_id, 'cdv_email_verified_date', current_time('mysql'));
 
         return $record->user_id;
     }
@@ -136,11 +138,36 @@ Il team di Compagni di Viaggi
     }
 
     /**
-     * Blocca login per utenti non verificati (DISABILITATO - verifica email opzionale)
+     * Blocca login per utenti non verificati
      */
     public static function block_unverified_login($user, $username, $password) {
-        // Email verification è opzionale - permettiamo login anche senza email verificata
-        // TODO: Riabilitare se si configura SMTP correttamente
+        // Se è un errore, passalo avanti
+        if (is_wp_error($user)) {
+            return $user;
+        }
+
+        // Se non è un oggetto User, ritorna
+        if (!is_a($user, 'WP_User')) {
+            return $user;
+        }
+
+        // Gli amministratori possono sempre fare login
+        if (in_array('administrator', $user->roles)) {
+            return $user;
+        }
+
+        // Controlla se l'email è verificata
+        $email_verified = get_user_meta($user->ID, 'cdv_email_verified', true);
+        $user_approved = get_user_meta($user->ID, 'cdv_user_approved', true);
+
+        if ($email_verified !== 'yes' || $user_approved !== '1') {
+            return new WP_Error(
+                'email_not_verified',
+                '<strong>Errore:</strong> Devi confermare il tuo indirizzo email prima di poter accedere. ' .
+                'Controlla la tua casella di posta (anche spam) per il link di conferma.'
+            );
+        }
+
         return $user;
     }
 

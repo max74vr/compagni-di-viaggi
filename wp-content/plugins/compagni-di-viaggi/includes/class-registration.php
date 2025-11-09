@@ -143,14 +143,15 @@ class CDV_Registration {
         $user = new WP_User($user_id);
         $user->set_role('viaggiatore');
 
-        // Update display name
+        // Set display name
         wp_update_user(array(
             'ID' => $user_id,
             'display_name' => $display_name,
         ));
 
-        // Auto-approve users (only travels need moderation)
-        update_user_meta($user_id, 'cdv_user_approved', '1');
+        // User starts as NOT approved - will be approved after email confirmation
+        update_user_meta($user_id, 'cdv_user_approved', '0');
+        update_user_meta($user_id, 'cdv_email_verified', 'no');
         update_user_meta($user_id, 'cdv_registration_date', current_time('mysql'));
 
         // Invia email di verifica
@@ -159,7 +160,9 @@ class CDV_Registration {
         // Notifica l'admin della nuova registrazione
         self::notify_admin_new_user($user_id);
 
-        // Auto-login (temporaneo per completare la registrazione)
+        // Auto-login temporaneo per completare la registrazione
+        // L'utente può completare il profilo e creare il primo viaggio,
+        // ma dopo il logout NON potrà riaccedere finché non conferma l'email
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
 
@@ -171,7 +174,9 @@ class CDV_Registration {
 
         $message = 'Account creato con successo!';
         if ($email_sent) {
-            $message .= ' Ti abbiamo inviato un\'email di verifica. Controlla la tua casella di posta (anche spam) e clicca sul link per confermare il tuo indirizzo email.';
+            $message .= ' <strong>IMPORTANTE:</strong> Ti abbiamo inviato un\'email di verifica. ' .
+                       'Controlla la tua casella di posta (anche spam) e clicca sul link per attivare il tuo account. ' .
+                       'Puoi completare il profilo ora, ma dovrai confermare l\'email prima di poter accedere nuovamente.';
         }
 
         wp_send_json_success(array(
