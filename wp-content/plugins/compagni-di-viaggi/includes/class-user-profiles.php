@@ -31,9 +31,9 @@ class CDV_User_Profiles {
         );
 
         // Set flag per flush rewrite rules al prossimo caricamento
-        if (!get_option('cdv_rewrite_rules_version') || get_option('cdv_rewrite_rules_version') !== '1.0') {
+        if (!get_option('cdv_rewrite_rules_version') || get_option('cdv_rewrite_rules_version') !== '1.1') {
             update_option('cdv_flush_rewrite_rules_flag', '1');
-            update_option('cdv_rewrite_rules_version', '1.0');
+            update_option('cdv_rewrite_rules_version', '1.1');
         }
     }
 
@@ -66,8 +66,13 @@ class CDV_User_Profiles {
         }
 
         // Controlla che sia un viaggiatore approvato
+        // Administrators and users without the meta are allowed (for compatibility)
         $approved = get_user_meta($user->ID, 'cdv_user_approved', true);
-        if ($approved !== 'approved' && $approved !== '1') {
+        $is_admin = in_array('administrator', $user->roles);
+
+        // Allow if: admin, approved ('1' or 'approved'), or meta not set (backward compatibility)
+        if (!$is_admin && $approved !== 'approved' && $approved !== '1' && !empty($approved) && $approved !== false) {
+            // Only block if approval meta is explicitly set to a rejection value
             global $wp_query;
             $wp_query->set_404();
             status_header(404);
