@@ -1,0 +1,402 @@
+[
+  {
+    "username": "marco_rossi",
+    "email": "marco.rossi@example.com",
+    "first_name": "Marco",
+    "last_name": "Rossi",
+    "display_name": "Marco Rossi",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Amante della natura e dei viaggi avventurosi. Sempre pronto per nuove esperienze!",
+      "cdv_birth_date": "1990-05-15",
+      "cdv_gender": "male",
+      "cdv_city": "Milano",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese",
+      "cdv_travel_styles": "Avventura, Natura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "laura_bianchi",
+    "email": "laura.bianchi@example.com",
+    "first_name": "Laura",
+    "last_name": "Bianchi",
+    "display_name": "Laura Bianchi",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Fotografa freelance, viaggio per catturare momenti unici e culture diverse.",
+      "cdv_birth_date": "1988-08-22",
+      "cdv_gender": "female",
+      "cdv_city": "Roma",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Spagnolo",
+      "cdv_travel_styles": "Cultura, Fotografia",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "giuseppe_verdi",
+    "email": "giuseppe.verdi@example.com",
+    "first_name": "Giuseppe",
+    "last_name": "Verdi",
+    "display_name": "Giuseppe Verdi",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Appassionato di trekking e montagna. Ho scalato le vette più alte d'Europa!",
+      "cdv_birth_date": "1985-03-10",
+      "cdv_gender": "male",
+      "cdv_city": "Torino",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Francese",
+      "cdv_travel_styles": "Montagna, Trekking",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "sofia_russo",
+    "email": "sofia.russo@example.com",
+    "first_name": "Sofia",
+    "last_name": "Russo",
+    "display_name": "Sofia Russo",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Insegnante di yoga, cerco viaggi rilassanti e spiritual. Mare e meditazione!",
+      "cdv_birth_date": "1992-11-30",
+      "cdv_gender": "female",
+      "cdv_city": "Napoli",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese",
+      "cdv_travel_styles": "Relax, Benessere",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "alessandro_ferrari",
+    "email": "alessandro.ferrari@example.com",
+    "first_name": "Alessandro",
+    "last_name": "Ferrari",
+    "display_name": "Alessandro Ferrari",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Surfista e amante del mare. Sempre alla ricerca della wave perfetta!",
+      "cdv_birth_date": "1995-07-18",
+      "cdv_gender": "male",
+      "cdv_city": "Genova",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Portoghese",
+      "cdv_travel_styles": "Mare, Sport",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "chiara_marino",
+    "email": "chiara.marino@example.com",
+    "first_name": "Chiara",
+    "last_name": "Marino",
+    "display_name": "Chiara Marino",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Food blogger, viaggio per scoprire sapori autentici e tradizioni culinarie.",
+      "cdv_birth_date": "1991-04-25",
+      "cdv_gender": "female",
+      "cdv_city": "Bologna",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Francese",
+      "cdv_travel_styles": "Enogastronomia, Cultura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "luca_colombo",
+    "email": "luca.colombo@example.com",
+    "first_name": "Luca",
+    "last_name": "Colombo",
+    "display_name": "Luca Colombo",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Ingegnere informatico e digital nomad. Lavoro mentre viaggio per il mondo!",
+      "cdv_birth_date": "1989-12-05",
+      "cdv_gender": "male",
+      "cdv_city": "Firenze",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Tedesco",
+      "cdv_travel_styles": "Città, Digital Nomad",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "valentina_ricci",
+    "email": "valentina.ricci@example.com",
+    "first_name": "Valentina",
+    "last_name": "Ricci",
+    "display_name": "Valentina Ricci",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Archeologa, amo esplorare siti antichi e scoprire la storia delle civiltà.",
+      "cdv_birth_date": "1987-09-14",
+      "cdv_gender": "female",
+      "cdv_city": "Palermo",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Greco",
+      "cdv_travel_styles": "Cultura, Storia",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "matteo_costa",
+    "email": "matteo.costa@example.com",
+    "first_name": "Matteo",
+    "last_name": "Costa",
+    "display_name": "Matteo Costa",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Ciclista appassionato, esploro il mondo su due ruote. Cicloturismo is life!",
+      "cdv_birth_date": "1993-06-20",
+      "cdv_gender": "male",
+      "cdv_city": "Verona",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese",
+      "cdv_travel_styles": "Cicloturismo, Natura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "francesca_galli",
+    "email": "francesca.galli@example.com",
+    "first_name": "Francesca",
+    "last_name": "Galli",
+    "display_name": "Francesca Galli",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Biologa marina, mi dedico alla conservazione degli oceani e alla subacquea.",
+      "cdv_birth_date": "1990-01-08",
+      "cdv_gender": "female",
+      "cdv_city": "Cagliari",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese",
+      "cdv_travel_styles": "Mare, Natura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "andrea_moretti",
+    "email": "andrea.moretti@example.com",
+    "first_name": "Andrea",
+    "last_name": "Moretti",
+    "display_name": "Andrea Moretti",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Musicista itinerante, suono la chitarra nelle piazze del mondo.",
+      "cdv_birth_date": "1994-10-12",
+      "cdv_gender": "male",
+      "cdv_city": "Venezia",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Spagnolo",
+      "cdv_travel_styles": "Cultura, Musica",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "elena_barbieri",
+    "email": "elena.barbieri@example.com",
+    "first_name": "Elena",
+    "last_name": "Barbieri",
+    "display_name": "Elena Barbieri",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Travel writer, scrivo guide e racconti di viaggio per riviste internazionali.",
+      "cdv_birth_date": "1986-02-28",
+      "cdv_gender": "female",
+      "cdv_city": "Trieste",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Tedesco, Sloveno",
+      "cdv_travel_styles": "Cultura, Scrittura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "roberto_fontana",
+    "email": "roberto.fontana@example.com",
+    "first_name": "Roberto",
+    "last_name": "Fontana",
+    "display_name": "Roberto Fontana",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Pilota di parapendio, vedo il mondo dall'alto. Adrenalina e libertà!",
+      "cdv_birth_date": "1991-08-07",
+      "cdv_gender": "male",
+      "cdv_city": "Trento",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Tedesco",
+      "cdv_travel_styles": "Avventura, Sport Estremi",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "giulia_santoro",
+    "email": "giulia.santoro@example.com",
+    "first_name": "Giulia",
+    "last_name": "Santoro",
+    "display_name": "Giulia Santoro",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Medico volontaria, viaggio per aiutare comunità remote e bisognose.",
+      "cdv_birth_date": "1988-05-19",
+      "cdv_gender": "female",
+      "cdv_city": "Bari",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Francese",
+      "cdv_travel_styles": "Volontariato, Solidarietà",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "davide_leone",
+    "email": "davide.leone@example.com",
+    "first_name": "Davide",
+    "last_name": "Leone",
+    "display_name": "Davide Leone",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Astrofotografo, caccio cieli stellati e paesaggi mozzafiato di notte.",
+      "cdv_birth_date": "1992-03-16",
+      "cdv_gender": "male",
+      "cdv_city": "Perugia",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese",
+      "cdv_travel_styles": "Fotografia, Natura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "silvia_morelli",
+    "email": "silvia.morelli@example.com",
+    "first_name": "Silvia",
+    "last_name": "Morelli",
+    "display_name": "Silvia Morelli",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Danzatrice professionista, scopro danze tradizionali in giro per il mondo.",
+      "cdv_birth_date": "1995-12-03",
+      "cdv_gender": "female",
+      "cdv_city": "Catania",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Spagnolo",
+      "cdv_travel_styles": "Cultura, Arte",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "federico_greco",
+    "email": "federico.greco@example.com",
+    "first_name": "Federico",
+    "last_name": "Greco",
+    "display_name": "Federico Greco",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Sommelier e appassionato di vini. Viaggio per degustare i migliori vini del mondo.",
+      "cdv_birth_date": "1987-07-21",
+      "cdv_gender": "male",
+      "cdv_city": "Siena",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Francese, Inglese",
+      "cdv_travel_styles": "Enogastronomia, Relax",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "martina_conti",
+    "email": "martina.conti@example.com",
+    "first_name": "Martina",
+    "last_name": "Conti",
+    "display_name": "Martina Conti",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Architetta paesaggista, studio giardini storici e parchi naturali.",
+      "cdv_birth_date": "1990-09-09",
+      "cdv_gender": "female",
+      "cdv_city": "Padova",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Giapponese",
+      "cdv_travel_styles": "Natura, Architettura",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "simone_de_luca",
+    "email": "simone.deluca@example.com",
+    "first_name": "Simone",
+    "last_name": "De Luca",
+    "display_name": "Simone De Luca",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Filmmaker documentarista, racconto storie di persone e luoghi attraverso i miei film.",
+      "cdv_birth_date": "1989-11-27",
+      "cdv_gender": "male",
+      "cdv_city": "Brescia",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Arabo",
+      "cdv_travel_styles": "Cultura, Cinema",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  },
+  {
+    "username": "anna_marchetti",
+    "email": "anna.marchetti@example.com",
+    "first_name": "Anna",
+    "last_name": "Marchetti",
+    "display_name": "Anna Marchetti",
+    "role": "viaggiatore",
+    "password": "TempPassword123!",
+    "meta": {
+      "cdv_bio": "Guida turistica certificata, amo condividere la bellezza dell'Italia con il mondo.",
+      "cdv_birth_date": "1993-04-14",
+      "cdv_gender": "female",
+      "cdv_city": "Pisa",
+      "cdv_country": "Italia",
+      "cdv_languages": "Italiano, Inglese, Tedesco, Francese",
+      "cdv_travel_styles": "Cultura, Storia",
+      "cdv_user_approved": "1",
+      "cdv_email_verified": "yes"
+    }
+  }
+]

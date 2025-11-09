@@ -48,36 +48,50 @@ while (have_posts()) : the_post();
                             <h3>Partecipanti (<?php echo count($participants); ?>)</h3>
                             <div class="participants-grid">
                                 <!-- Organizer First -->
-                                <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($author_id)); ?>" class="participant-card organizer">
-                                    <?php echo get_avatar($author_id, 80); ?>
-                                    <div class="participant-info">
-                                        <div class="participant-name">
-                                            <?php echo esc_html(get_the_author_meta('user_login', $author_id)); ?>
-                                            <span class="organizer-badge">Organizzatore</span>
+                                <div class="participant-card-wrapper">
+                                    <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($author_id)); ?>" class="participant-card organizer">
+                                        <?php echo get_avatar($author_id, 80); ?>
+                                        <div class="participant-info">
+                                            <div class="participant-name">
+                                                <?php echo esc_html(get_the_author_meta('user_login', $author_id)); ?>
+                                                <span class="organizer-badge">Organizzatore</span>
+                                            </div>
+                                            <?php
+                                            $reputation = get_user_meta($author_id, 'cdv_reputation_score', true);
+                                            if ($reputation) {
+                                                cdv_display_stars($reputation);
+                                            }
+                                            ?>
                                         </div>
-                                        <?php
-                                        $reputation = get_user_meta($author_id, 'cdv_reputation_score', true);
-                                        if ($reputation) {
-                                            cdv_display_stars($reputation);
-                                        }
-                                        ?>
-                                    </div>
-                                </a>
+                                    </a>
+                                    <?php if (is_user_logged_in() && get_current_user_id() != $author_id && ($is_participant || $is_organizer)) : ?>
+                                        <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $author_id . '&travel_id=' . $travel_id); ?>" class="btn btn-sm btn-primary participant-message-btn">
+                                            Invia Messaggio
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
 
                                 <!-- Other Participants -->
                                 <?php foreach ($participants as $participant) :
                                     $user = get_user_by('id', $participant->user_id);
                                     $reputation = get_user_meta($user->ID, 'cdv_reputation_score', true);
                                     ?>
-                                    <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($user->ID)); ?>" class="participant-card">
-                                        <?php echo get_avatar($user->ID, 80); ?>
-                                        <div class="participant-info">
-                                            <div class="participant-name"><?php echo esc_html($user->user_login); ?></div>
-                                            <?php if ($reputation) {
-                                                cdv_display_stars($reputation);
-                                            } ?>
-                                        </div>
-                                    </a>
+                                    <div class="participant-card-wrapper">
+                                        <a href="<?php echo esc_url(CDV_User_Profiles::get_profile_url($user->ID)); ?>" class="participant-card">
+                                            <?php echo get_avatar($user->ID, 80); ?>
+                                            <div class="participant-info">
+                                                <div class="participant-name"><?php echo esc_html($user->user_login); ?></div>
+                                                <?php if ($reputation) {
+                                                    cdv_display_stars($reputation);
+                                                } ?>
+                                            </div>
+                                        </a>
+                                        <?php if (is_user_logged_in() && get_current_user_id() != $user->ID && ($is_participant || $is_organizer)) : ?>
+                                            <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $user->ID . '&travel_id=' . $travel_id); ?>" class="btn btn-sm btn-primary participant-message-btn">
+                                                Invia Messaggio
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>

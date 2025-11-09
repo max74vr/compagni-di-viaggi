@@ -86,6 +86,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-participants.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-badges.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-travel-stories.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-private-messages.php';
 
         // REST API
         require_once CDV_PLUGIN_DIR . 'includes/api/class-rest-api.php';
@@ -94,6 +95,7 @@ class Compagni_Di_Viaggi {
         // Admin
         if (is_admin()) {
             require_once CDV_PLUGIN_DIR . 'admin/class-admin.php';
+            require_once CDV_PLUGIN_DIR . 'import-users.php';
         }
 
         // Ajax handlers
@@ -119,6 +121,7 @@ class Compagni_Di_Viaggi {
         CDV_Participants::init();
         CDV_Badges::init();
         CDV_Travel_Stories::init();
+        CDV_Private_Messages::init();
         CDV_REST_API::init();
         CDV_Ajax_Handlers::init();
 

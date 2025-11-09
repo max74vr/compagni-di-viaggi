@@ -68,6 +68,9 @@ $my_stories = new WP_Query(array(
     'orderby' => 'date',
     'order' => 'DESC',
 ));
+
+// Get unread messages count
+$unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->ID);
 ?>
 
 <main class="site-main dashboard">
@@ -101,6 +104,12 @@ $my_stories = new WP_Query(array(
             </button>
             <button class="tab-button" data-tab="my-stories">
                 I Miei Racconti (<?php echo $my_stories->post_count; ?>)
+            </button>
+            <button class="tab-button" data-tab="messages">
+                Messaggi
+                <?php if ($unread_messages_count > 0) : ?>
+                    <span class="badge-count"><?php echo $unread_messages_count; ?></span>
+                <?php endif; ?>
             </button>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
         </div>
@@ -306,6 +315,49 @@ $my_stories = new WP_Query(array(
                     </a>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Tab: Messaggi -->
+        <div class="tab-content" id="tab-messages">
+            <h2>Messaggi</h2>
+
+            <div class="messages-container">
+                <div class="conversations-list">
+                    <h3>Conversazioni</h3>
+                    <div id="conversations-list-content">
+                        <p class="loading-message">Caricamento conversazioni...</p>
+                    </div>
+                </div>
+
+                <div class="message-thread">
+                    <div class="no-conversation-selected">
+                        <p>Seleziona una conversazione per visualizzare i messaggi</p>
+                    </div>
+
+                    <div class="conversation-view" style="display: none;">
+                        <div class="conversation-header">
+                            <div class="conversation-info">
+                                <h3 id="conversation-user-name"></h3>
+                                <p id="conversation-travel-title"></p>
+                            </div>
+                            <div class="conversation-actions">
+                                <button class="btn btn-sm btn-danger" id="block-conversation-btn">
+                                    Blocca Conversazione
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="messages-list" id="messages-list">
+                            <!-- Messages will be loaded here -->
+                        </div>
+
+                        <div class="message-compose">
+                            <textarea id="message-input" placeholder="Scrivi un messaggio..." rows="3"></textarea>
+                            <button class="btn btn-primary" id="send-message-btn">Invia</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Tab: Impostazioni -->
@@ -802,6 +854,254 @@ $my_stories = new WP_Query(array(
         grid-template-columns: 1fr;
     }
 }
+
+/* Messages Styles */
+.messages-container {
+    display: grid;
+    grid-template-columns: 350px 1fr;
+    gap: 2rem;
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    height: 600px;
+    overflow: hidden;
+}
+
+.conversations-list {
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.conversations-list h3 {
+    padding: 1.5rem;
+    margin: 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+#conversations-list-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.conversation-item:hover {
+    background: #f8f9fa;
+}
+
+.conversation-item.active {
+    background: #e8f4f8;
+    border-left: 3px solid var(--primary-color);
+}
+
+.conversation-item.unread {
+    background: #f0f8ff;
+}
+
+.conversation-item img {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+}
+
+.conversation-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.conversation-item-info h4 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.conversation-item-meta {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.unread-badge {
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.message-thread {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.no-conversation-selected {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+}
+
+.conversation-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.conversation-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.conversation-info h3 {
+    margin: 0 0 0.25rem 0;
+}
+
+.conversation-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #666;
+}
+
+.messages-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.message-item {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 70%;
+}
+
+.message-item.sent {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.message-item img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.message-bubble {
+    background: #f0f0f0;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    word-wrap: break-word;
+}
+
+.message-item.sent .message-bubble {
+    background: var(--primary-color);
+    color: white;
+}
+
+.message-text {
+    margin: 0 0 0.25rem 0;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: #999;
+    margin: 0;
+}
+
+.message-item.sent .message-time {
+    color: rgba(255,255,255,0.8);
+}
+
+.message-compose {
+    padding: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 1rem;
+}
+
+.message-compose textarea {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+.message-compose textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.loading-message {
+    padding: 2rem;
+    text-align: center;
+    color: #999;
+}
+
+.blocked-conversation {
+    padding: 2rem;
+    text-align: center;
+    background: #fff3cd;
+    margin: 1rem;
+    border-radius: 8px;
+    color: #856404;
+}
+
+@media (max-width: 768px) {
+    .messages-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .conversations-list {
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        height: 300px;
+    }
+
+    .message-thread {
+        min-height: 400px;
+    }
+
+    .message-item {
+        max-width: 85%;
+    }
+}
 </style>
 
 <script>
@@ -1084,6 +1384,294 @@ document.addEventListener('DOMContentLoaded', function() {
                     window.location.href = '<?php echo home_url(); ?>';
                 } else {
                     alert(response.data.message || 'Errore durante l\'eliminazione');
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
+    });
+
+    // === MESSAGING FUNCTIONALITY ===
+    let currentConversation = null;
+    let messagesRefreshInterval = null;
+
+    // Check URL parameters for direct message link
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTab = urlParams.get('tab');
+    const urlUserId = urlParams.get('user_id');
+    const urlTravelId = urlParams.get('travel_id');
+
+    if (urlTab === 'messages' && urlUserId && urlTravelId) {
+        // Switch to messages tab
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.querySelector('[data-tab="messages"]').classList.add('active');
+        document.getElementById('tab-messages').classList.add('active');
+
+        // Load conversations and open specific one
+        loadConversations(function() {
+            setTimeout(function() {
+                loadConversation(urlUserId, urlTravelId);
+            }, 500);
+        });
+    }
+
+    // Load conversations when messages tab is opened
+    document.querySelector('[data-tab="messages"]')?.addEventListener('click', function() {
+        loadConversations();
+    });
+
+    function loadConversations(callback) {
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_user_conversations',
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    displayConversations(response.data);
+                    if (callback) callback();
+                } else {
+                    document.getElementById('conversations-list-content').innerHTML =
+                        '<p class="loading-message">Nessuna conversazione disponibile</p>';
+                }
+            },
+            error: function() {
+                document.getElementById('conversations-list-content').innerHTML =
+                    '<p class="loading-message">Errore nel caricamento delle conversazioni</p>';
+            }
+        });
+    }
+
+    function displayConversations(conversations) {
+        const container = document.getElementById('conversations-list-content');
+
+        if (!conversations || conversations.length === 0) {
+            container.innerHTML = '<p class="loading-message">Nessuna conversazione</p>';
+            return;
+        }
+
+        let html = '';
+        conversations.forEach(conv => {
+            const unreadBadge = conv.unread_count > 0 ?
+                `<div class="unread-badge">${conv.unread_count}</div>` : '';
+            const unreadClass = conv.unread_count > 0 ? 'unread' : '';
+
+            html += `
+                <div class="conversation-item ${unreadClass}"
+                     data-user-id="${conv.other_user_id}"
+                     data-travel-id="${conv.travel_id}">
+                    ${conv.avatar}
+                    <div class="conversation-item-info">
+                        <h4>${conv.other_user_name}</h4>
+                        <p>${conv.travel_title}</p>
+                        <span class="conversation-item-meta">${conv.last_message_time}</span>
+                    </div>
+                    ${unreadBadge}
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+        // Add click handlers to conversation items
+        document.querySelectorAll('.conversation-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const userId = this.dataset.userId;
+                const travelId = this.dataset.travelId;
+                loadConversation(userId, travelId);
+
+                // Update active state
+                document.querySelectorAll('.conversation-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                this.classList.remove('unread');
+            });
+        });
+    }
+
+    function loadConversation(otherUserId, travelId) {
+        currentConversation = { user_id: otherUserId, travel_id: travelId };
+
+        // Clear any existing refresh interval
+        if (messagesRefreshInterval) {
+            clearInterval(messagesRefreshInterval);
+        }
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_conversation',
+                other_user_id: otherUserId,
+                travel_id: travelId,
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    displayConversation(response.data);
+
+                    // Refresh messages every 10 seconds
+                    messagesRefreshInterval = setInterval(function() {
+                        refreshMessages(otherUserId, travelId);
+                    }, 10000);
+                } else {
+                    alert('Errore nel caricamento della conversazione: ' + (response.data?.message || 'Sconosciuto'));
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
+    }
+
+    function displayConversation(data) {
+        // Hide no-conversation message, show conversation view
+        document.querySelector('.no-conversation-selected').style.display = 'none';
+        document.querySelector('.conversation-view').style.display = 'flex';
+
+        // Update header
+        document.getElementById('conversation-user-name').textContent = data.other_user_name;
+        document.getElementById('conversation-travel-title').textContent = 'Viaggio: ' + data.travel_title;
+
+        // Update block button
+        const blockBtn = document.getElementById('block-conversation-btn');
+        if (data.is_blocked) {
+            blockBtn.textContent = 'Sblocca Conversazione';
+            blockBtn.classList.remove('btn-danger');
+            blockBtn.classList.add('btn-secondary');
+        } else {
+            blockBtn.textContent = 'Blocca Conversazione';
+            blockBtn.classList.remove('btn-secondary');
+            blockBtn.classList.add('btn-danger');
+        }
+
+        // Display messages
+        displayMessages(data.messages);
+    }
+
+    function displayMessages(messages) {
+        const container = document.getElementById('messages-list');
+
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<p class="loading-message">Nessun messaggio. Inizia la conversazione!</p>';
+            return;
+        }
+
+        let html = '';
+        messages.forEach(msg => {
+            const sentClass = msg.is_sent ? 'sent' : '';
+            html += `
+                <div class="message-item ${sentClass}">
+                    ${msg.avatar}
+                    <div class="message-bubble">
+                        <p class="message-text">${msg.message}</p>
+                        <p class="message-time">${msg.time_ago}</p>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
+
+        // Scroll to bottom
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function refreshMessages(otherUserId, travelId) {
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_conversation',
+                other_user_id: otherUserId,
+                travel_id: travelId,
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    displayMessages(response.data.messages);
+                }
+            }
+        });
+    }
+
+    // Send message
+    document.getElementById('send-message-btn')?.addEventListener('click', function() {
+        sendMessage();
+    });
+
+    document.getElementById('message-input')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function sendMessage() {
+        if (!currentConversation) return;
+
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+
+        if (!message) {
+            alert('Scrivi un messaggio prima di inviare');
+            return;
+        }
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_send_message',
+                receiver_id: currentConversation.user_id,
+                travel_id: currentConversation.travel_id,
+                message: message,
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    messageInput.value = '';
+                    loadConversation(currentConversation.user_id, currentConversation.travel_id);
+                } else {
+                    alert('Errore nell\'invio del messaggio: ' + (response.data?.message || 'Sconosciuto'));
+                }
+            },
+            error: function() {
+                alert('Errore di connessione');
+            }
+        });
+    }
+
+    // Block/Unblock conversation
+    document.getElementById('block-conversation-btn')?.addEventListener('click', function() {
+        if (!currentConversation) return;
+
+        const isBlocking = this.textContent.includes('Blocca');
+        const confirmMsg = isBlocking ?
+            'Sei sicuro di voler bloccare questa conversazione? Non riceverai più messaggi da questo utente.' :
+            'Vuoi sbloccare questa conversazione?';
+
+        if (!confirm(confirmMsg)) return;
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_block_conversation',
+                other_user_id: currentConversation.user_id,
+                travel_id: currentConversation.travel_id,
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert(isBlocking ? 'Conversazione bloccata' : 'Conversazione sbloccata');
+                    loadConversation(currentConversation.user_id, currentConversation.travel_id);
+                    loadConversations(); // Refresh conversation list
+                } else {
+                    alert('Errore: ' + (response.data?.message || 'Sconosciuto'));
                 }
             },
             error: function() {
