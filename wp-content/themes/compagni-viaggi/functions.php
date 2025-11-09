@@ -146,6 +146,7 @@ function cdv_travel_meta($post_id = null) {
 
     $start_date = get_post_meta($post_id, 'cdv_start_date', true);
     $end_date = get_post_meta($post_id, 'cdv_end_date', true);
+    $date_type = get_post_meta($post_id, 'cdv_date_type', true);
     $destination = get_post_meta($post_id, 'cdv_destination', true);
     $country = get_post_meta($post_id, 'cdv_country', true);
     $budget = get_post_meta($post_id, 'cdv_budget', true);
@@ -164,8 +165,16 @@ function cdv_travel_meta($post_id = null) {
         <?php if ($start_date) : ?>
             <span class="meta-item">
                 <span class="icon">📅</span>
-                <?php echo date_i18n('d/m/Y', strtotime($start_date)); ?>
-                <?php if ($end_date) echo ' - ' . date_i18n('d/m/Y', strtotime($end_date)); ?>
+                <?php
+                if ($date_type === 'month') {
+                    // Mostra solo il mese
+                    echo date_i18n('F Y', strtotime($start_date));
+                } else {
+                    // Mostra date precise
+                    echo date_i18n('d/m/Y', strtotime($start_date));
+                    if ($end_date) echo ' - ' . date_i18n('d/m/Y', strtotime($end_date));
+                }
+                ?>
             </span>
         <?php endif; ?>
 

@@ -476,6 +476,7 @@ class CDV_Ajax_Handlers {
         $end_date = isset($_POST['end_date']) ? sanitize_text_field($_POST['end_date']) : '';
         $budget = isset($_POST['budget']) ? intval($_POST['budget']) : 0;
         $max_participants = isset($_POST['max_participants']) ? intval($_POST['max_participants']) : 5;
+        $date_type = isset($_POST['date_type']) ? sanitize_text_field($_POST['date_type']) : 'precise';
 
         if (empty($title) || empty($description) || empty($destination) || empty($country) ||
             empty($start_date) || empty($end_date) || $budget <= 0 || $max_participants < 2) {
@@ -511,6 +512,7 @@ class CDV_Ajax_Handlers {
         update_post_meta($travel_id, 'cdv_country', $country);
         update_post_meta($travel_id, 'cdv_start_date', $start_date);
         update_post_meta($travel_id, 'cdv_end_date', $end_date);
+        update_post_meta($travel_id, 'cdv_date_type', $date_type);
         update_post_meta($travel_id, 'cdv_budget', $budget);
         update_post_meta($travel_id, 'cdv_max_participants', $max_participants);
         update_post_meta($travel_id, 'cdv_travel_status', 'open');
