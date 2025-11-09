@@ -24,6 +24,9 @@ class CDV_User_Roles {
 
         // Allow viaggiatori to appear in author dropdown for viaggio post type
         add_filter('wp_dropdown_users_args', array(__CLASS__, 'add_viaggiatori_to_author_dropdown'), 10, 2);
+
+        // Also filter for ajax requests (Quick Edit uses AJAX)
+        add_action('wp_ajax_inline-save', array(__CLASS__, 'ajax_inline_save_allow_viaggiatori'), 0);
     }
 
     /**
@@ -270,10 +273,33 @@ class CDV_User_Roles {
     }
 
     /**
+     * Allow viaggiatori for ajax inline save
+     */
+    public static function ajax_inline_save_allow_viaggiatori() {
+        if (isset($_POST['post_type']) && $_POST['post_type'] === 'viaggio') {
+            add_filter('wp_dropdown_users_args', array(__CLASS__, 'force_viaggiatori_in_dropdown'), 999, 2);
+        }
+    }
+
+    /**
+     * Force viaggiatori in dropdown (high priority)
+     */
+    public static function force_viaggiatori_in_dropdown($query_args, $parsed_args) {
+        unset($query_args['who']);
+        $query_args['role__in'] = array('administrator', 'editor', 'viaggiatore');
+        return $query_args;
+    }
+
+    /**
      * Add viaggiatori to author dropdown in backend for viaggio post type
      */
     public static function add_viaggiatori_to_author_dropdown($query_args, $parsed_args) {
         global $pagenow, $typenow;
+
+        // Debug: log the context
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('CDV: wp_dropdown_users_args called - pagenow: ' . $pagenow . ', typenow: ' . $typenow);
+        }
 
         // Check if we're on the right screen
         $is_viaggio_screen = false;
@@ -284,11 +310,16 @@ class CDV_User_Roles {
         }
 
         // Check for edit post screen
-        if ($pagenow === 'post.php' && isset($_GET['post'])) {
-            $post = get_post($_GET['post']);
+        if ($pagenow === 'post.php' && isset($_GET['post']) && !empty($_GET['post'])) {
+            $post = get_post(intval($_GET['post']));
             if ($post && $post->post_type === 'viaggio') {
                 $is_viaggio_screen = true;
             }
+        }
+
+        // Check for list screen (quick edit)
+        if ($pagenow === 'edit.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'viaggio') {
+            $is_viaggio_screen = true;
         }
 
         // Also check global $typenow
@@ -296,8 +327,18 @@ class CDV_User_Roles {
             $is_viaggio_screen = true;
         }
 
+        // Check screen object as fallback
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        if ($screen && $screen->post_type === 'viaggio') {
+            $is_viaggio_screen = true;
+        }
+
         // Only modify query for viaggio post type
         if (is_admin() && $is_viaggio_screen) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('CDV: Modifying wp_dropdown_users query for viaggio');
+            }
+
             // Remove the default capability requirement
             unset($query_args['who']);
 
