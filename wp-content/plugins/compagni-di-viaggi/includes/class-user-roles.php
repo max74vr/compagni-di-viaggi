@@ -21,6 +21,9 @@ class CDV_User_Roles {
         // Hide admin bar for viaggiatore
         add_filter('show_admin_bar', array(__CLASS__, 'hide_admin_bar'));
         add_action('after_setup_theme', array(__CLASS__, 'hide_admin_bar_theme'));
+
+        // Allow viaggiatori to appear in author dropdown for viaggio post type
+        add_filter('wp_dropdown_users_args', array(__CLASS__, 'add_viaggiatori_to_author_dropdown'), 10, 2);
     }
 
     /**
@@ -264,5 +267,44 @@ class CDV_User_Roles {
         if (self::is_viaggiatore()) {
             show_admin_bar(false);
         }
+    }
+
+    /**
+     * Add viaggiatori to author dropdown in backend for viaggio post type
+     */
+    public static function add_viaggiatori_to_author_dropdown($query_args, $parsed_args) {
+        global $pagenow, $typenow;
+
+        // Check if we're on the right screen
+        $is_viaggio_screen = false;
+
+        // Check for new post screen
+        if ($pagenow === 'post-new.php' && isset($_GET['post_type']) && $_GET['post_type'] === 'viaggio') {
+            $is_viaggio_screen = true;
+        }
+
+        // Check for edit post screen
+        if ($pagenow === 'post.php' && isset($_GET['post'])) {
+            $post = get_post($_GET['post']);
+            if ($post && $post->post_type === 'viaggio') {
+                $is_viaggio_screen = true;
+            }
+        }
+
+        // Also check global $typenow
+        if ($typenow === 'viaggio') {
+            $is_viaggio_screen = true;
+        }
+
+        // Only modify query for viaggio post type
+        if (is_admin() && $is_viaggio_screen) {
+            // Remove the default capability requirement
+            unset($query_args['who']);
+
+            // Include viaggiatori role
+            $query_args['role__in'] = array('administrator', 'editor', 'viaggiatore');
+        }
+
+        return $query_args;
     }
 }
