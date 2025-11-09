@@ -51,20 +51,20 @@
 
         <div class="header-actions desktop-only">
             <?php if (is_user_logged_in()) : ?>
-                <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-secondary">
-                    Dashboard
+                <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-header btn-header-secondary">
+                    👤 Dashboard
                 </a>
-                <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-primary">
-                    Crea Viaggio
+                <a href="<?php echo esc_url(home_url('/crea-viaggio')); ?>" class="btn-header btn-header-primary">
+                    ✈️ Crea Viaggio
                 </a>
-                <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="btn-secondary">
+                <a href="<?php echo esc_url(wp_logout_url(home_url())); ?>" class="btn-header btn-header-ghost">
                     Esci
                 </a>
             <?php else : ?>
-                <a href="<?php echo esc_url(wp_login_url()); ?>" class="btn-secondary">
+                <a href="<?php echo esc_url(home_url('/accedi')); ?>" class="btn-header btn-header-ghost">
                     Accedi
                 </a>
-                <a href="<?php echo esc_url(wp_registration_url()); ?>" class="btn-primary">
+                <a href="<?php echo esc_url(home_url('/registrazione')); ?>" class="btn-header btn-header-primary">
                     Registrati
                 </a>
             <?php endif; ?>
@@ -91,15 +91,16 @@ function cdv_fallback_menu() {
  */
 function cdv_fallback_mobile_menu() {
     echo '<ul class="mobile-menu">';
-    echo '<li><a href="' . esc_url(home_url('/')) . '">Home</a></li>';
-    echo '<li><a href="' . esc_url(home_url('/viaggi')) . '">Viaggi</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/')) . '">🏠 Home</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/viaggi')) . '">✈️ Viaggi</a></li>';
+    echo '<li><a href="' . esc_url(home_url('/racconti')) . '">📖 Racconti</a></li>';
     if (is_user_logged_in()) {
-        echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">Dashboard</a></li>';
-        echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">Crea Viaggio</a></li>';
-        echo '<li><a href="' . esc_url(wp_logout_url(home_url())) . '">Esci</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">👤 Dashboard</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">➕ Crea Viaggio</a></li>';
+        echo '<li><a href="' . esc_url(wp_logout_url(home_url())) . '" style="background: rgba(220, 53, 69, 0.2); color: #ff6b6b;">Esci</a></li>';
     } else {
-        echo '<li><a href="' . esc_url(wp_login_url()) . '">Accedi</a></li>';
-        echo '<li><a href="' . esc_url(wp_registration_url()) . '">Registrati</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/accedi')) . '">🔐 Accedi</a></li>';
+        echo '<li><a href="' . esc_url(home_url('/registrazione')) . '" style="background: var(--primary-color); color: white;">✨ Registrati</a></li>';
     }
     echo '</ul>';
 }

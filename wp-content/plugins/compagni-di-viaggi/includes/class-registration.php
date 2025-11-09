@@ -25,8 +25,12 @@ class CDV_Registration {
         add_action('wp_ajax_cdv_upload_profile_image', array(__CLASS__, 'ajax_upload_profile_image'));
         add_action('wp_ajax_cdv_create_first_travel', array(__CLASS__, 'ajax_create_first_travel'));
 
+        // Frontend login
+        add_action('wp_ajax_nopriv_cdv_frontend_login', array(__CLASS__, 'ajax_frontend_login'));
+
         // Prevent backend registration
         add_filter('register_url', array(__CLASS__, 'custom_register_url'));
+        add_filter('login_url', array(__CLASS__, 'custom_login_url'), 10, 3);
     }
 
     /**
@@ -34,6 +38,66 @@ class CDV_Registration {
      */
     public static function custom_register_url($url) {
         return home_url('/registrazione');
+    }
+
+    /**
+     * Custom login URL
+     */
+    public static function custom_login_url($login_url, $redirect, $force_reauth) {
+        $custom_login = home_url('/accedi');
+
+        if (!empty($redirect)) {
+            $custom_login = add_query_arg('redirect_to', urlencode($redirect), $custom_login);
+        }
+
+        return $custom_login;
+    }
+
+    /**
+     * AJAX: Frontend Login
+     */
+    public static function ajax_frontend_login() {
+        try {
+            check_ajax_referer('cdv_login_nonce', 'nonce');
+
+            $username = isset($_POST['username']) ? sanitize_text_field($_POST['username']) : '';
+            $password = isset($_POST['password']) ? $_POST['password'] : '';
+            $remember = isset($_POST['remember']) && $_POST['remember'] === 'true';
+
+            // Validation
+            if (empty($username) || empty($password)) {
+                wp_send_json_error(array('message' => 'Username e password sono obbligatori'));
+            }
+
+            // Try to authenticate
+            $user = wp_authenticate($username, $password);
+
+            if (is_wp_error($user)) {
+                error_log('CDV: Login failed for user: ' . $username . ' - ' . $user->get_error_message());
+                wp_send_json_error(array('message' => 'Username o password non corretti'));
+            }
+
+            // Check if user is approved (viaggiatori are auto-approved with value '1')
+            $approved = get_user_meta($user->ID, 'cdv_user_approved', true);
+
+            // Log user in
+            wp_set_current_user($user->ID);
+            wp_set_auth_cookie($user->ID, $remember);
+
+            // Determine redirect URL
+            $redirect_to = isset($_GET['redirect_to']) ? esc_url_raw($_GET['redirect_to']) : home_url('/dashboard');
+
+            error_log('CDV: Successful login for user: ' . $username);
+
+            wp_send_json_success(array(
+                'message' => 'Accesso effettuato con successo!',
+                'redirect_url' => $redirect_to,
+            ));
+
+        } catch (Exception $e) {
+            error_log('CDV: Error in frontend login: ' . $e->getMessage());
+            wp_send_json_error(array('message' => 'Si è verificato un errore. Riprova.'));
+        }
     }
 
     /**
