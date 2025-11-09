@@ -23,6 +23,7 @@
                 <ul class="nav-menu">
                     <li><a href="<?= SITE_URL ?>/index.php">Home</a></li>
                     <li><a href="<?= SITE_URL ?>/travels.php">Scopri Viaggi</a></li>
+                    <li><a href="<?= SITE_URL ?>/stories.php">Racconti di Viaggio</a></li>
                     <li><a href="<?= SITE_URL ?>/explore-travelers.php">Trova Viaggiatori</a></li>
 
                     <?php if (isLoggedIn()): ?>

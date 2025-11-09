@@ -104,6 +104,19 @@ class AuthController {
             // Award early adopter badge
             $this->userModel->awardBadge($userId, 'early_adopter', 'Early Adopter', '🌟');
 
+            // Send welcome email to user
+            sendRegistrationEmail($email, $firstName);
+
+            // Send notification to admin
+            $adminMessage = "
+                <h3>Nuova registrazione! 🎉</h3>
+                <p><strong>Nome:</strong> {$firstName} {$lastName}</p>
+                <p><strong>Email:</strong> {$email}</p>
+                <p><strong>Username:</strong> {$username}</p>
+                <p><strong>Data registrazione:</strong> " . date('d/m/Y H:i') . "</p>
+            ";
+            sendAdminNotification('Nuova registrazione utente', $adminMessage);
+
             setFlashMessage('Registrazione completata! Benvenuto su Compagni di Viaggi!', 'success');
 
             // Auto login
@@ -192,10 +205,24 @@ class AuthController {
         }
 
         $userId = getCurrentUserId();
+        $updateData = [];
+
+        // Handle profile photo upload
+        if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === UPLOAD_ERR_OK) {
+            $uploadResult = uploadFile($_FILES['profile_photo'], PROFILE_PHOTOS_DIR);
+            if ($uploadResult['success']) {
+                $updateData['profile_photo'] = $uploadResult['filename'];
+            }
+        }
 
         // Add bio
         if (!empty($_POST['bio'])) {
-            $this->userModel->update($userId, ['bio' => sanitize($_POST['bio'])]);
+            $updateData['bio'] = sanitize($_POST['bio']);
+        }
+
+        // Update user if there's data
+        if (!empty($updateData)) {
+            $this->userModel->update($userId, $updateData);
         }
 
         // Add travel preferences
@@ -216,6 +243,7 @@ class AuthController {
         // Add languages
         if (!empty($_POST['languages'])) {
             foreach ($_POST['languages'] as $langData) {
+                if (empty($langData)) continue;
                 $langParts = explode(':', $langData);
                 if (count($langParts) === 2) {
                     $this->userModel->addLanguage(

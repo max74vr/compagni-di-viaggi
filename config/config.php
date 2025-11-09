@@ -38,6 +38,10 @@ foreach ($dirs as $dir) {
     }
 }
 
+// Email configuration
+define('SITE_EMAIL', getenv('SITE_EMAIL') ?: 'noreply@compagnidiviaggi.com');
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'admin@compagnidiviaggi.com');
+
 // Security
 define('PASSWORD_MIN_LENGTH', 8);
 define('SESSION_TIMEOUT', 3600); // 1 hour

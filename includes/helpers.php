@@ -203,3 +203,78 @@ function generateCSRFToken() {
 function validateCSRFToken($token) {
     return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
+
+/**
+ * Send email using PHP mail()
+ */
+function sendEmail($to, $subject, $message, $fromName = 'Compagni di Viaggi', $fromEmail = null) {
+    if ($fromEmail === null) {
+        $fromEmail = defined('SITE_EMAIL') ? SITE_EMAIL : 'noreply@compagnidiviaggi.com';
+    }
+
+    $headers = [
+        'From: ' . $fromName . ' <' . $fromEmail . '>',
+        'Reply-To: ' . $fromEmail,
+        'X-Mailer: PHP/' . phpversion(),
+        'MIME-Version: 1.0',
+        'Content-Type: text/html; charset=UTF-8'
+    ];
+
+    $messageWrapped = "
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+</head>
+<body style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;'>
+    <div style='background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 2rem; text-align: center; border-radius: 8px 8px 0 0;'>
+        <h1 style='margin: 0;'>✈️ Compagni di Viaggi</h1>
+    </div>
+    <div style='background: #f7f7f7; padding: 2rem; border-radius: 0 0 8px 8px;'>
+        {$message}
+    </div>
+    <div style='text-align: center; margin-top: 1rem; color: #999; font-size: 0.875rem;'>
+        <p>Questo è un messaggio automatico, non rispondere a questa email.</p>
+        <p>&copy; " . date('Y') . " Compagni di Viaggi. Tutti i diritti riservati.</p>
+    </div>
+</body>
+</html>";
+
+    return mail($to, $subject, $messageWrapped, implode("\r\n", $headers));
+}
+
+/**
+ * Send registration confirmation email
+ */
+function sendRegistrationEmail($userEmail, $userName) {
+    $subject = 'Benvenuto su Compagni di Viaggi! ✈️';
+    $message = "
+        <h2>Ciao {$userName}! 👋</h2>
+        <p>Benvenuto/a su <strong>Compagni di Viaggi</strong>!</p>
+        <p>Siamo felici di averti nella nostra community di viaggiatori. Ora puoi:</p>
+        <ul style='line-height: 2;'>
+            <li>🔍 Cercare compagni di viaggio</li>
+            <li>✈️ Creare i tuoi viaggi</li>
+            <li>💬 Chattare con altri viaggiatori</li>
+            <li>⭐ Costruire la tua reputazione</li>
+        </ul>
+        <p style='margin-top: 2rem; text-align: center;'>
+            <a href='" . SITE_URL . "/dashboard.php' style='background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; display: inline-block;'>
+                Vai alla Dashboard
+            </a>
+        </p>
+        <p style='margin-top: 2rem; color: #666;'>
+            Ti consigliamo di completare il tuo profilo per trovare compagni di viaggio più compatibili!
+        </p>
+    ";
+
+    return sendEmail($userEmail, $subject, $message);
+}
+
+/**
+ * Send admin notification email
+ */
+function sendAdminNotification($subject, $message) {
+    $adminEmail = defined('ADMIN_EMAIL') ? ADMIN_EMAIL : 'admin@compagnidiviaggi.com';
+    return sendEmail($adminEmail, '[Admin] ' . $subject, $message);
+}

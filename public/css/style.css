@@ -80,13 +80,20 @@ body {
     color: var(--text-primary);
     font-weight: 500;
     transition: var(--transition);
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 0.75rem; /* Padding ridotto per compattare */
     border-radius: var(--border-radius);
+    font-size: 0.95rem; /* Font leggermente più piccolo */
 }
 
 .nav-menu a:hover {
     color: var(--primary-color);
     background-color: var(--bg-light);
+}
+
+.nav-menu .btn-primary,
+.nav-menu .btn-secondary {
+    padding: 0.5rem 1rem; /* Pulsanti più compatti */
+    font-size: 0.9rem;
 }
 
 .dropdown {
@@ -142,10 +149,13 @@ body {
 }
 
 .mobile-menu-toggle {
-    display: none;
+    display: none; /* Nascosto di default su desktop */
     flex-direction: column;
     gap: 4px;
     cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.5rem;
 }
 
 .mobile-menu-toggle span {
@@ -153,6 +163,19 @@ body {
     height: 3px;
     background: var(--text-primary);
     border-radius: 3px;
+    transition: var(--transition);
+}
+
+.mobile-menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.mobile-menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.mobile-menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
 }
 
 /* Buttons */
@@ -642,6 +665,50 @@ textarea.form-control {
 
     .nav-menu {
         display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-white);
+        flex-direction: column;
+        gap: 0;
+        padding: 1rem 0;
+        box-shadow: var(--shadow-lg);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .nav-menu.active {
+        display: flex;
+    }
+
+    .nav-menu li {
+        width: 100%;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .nav-menu li:last-child {
+        border-bottom: none;
+    }
+
+    .nav-menu a {
+        display: block;
+        padding: 1rem;
+        width: 100%;
+    }
+
+    .nav-menu .btn-primary,
+    .nav-menu .btn-secondary {
+        width: 90%;
+        margin: 0.5rem auto;
+        display: block;
+    }
+
+    .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        margin-top: 0;
+        padding-left: 1rem;
     }
 
     .mobile-menu-toggle {
@@ -651,5 +718,9 @@ textarea.form-control {
     .travel-grid,
     .users-grid {
         grid-template-columns: 1fr;
+    }
+
+    .navbar {
+        position: relative;
     }
 }

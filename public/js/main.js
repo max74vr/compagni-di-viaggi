@@ -7,9 +7,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const mobileToggle = document.querySelector('.mobile-menu-toggle');
     const navMenu = document.querySelector('.nav-menu');
 
-    if (mobileToggle) {
+    if (mobileToggle && navMenu) {
         mobileToggle.addEventListener('click', function() {
             navMenu.classList.toggle('active');
+            mobileToggle.classList.toggle('active');
+        });
+
+        // Chiudi menu quando si clicca su un link
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 768) {
+                    navMenu.classList.remove('active');
+                    mobileToggle.classList.remove('active');
+                }
+            });
         });
     }
 
