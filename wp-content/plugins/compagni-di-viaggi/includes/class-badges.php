@@ -23,6 +23,16 @@ class CDV_Badges {
             'icon' => '✓',
             'description' => 'Identità verificata',
         ),
+        'first_travel' => array(
+            'name' => 'Primo Viaggio',
+            'icon' => '🚀',
+            'description' => 'Ha organizzato il primo viaggio',
+        ),
+        'first_story' => array(
+            'name' => 'Narratore',
+            'icon' => '📖',
+            'description' => 'Ha pubblicato il primo racconto',
+        ),
         'explorer' => array(
             'name' => 'Esploratore',
             'icon' => '🧭',
@@ -47,6 +57,11 @@ class CDV_Badges {
             'name' => 'Socievole',
             'icon' => '🎉',
             'description' => 'Ha lasciato 10 recensioni positive',
+        ),
+        'storyteller' => array(
+            'name' => 'Raccontastorie',
+            'icon' => '📚',
+            'description' => 'Ha pubblicato 10 racconti',
         ),
     );
 

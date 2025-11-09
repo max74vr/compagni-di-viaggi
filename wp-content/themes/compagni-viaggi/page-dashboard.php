@@ -58,6 +58,16 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     ORDER BY p.created_at DESC",
     $current_user->ID
 ));
+
+// Query racconti dell'utente
+$my_stories = new WP_Query(array(
+    'post_type' => 'racconto',
+    'author' => $current_user->ID,
+    'post_status' => 'publish',
+    'posts_per_page' => -1,
+    'orderby' => 'date',
+    'order' => 'DESC',
+));
 ?>
 
 <main class="site-main dashboard">
@@ -88,6 +98,9 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
                 <?php if ($participated_travels) : ?>
                     (<?php echo $participated_travels->post_count; ?>)
                 <?php endif; ?>
+            </button>
+            <button class="tab-button" data-tab="my-stories">
+                I Miei Racconti (<?php echo $my_stories->post_count; ?>)
             </button>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
         </div>
@@ -231,6 +244,67 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
                 </div>
             <?php else : ?>
                 <p class="no-content">Non stai partecipando a nessun viaggio. <a href="<?php echo get_post_type_archive_link('viaggio'); ?>">Cerca un viaggio!</a></p>
+            <?php endif; ?>
+        </div>
+
+        <!-- Tab: I Miei Racconti -->
+        <div class="tab-content" id="tab-my-stories">
+            <div class="section-header">
+                <h2>I Miei Racconti</h2>
+                <a href="<?php echo esc_url(home_url('/racconta-viaggio')); ?>" class="btn btn-primary">
+                    <i class="icon-plus"></i> Nuovo Racconto
+                </a>
+            </div>
+
+            <?php if ($my_stories->have_posts()) : ?>
+                <div class="stories-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                    <?php while ($my_stories->have_posts()) : $my_stories->the_post(); ?>
+                        <?php
+                        $story_stats = CDV_Travel_Stories::get_story_stats(get_the_ID());
+                        ?>
+                        <div class="story-item" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <?php if (has_post_thumbnail()) : ?>
+                                <div class="story-image" style="aspect-ratio: 4/3; overflow: hidden;">
+                                    <?php the_post_thumbnail('medium', array('style' => 'width: 100%; height: 100%; object-fit: cover;')); ?>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="story-item-content" style="padding: 1.5rem;">
+                                <h3 style="margin: 0 0 1rem 0;">
+                                    <a href="<?php the_permalink(); ?>" target="_blank" style="color: #333; text-decoration: none;">
+                                        <?php the_title(); ?>
+                                    </a>
+                                </h3>
+
+                                <div class="story-meta" style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.875rem; color: #666;">
+                                    <span>👁 <?php echo number_format_i18n($story_stats['views']); ?> visualizzazioni</span>
+                                    <span>💬 <?php echo number_format_i18n($story_stats['comments']); ?> commenti</span>
+                                </div>
+
+                                <div class="story-excerpt" style="color: #666; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                                    <?php echo wp_trim_words(get_the_excerpt(), 15); ?>
+                                </div>
+
+                                <div class="story-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <a href="<?php echo esc_url(add_query_arg('story_id', get_the_ID(), home_url('/racconta-viaggio'))); ?>" class="btn btn-secondary btn-sm">
+                                        Modifica
+                                    </a>
+                                    <a href="<?php the_permalink(); ?>" class="btn btn-secondary btn-sm" target="_blank">
+                                        Visualizza
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; ?>
+                    <?php wp_reset_postdata(); ?>
+                </div>
+            <?php else : ?>
+                <div class="no-content">
+                    <p>Non hai ancora pubblicato nessun racconto.</p>
+                    <a href="<?php echo esc_url(home_url('/racconta-viaggio')); ?>" class="btn btn-primary" style="margin-top: 1rem;">
+                        Racconta il Tuo Primo Viaggio
+                    </a>
+                </div>
             <?php endif; ?>
         </div>
 

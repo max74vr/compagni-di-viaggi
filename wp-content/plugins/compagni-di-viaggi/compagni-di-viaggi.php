@@ -84,6 +84,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-reviews.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-participants.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-badges.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-travel-stories.php';
 
         // REST API
         require_once CDV_PLUGIN_DIR . 'includes/api/class-rest-api.php';
@@ -115,6 +116,7 @@ class Compagni_Di_Viaggi {
         CDV_Reviews::init();
         CDV_Participants::init();
         CDV_Badges::init();
+        CDV_Travel_Stories::init();
         CDV_REST_API::init();
         CDV_Ajax_Handlers::init();
 
