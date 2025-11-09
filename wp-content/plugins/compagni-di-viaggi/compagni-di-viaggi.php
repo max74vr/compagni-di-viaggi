@@ -71,6 +71,7 @@ class Compagni_Di_Viaggi {
         // Core
         require_once CDV_PLUGIN_DIR . 'includes/class-post-types.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-taxonomies.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-taxonomy-images.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-user-meta.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-database.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-user-roles.php';
@@ -106,6 +107,7 @@ class Compagni_Di_Viaggi {
         // Initialize classes
         CDV_Post_Types::init();
         CDV_Taxonomies::init();
+        CDV_Taxonomy_Images::init();
         CDV_User_Meta::init();
         CDV_User_Roles::init();
         CDV_Registration::init();
