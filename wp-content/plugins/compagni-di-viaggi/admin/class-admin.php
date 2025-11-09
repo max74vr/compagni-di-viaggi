@@ -136,6 +136,32 @@ class CDV_Admin {
      * Settings page
      */
     public static function settings_page() {
+        // Handle email test
+        if (isset($_POST['cdv_test_email'])) {
+            check_admin_referer('cdv_settings_nonce');
+
+            $test_email = sanitize_email($_POST['test_email_address']);
+            if (!$test_email || !is_email($test_email)) {
+                $test_email = get_option('admin_email');
+            }
+
+            $subject = '[Compagni di Viaggi] Test Email';
+            $message = "Questa è un'email di test inviata da Compagni di Viaggi.\n\n";
+            $message .= "Se ricevi questo messaggio, la configurazione email funziona correttamente!\n\n";
+            $message .= "Data invio: " . current_time('d/m/Y H:i:s') . "\n";
+            $message .= "Inviato a: " . $test_email . "\n";
+
+            $headers = array('Content-Type: text/plain; charset=UTF-8');
+
+            $result = wp_mail($test_email, $subject, $message, $headers);
+
+            if ($result) {
+                echo '<div class="notice notice-success"><p><strong>Email di test inviata con successo!</strong> Controlla la casella di posta di <code>' . esc_html($test_email) . '</code> (anche spam/posta indesiderata).</p></div>';
+            } else {
+                echo '<div class="notice notice-error"><p><strong>Invio email fallito!</strong> Controlla i log degli errori in <code>wp-content/debug.log</code>. Potrebbe essere necessario configurare SMTP.</p></div>';
+            }
+        }
+
         if (isset($_POST['cdv_save_settings'])) {
             check_admin_referer('cdv_settings_nonce');
 
@@ -214,6 +240,69 @@ class CDV_Admin {
                     <input type="submit" name="cdv_save_settings" class="button button-primary" value="Salva Impostazioni" />
                 </p>
             </form>
+
+            <hr style="margin: 40px 0;">
+
+            <h2>Configurazione Email</h2>
+
+            <div class="card" style="max-width: none; padding: 20px; background: #f9f9f9; border-left: 4px solid #667eea;">
+                <h3 style="margin-top: 0;">Test Invio Email</h3>
+                <p>Verifica che il sistema email di WordPress funzioni correttamente. Se il test fallisce, potrebbe essere necessario installare e configurare un plugin SMTP.</p>
+
+                <form method="post" action="">
+                    <?php wp_nonce_field('cdv_settings_nonce'); ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">
+                                <label for="test_email_address">Invia email di test a:</label>
+                            </th>
+                            <td>
+                                <input type="email" name="test_email_address" id="test_email_address" value="<?php echo esc_attr(get_option('admin_email')); ?>" class="regular-text" />
+                                <p class="description">Lascia vuoto per usare l'email amministratore</p>
+                            </td>
+                        </tr>
+                    </table>
+                    <p class="submit">
+                        <input type="submit" name="cdv_test_email" class="button button-secondary" value="Invia Email di Test" />
+                    </p>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: none; padding: 20px; margin-top: 20px;">
+                <h3 style="margin-top: 0;">Configurazione SMTP Consigliata</h3>
+                <p>Per garantire l'invio affidabile di email (verifica account, notifiche admin), si consiglia di configurare SMTP:</p>
+
+                <ol>
+                    <li><strong>Installa il plugin "WP Mail SMTP"</strong>
+                        <ul>
+                            <li>Vai su Plugin → Aggiungi nuovo</li>
+                            <li>Cerca "WP Mail SMTP by WPForms"</li>
+                            <li>Installa e attiva</li>
+                        </ul>
+                    </li>
+                    <li><strong>Configura il tuo provider SMTP</strong>
+                        <ul>
+                            <li>Gmail, SendGrid, Mailgun, Amazon SES, ecc.</li>
+                            <li>Segui la configurazione guidata del plugin</li>
+                        </ul>
+                    </li>
+                    <li><strong>Testa nuovamente</strong>
+                        <ul>
+                            <li>Usa il pulsante "Invia Email di Test" qui sopra</li>
+                            <li>Verifica che l'email arrivi correttamente</li>
+                        </ul>
+                    </li>
+                </ol>
+
+                <h4>Email inviate dal sistema:</h4>
+                <ul>
+                    <li>✉️ <strong>Verifica email</strong> - Inviata agli utenti al momento della registrazione</li>
+                    <li>✉️ <strong>Notifica admin</strong> - Inviata all'amministratore quando un nuovo utente si registra</li>
+                    <li>✉️ <strong>Notifiche viaggi</strong> - Per richieste di partecipazione, approvazioni, ecc.</li>
+                </ul>
+
+                <p><strong>Nota:</strong> Le email di verifica sono opzionali. Gli utenti possono comunque accedere anche senza verificare l'email. L'invio email è stato configurato per non bloccare le registrazioni in caso di problemi.</p>
+            </div>
         </div>
         <?php
     }

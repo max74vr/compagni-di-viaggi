@@ -92,6 +92,9 @@ class CDV_Registration {
         // Invia email di verifica
         $email_sent = CDV_Email_Verification::send_verification_email($user_id);
 
+        // Notifica l'admin della nuova registrazione
+        self::notify_admin_new_user($user_id);
+
         // Auto-login (temporaneo per completare la registrazione)
         wp_set_current_user($user_id);
         wp_set_auth_cookie($user_id);
@@ -368,26 +371,38 @@ class CDV_Registration {
     private static function notify_admin_new_user($user_id) {
         $user = get_user_by('id', $user_id);
         if (!$user) {
+            error_log('CDV: Failed to get user data for admin notification. User ID: ' . $user_id);
             return false;
         }
 
         $admin_email = get_option('admin_email');
         if (!$admin_email) {
+            error_log('CDV: No admin email configured for notifications');
             return false;
         }
 
-        $subject = '[Compagni di Viaggi] Nuovo utente da approvare';
+        $subject = '[Compagni di Viaggi] Nuova registrazione utente';
         $message = sprintf(
-            "Nuovo utente registrato:\n\nNome: %s\nUsername: %s\nEmail: %s\n\nApprova qui: %s",
+            "Nuovo utente registrato:\n\nNome: %s\nUsername: %s\nEmail: %s\nData: %s\n\nVisualizza utenti: %s",
             $user->display_name,
             $user->user_login,
             $user->user_email,
-            admin_url('admin.php?page=cdv-pending-users')
+            current_time('d/m/Y H:i'),
+            admin_url('users.php')
         );
 
-        // wp_mail può causare timeout, lo eseguiamo in modo non bloccante
-        @wp_mail($admin_email, $subject, $message);
-        return true;
+        $headers = array('Content-Type: text/plain; charset=UTF-8');
+
+        $result = wp_mail($admin_email, $subject, $message, $headers);
+
+        if (!$result) {
+            error_log('CDV: Failed to send admin notification email for user ' . $user_id . ' to ' . $admin_email);
+            error_log('CDV: Check WordPress mail configuration or install WP Mail SMTP plugin');
+        } else {
+            error_log('CDV: Admin notification email sent successfully for user ' . $user_id);
+        }
+
+        return $result;
     }
 
     /**

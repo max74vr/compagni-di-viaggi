@@ -500,18 +500,18 @@ function cdv_customizer_css() {
             color: var(--primary-color);
         }
 
-        .site-header .btn-primary {
+        .site-header .header-actions .btn-primary {
             background: var(--primary-color);
             color: white;
         }
 
-        .site-header .btn-secondary {
+        .site-header .header-actions .btn-secondary {
             background: transparent;
             color: var(--primary-color);
             border: 2px solid var(--primary-color);
         }
 
-        .site-header .btn-secondary:hover {
+        .site-header .header-actions .btn-secondary:hover {
             background: var(--primary-color);
             color: white;
         }

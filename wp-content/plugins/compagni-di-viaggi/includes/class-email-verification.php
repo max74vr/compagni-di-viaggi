@@ -73,7 +73,19 @@ Il team di Compagni di Viaggi
 
         $headers = array('Content-Type: text/plain; charset=UTF-8');
 
-        return wp_mail($user->user_email, $subject, $message, $headers);
+        $result = wp_mail($user->user_email, $subject, $message, $headers);
+
+        if (!$result) {
+            error_log('CDV: Failed to send verification email to user ' . $user_id . ' (' . $user->user_email . ')');
+            error_log('CDV: WordPress wp_mail() returned false. Possible causes:');
+            error_log('CDV: 1. Server mail() function not configured');
+            error_log('CDV: 2. No SMTP plugin installed (recommended: WP Mail SMTP)');
+            error_log('CDV: 3. Email address or domain blocked by hosting provider');
+        } else {
+            error_log('CDV: Verification email sent successfully to user ' . $user_id . ' (' . $user->user_email . ')');
+        }
+
+        return $result;
     }
 
     /**

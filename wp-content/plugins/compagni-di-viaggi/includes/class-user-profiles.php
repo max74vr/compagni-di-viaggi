@@ -11,6 +11,12 @@ class CDV_User_Profiles {
         add_action('init', array(__CLASS__, 'add_rewrite_rules'));
         add_filter('query_vars', array(__CLASS__, 'add_query_vars'));
         add_action('template_redirect', array(__CLASS__, 'handle_profile_template'));
+
+        // Flush rewrite rules if needed
+        if (get_option('cdv_flush_rewrite_rules_flag')) {
+            flush_rewrite_rules();
+            delete_option('cdv_flush_rewrite_rules_flag');
+        }
     }
 
     /**
@@ -23,6 +29,12 @@ class CDV_User_Profiles {
             'index.php?cdv_user_profile=$matches[1]',
             'top'
         );
+
+        // Set flag per flush rewrite rules al prossimo caricamento
+        if (!get_option('cdv_rewrite_rules_version') || get_option('cdv_rewrite_rules_version') !== '1.0') {
+            update_option('cdv_flush_rewrite_rules_flag', '1');
+            update_option('cdv_rewrite_rules_version', '1.0');
+        }
     }
 
     /**
@@ -55,7 +67,7 @@ class CDV_User_Profiles {
 
         // Controlla che sia un viaggiatore approvato
         $approved = get_user_meta($user->ID, 'cdv_user_approved', true);
-        if ($approved !== 'approved') {
+        if ($approved !== 'approved' && $approved !== '1') {
             global $wp_query;
             $wp_query->set_404();
             status_header(404);
