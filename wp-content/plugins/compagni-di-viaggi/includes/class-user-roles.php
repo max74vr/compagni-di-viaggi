@@ -60,6 +60,7 @@ class CDV_User_Roles {
                 __('Viaggiatore', 'compagni-di-viaggi'),
                 array(
                     'read' => true,
+                    'level_0' => true, // Required for appearing in author dropdown
                     'edit_posts' => false,
                     'delete_posts' => false,
                     'publish_posts' => false,
@@ -74,6 +75,12 @@ class CDV_User_Roles {
                     'leave_reviews' => true,
                 )
             );
+        } else {
+            // Update existing role to add level_0 if missing
+            $role = get_role('viaggiatore');
+            if ($role && !$role->has_cap('level_0')) {
+                $role->add_cap('level_0');
+            }
         }
 
         // Add custom capabilities to administrator
