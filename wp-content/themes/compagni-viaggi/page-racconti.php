@@ -16,7 +16,7 @@ get_header();
                 Scopri le avventure dei nostri viaggiatori, leggi i loro consigli e lasciati ispirare per il tuo prossimo viaggio.
             </p>
             <?php if (is_user_logged_in()) : ?>
-                <a href="<?php echo esc_url(home_url('/racconta-viaggio')); ?>" class="btn-primary" style="background: white; color: var(--primary-color);">
+                <a href="<?php echo esc_url(home_url('/racconta-viaggio')); ?>" class="btn-primary" style="background: white !important; color: var(--primary-color) !important; border: 2px solid white;">
                     ✍️ Racconta il Tuo Viaggio
                 </a>
             <?php endif; ?>
