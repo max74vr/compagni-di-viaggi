@@ -241,24 +241,35 @@ class CDV_Private_Messages {
         $messages_table = $wpdb->prefix . 'cdv_private_messages';
 
         // Get unique conversations with last message
+        // Use a simpler query that's compatible with all MySQL versions
         $conversations = $wpdb->get_results($wpdb->prepare(
             "SELECT
-                CASE
-                    WHEN sender_id = %d THEN receiver_id
-                    ELSE sender_id
-                END as other_user_id,
-                travel_id,
-                MAX(created_at) as last_message_time,
-                (SELECT COUNT(*) FROM $messages_table m2
-                 WHERE m2.receiver_id = %d
-                 AND m2.is_read = 0
-                 AND m2.travel_id = $messages_table.travel_id
-                 AND (m2.sender_id = CASE WHEN $messages_table.sender_id = %d THEN $messages_table.receiver_id ELSE $messages_table.sender_id END)
-                ) as unread_count
-            FROM $messages_table
-            WHERE sender_id = %d OR receiver_id = %d
-            GROUP BY other_user_id, travel_id
-            ORDER BY last_message_time DESC",
+                m1.other_user_id,
+                m1.travel_id,
+                m1.last_message_time,
+                COALESCE(unread.unread_count, 0) as unread_count
+            FROM (
+                SELECT
+                    CASE WHEN sender_id = %d THEN receiver_id ELSE sender_id END as other_user_id,
+                    travel_id,
+                    MAX(created_at) as last_message_time
+                FROM $messages_table
+                WHERE sender_id = %d OR receiver_id = %d
+                GROUP BY
+                    CASE WHEN sender_id = %d THEN receiver_id ELSE sender_id END,
+                    travel_id
+            ) m1
+            LEFT JOIN (
+                SELECT
+                    sender_id as other_user_id,
+                    travel_id,
+                    COUNT(*) as unread_count
+                FROM $messages_table
+                WHERE receiver_id = %d AND is_read = 0
+                GROUP BY sender_id, travel_id
+            ) unread ON m1.other_user_id = unread.other_user_id
+                AND m1.travel_id = unread.travel_id
+            ORDER BY m1.last_message_time DESC",
             $user_id, $user_id, $user_id, $user_id, $user_id
         ));
 

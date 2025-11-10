@@ -55,7 +55,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON p.user_id = u.ID
     WHERE t.post_author = %d AND p.status = 'pending'
-    ORDER BY p.created_at DESC",
+    ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
 
@@ -66,7 +66,7 @@ $my_pending_requests = $wpdb->get_results($wpdb->prepare(
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON t.post_author = u.ID
     WHERE p.user_id = %d AND p.status = 'pending'
-    ORDER BY p.created_at DESC",
+    ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
 
@@ -233,7 +233,7 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
                                         <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
                                         <p class="request-date">
                                             <i class="icon-clock"></i>
-                                            Inviata <?php echo human_time_diff(strtotime($request->created_at), current_time('timestamp')); ?> fa
+                                            Inviata <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
                                         </p>
                                         <?php if (!empty($request->message)) : ?>
                                             <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
@@ -273,7 +273,7 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
                                         <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
                                         <p class="request-date">
                                             <i class="icon-clock"></i>
-                                            <?php echo human_time_diff(strtotime($request->created_at), current_time('timestamp')); ?> fa
+                                            <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
                                         </p>
                                         <?php if (!empty($request->message)) : ?>
                                             <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
