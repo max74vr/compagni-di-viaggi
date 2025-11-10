@@ -181,11 +181,15 @@ Il team di Compagni di Viaggi
             $result = self::verify_token($token);
 
             if (is_wp_error($result)) {
-                // Salva errore in sessione (o query var)
-                set_transient('cdv_verification_error_' . session_id(), $result->get_error_message(), 60);
+                // Redirect with error message in query var
+                $redirect_url = add_query_arg('verification_error', urlencode($result->get_error_message()), home_url('/conferma-email/'));
+                wp_safe_redirect($redirect_url);
+                exit;
             } else {
-                // Salva successo
-                set_transient('cdv_verification_success_' . session_id(), $result, 60);
+                // Redirect with success message in query var
+                $redirect_url = add_query_arg('verification_success', '1', home_url('/conferma-email/'));
+                wp_safe_redirect($redirect_url);
+                exit;
             }
         }
     }

@@ -48,13 +48,24 @@ if (!empty($participated_ids)) {
     ));
 }
 
-// Conta richieste pendenti
+// Conta richieste pendenti RICEVUTE (per organizzatori)
 $pending_requests = $wpdb->get_results($wpdb->prepare(
     "SELECT p.*, t.post_title, u.display_name, u.user_login
     FROM $participants_table p
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON p.user_id = u.ID
     WHERE t.post_author = %d AND p.status = 'pending'
+    ORDER BY p.requested_at DESC",
+    $current_user->ID
+));
+
+// Richieste pendenti INVIATE (per viaggiatori)
+$my_pending_requests = $wpdb->get_results($wpdb->prepare(
+    "SELECT p.*, t.post_title, t.post_author, u.display_name as organizer_name
+    FROM $participants_table p
+    LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
+    LEFT JOIN {$wpdb->users} u ON t.post_author = u.ID
+    WHERE p.user_id = %d AND p.status = 'pending'
     ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
@@ -92,8 +103,10 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
             </button>
             <button class="tab-button" data-tab="requests">
                 Richieste di Partecipazione
-                <?php if (count($pending_requests) > 0) : ?>
-                    <span class="badge-count"><?php echo count($pending_requests); ?></span>
+                <?php
+                $total_requests = count($pending_requests) + count($my_pending_requests);
+                if ($total_requests > 0) : ?>
+                    <span class="badge-count"><?php echo $total_requests; ?></span>
                 <?php endif; ?>
             </button>
             <button class="tab-button" data-tab="participating">
@@ -201,41 +214,92 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
         <div class="tab-content" id="tab-requests">
             <h2>Richieste di Partecipazione</h2>
 
-            <?php if (!empty($pending_requests)) : ?>
-                <div class="requests-list">
-                    <?php foreach ($pending_requests as $request) : ?>
-                        <div class="request-item" data-request-id="<?php echo $request->id; ?>">
-                            <div class="request-user">
-                                <?php echo get_avatar($request->user_id, 60); ?>
-                                <div class="request-user-info">
-                                    <h4>
-                                        <a href="<?php echo CDV_User_Profiles::get_profile_url($request->user_id); ?>" target="_blank">
-                                            <?php echo esc_html($request->user_login); ?>
-                                        </a>
-                                    </h4>
-                                    <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
-                                    <p class="request-date">
-                                        <i class="icon-clock"></i>
-                                        <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
-                                    </p>
-                                    <?php if (!empty($request->message)) : ?>
-                                        <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
-                                    <?php endif; ?>
+            <!-- Richieste Inviate (viaggiatore) -->
+            <?php if (!empty($my_pending_requests)) : ?>
+                <div class="requests-section">
+                    <h3>Le Mie Richieste Inviate</h3>
+                    <div class="requests-list">
+                        <?php foreach ($my_pending_requests as $request) : ?>
+                            <div class="request-item sent-request" data-request-id="<?php echo $request->id; ?>">
+                                <div class="request-user">
+                                    <?php echo get_avatar($request->post_author, 60); ?>
+                                    <div class="request-user-info">
+                                        <h4>
+                                            <span class="request-label">Organizzatore:</span>
+                                            <a href="<?php echo CDV_User_Profiles::get_profile_url($request->post_author); ?>" target="_blank">
+                                                <?php echo esc_html($request->organizer_name); ?>
+                                            </a>
+                                        </h4>
+                                        <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
+                                        <p class="request-date">
+                                            <i class="icon-clock"></i>
+                                            Inviata <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
+                                        </p>
+                                        <?php if (!empty($request->message)) : ?>
+                                            <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
+                                        <?php endif; ?>
+                                        <p class="request-status">
+                                            <i class="icon-info"></i> In attesa di approvazione
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="request-actions">
+                                    <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $request->post_author . '&travel_id=' . $request->travel_id); ?>" class="btn btn-secondary">
+                                        <i class="icon-message"></i> Messaggia
+                                    </a>
                                 </div>
                             </div>
-
-                            <div class="request-actions">
-                                <button class="btn btn-success approve-request" data-request-id="<?php echo $request->id; ?>" data-travel-id="<?php echo $request->travel_id; ?>" data-user-id="<?php echo $request->user_id; ?>">
-                                    <i class="icon-check"></i> Approva
-                                </button>
-                                <button class="btn btn-danger reject-request" data-request-id="<?php echo $request->id; ?>" data-travel-id="<?php echo $request->travel_id; ?>" data-user-id="<?php echo $request->user_id; ?>">
-                                    <i class="icon-x"></i> Rifiuta
-                                </button>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-            <?php else : ?>
+            <?php endif; ?>
+
+            <!-- Richieste Ricevute (organizzatore) -->
+            <?php if (!empty($pending_requests)) : ?>
+                <div class="requests-section">
+                    <h3>Richieste Ricevute</h3>
+                    <div class="requests-list">
+                        <?php foreach ($pending_requests as $request) : ?>
+                            <div class="request-item" data-request-id="<?php echo $request->id; ?>">
+                                <div class="request-user">
+                                    <?php echo get_avatar($request->user_id, 60); ?>
+                                    <div class="request-user-info">
+                                        <h4>
+                                            <a href="<?php echo CDV_User_Profiles::get_profile_url($request->user_id); ?>" target="_blank">
+                                                <?php echo esc_html($request->user_login); ?>
+                                            </a>
+                                        </h4>
+                                        <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
+                                        <p class="request-date">
+                                            <i class="icon-clock"></i>
+                                            <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
+                                        </p>
+                                        <?php if (!empty($request->message)) : ?>
+                                            <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div class="request-actions">
+                                    <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $request->user_id . '&travel_id=' . $request->travel_id); ?>" class="btn btn-sm btn-secondary">
+                                        <i class="icon-message"></i> Rispondi
+                                    </a>
+                                    <button class="btn btn-success approve-request" data-request-id="<?php echo $request->id; ?>" data-travel-id="<?php echo $request->travel_id; ?>" data-user-id="<?php echo $request->user_id; ?>">
+                                        <i class="icon-check"></i> Approva
+                                    </button>
+                                    <button class="btn btn-danger reject-request" data-request-id="<?php echo $request->id; ?>" data-travel-id="<?php echo $request->travel_id; ?>" data-user-id="<?php echo $request->user_id; ?>">
+                                        <i class="icon-x"></i> Rifiuta
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- Messaggio se non ci sono richieste -->
+            <?php if (empty($pending_requests) && empty($my_pending_requests)) : ?>
                 <p class="no-content">Nessuna richiesta di partecipazione in attesa.</p>
             <?php endif; ?>
         </div>
@@ -648,6 +712,18 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
     cursor: pointer;
 }
 
+.requests-section {
+    margin-bottom: 2rem;
+}
+
+.requests-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e0e0e0;
+    color: #333;
+}
+
 .requests-list {
     display: flex;
     flex-direction: column;
@@ -663,6 +739,25 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
+}
+
+.request-item.sent-request {
+    border-left: 4px solid var(--primary-color);
+}
+
+.request-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #999;
+    font-weight: normal;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.request-status {
+    color: var(--primary-color);
+    font-weight: 500;
+    font-size: 0.875rem;
 }
 
 .request-user {

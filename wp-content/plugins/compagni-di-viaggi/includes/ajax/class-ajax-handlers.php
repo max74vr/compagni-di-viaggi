@@ -29,6 +29,7 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_update_profile', array(__CLASS__, 'update_profile'));
         add_action('wp_ajax_cdv_change_password', array(__CLASS__, 'change_password'));
         add_action('wp_ajax_cdv_delete_account', array(__CLASS__, 'delete_account'));
+        add_action('wp_ajax_cdv_upload_profile_image', array(__CLASS__, 'upload_profile_image'));
 
         // Travel creation
         add_action('wp_ajax_cdv_create_travel', array(__CLASS__, 'create_travel'));
@@ -542,6 +543,66 @@ class CDV_Ajax_Handlers {
         wp_send_json_success(array(
             'message' => 'Viaggio creato con successo! In attesa di approvazione da parte degli amministratori.',
             'redirect_url' => home_url('/dashboard'),
+        ));
+    }
+
+    /**
+     * AJAX: Upload profile image
+     */
+    public static function upload_profile_image() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Check if file was uploaded
+        if (!isset($_FILES['profile_image'])) {
+            wp_send_json_error(array('message' => 'Nessun file caricato'));
+        }
+
+        $file = $_FILES['profile_image'];
+
+        // Validate file type
+        $allowed_types = array('image/jpeg', 'image/jpg', 'image/png');
+        if (!in_array($file['type'], $allowed_types)) {
+            wp_send_json_error(array('message' => 'Formato file non valido. Usa JPG o PNG'));
+        }
+
+        // Validate file size (5MB max)
+        if ($file['size'] > 5 * 1024 * 1024) {
+            wp_send_json_error(array('message' => 'File troppo grande. Massimo 5MB'));
+        }
+
+        // Handle upload using WordPress
+        require_once(ABSPATH . 'wp-admin/includes/file.php');
+        require_once(ABSPATH . 'wp-admin/includes/image.php');
+        require_once(ABSPATH . 'wp-admin/includes/media.php');
+
+        // Delete old profile image if exists
+        $old_attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+        if ($old_attachment_id) {
+            wp_delete_attachment($old_attachment_id, true);
+        }
+
+        // Upload new image
+        $attachment_id = media_handle_upload('profile_image', 0);
+
+        if (is_wp_error($attachment_id)) {
+            wp_send_json_error(array('message' => 'Errore durante il caricamento: ' . $attachment_id->get_error_message()));
+        }
+
+        // Save attachment ID to user meta
+        update_user_meta($user_id, 'cdv_profile_image_id', $attachment_id);
+
+        // Get image URL
+        $image_url = wp_get_attachment_url($attachment_id);
+
+        wp_send_json_success(array(
+            'message' => 'Immagine profilo aggiornata con successo',
+            'image_url' => $image_url,
         ));
     }
 }

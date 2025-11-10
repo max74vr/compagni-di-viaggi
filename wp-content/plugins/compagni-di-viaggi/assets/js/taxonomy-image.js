@@ -4,31 +4,26 @@
 jQuery(document).ready(function($) {
     'use strict';
 
-    var mediaUploader;
-
     // Upload image
     $(document).on('click', '.cdv-upload-taxonomy-image', function(e) {
         e.preventDefault();
 
         var button = $(this);
-        var wrapper = button.closest('.cdv-taxonomy-image-wrapper').parent();
+        var wrapper = button.closest('.term-image-wrap');
         var imagePreview = wrapper.find('.cdv-taxonomy-image-preview');
         var imageId = wrapper.find('.cdv-taxonomy-image-id');
         var removeButton = wrapper.find('.cdv-remove-taxonomy-image');
 
-        // If the media uploader already exists, reopen it
-        if (mediaUploader) {
-            mediaUploader.open();
-            return;
-        }
-
-        // Create the media uploader
-        mediaUploader = wp.media({
+        // Create a new media uploader instance each time
+        var mediaUploader = wp.media({
             title: 'Seleziona o Carica Immagine',
             button: {
                 text: 'Usa questa immagine'
             },
-            multiple: false
+            multiple: false,
+            library: {
+                type: 'image'
+            }
         });
 
         // When an image is selected
@@ -39,6 +34,9 @@ jQuery(document).ready(function($) {
             imagePreview.attr('src', attachment.url).show();
             imageId.val(attachment.id);
             removeButton.show();
+
+            // Debug log to verify
+            console.log('CDV Taxonomy Image: Selected ID = ' + attachment.id + ', URL = ' + attachment.url);
         });
 
         // Open the media uploader
@@ -50,7 +48,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         var button = $(this);
-        var wrapper = button.closest('.cdv-taxonomy-image-wrapper').parent();
+        var wrapper = button.closest('.term-image-wrap');
         var imagePreview = wrapper.find('.cdv-taxonomy-image-preview');
         var imageId = wrapper.find('.cdv-taxonomy-image-id');
 
