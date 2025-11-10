@@ -34,6 +34,10 @@ class CDV_Ajax_Handlers {
         // Travel creation
         add_action('wp_ajax_cdv_create_travel', array(__CLASS__, 'create_travel'));
 
+        // Group Chat
+        add_action('wp_ajax_cdv_send_group_message', array(__CLASS__, 'send_group_message'));
+        add_action('wp_ajax_cdv_get_group_messages', array(__CLASS__, 'get_group_messages'));
+
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
     }
@@ -603,6 +607,73 @@ class CDV_Ajax_Handlers {
         wp_send_json_success(array(
             'message' => 'Immagine profilo aggiornata con successo',
             'image_url' => $image_url,
+        ));
+    }
+
+    /**
+     * AJAX: Send group message
+     */
+    public static function send_group_message() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
+        $user_id = get_current_user_id();
+
+        if (empty($travel_id) || empty($message)) {
+            wp_send_json_error(array('message' => 'Parametri mancanti'));
+        }
+
+        // Send message
+        $result = CDV_Group_Chat::send_message($travel_id, $user_id, $message);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array(
+            'message' => 'Messaggio inviato',
+            'message_id' => $result,
+        ));
+    }
+
+    /**
+     * AJAX: Get group messages
+     */
+    public static function get_group_messages() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $user_id = get_current_user_id();
+
+        if (empty($travel_id)) {
+            wp_send_json_error(array('message' => 'Travel ID mancante'));
+        }
+
+        // Check if user is participant
+        if (!CDV_Group_Chat::is_participant($travel_id, $user_id)) {
+            wp_send_json_error(array('message' => 'Non sei un partecipante di questo viaggio'));
+        }
+
+        // Get messages
+        $messages = CDV_Group_Chat::get_messages($travel_id, 100);
+        $formatted = CDV_Group_Chat::format_messages($messages, $user_id);
+
+        // Get participants
+        $participants = CDV_Group_Chat::get_participants($travel_id);
+
+        wp_send_json_success(array(
+            'messages' => $formatted,
+            'participants' => $participants,
+            'participants_count' => count($participants),
         ));
     }
 }

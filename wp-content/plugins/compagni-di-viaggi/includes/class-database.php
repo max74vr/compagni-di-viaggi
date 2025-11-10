@@ -38,34 +38,21 @@ class CDV_Database {
 
         dbDelta($sql_participants);
 
-        // Table: chat_groups
-        $table_chat_groups = $wpdb->prefix . 'cdv_chat_groups';
-        $sql_chat_groups = "CREATE TABLE IF NOT EXISTS $table_chat_groups (
+        // Table: travel_group_messages
+        $table_group_messages = $wpdb->prefix . 'cdv_travel_group_messages';
+        $sql_group_messages = "CREATE TABLE IF NOT EXISTS $table_group_messages (
             id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             travel_id bigint(20) UNSIGNED NOT NULL,
-            name varchar(255) NOT NULL,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY travel_id (travel_id)
-        ) $charset_collate;";
-
-        dbDelta($sql_chat_groups);
-
-        // Table: chat_messages
-        $table_chat_messages = $wpdb->prefix . 'cdv_chat_messages';
-        $sql_chat_messages = "CREATE TABLE IF NOT EXISTS $table_chat_messages (
-            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-            chat_group_id bigint(20) UNSIGNED NOT NULL,
             user_id bigint(20) UNSIGNED NOT NULL,
             message text NOT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
-            KEY chat_group_id (chat_group_id),
+            KEY travel_id (travel_id),
             KEY user_id (user_id),
             KEY created_at (created_at)
         ) $charset_collate;";
 
-        dbDelta($sql_chat_messages);
+        dbDelta($sql_group_messages);
 
         // Table: reviews
         $table_reviews = $wpdb->prefix . 'cdv_reviews';
@@ -134,8 +121,7 @@ class CDV_Database {
 
         $tables = array(
             $wpdb->prefix . 'cdv_travel_participants',
-            $wpdb->prefix . 'cdv_chat_groups',
-            $wpdb->prefix . 'cdv_chat_messages',
+            $wpdb->prefix . 'cdv_travel_group_messages',
             $wpdb->prefix . 'cdv_reviews',
             $wpdb->prefix . 'cdv_user_badges',
             $wpdb->prefix . 'cdv_email_verification',

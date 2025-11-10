@@ -97,6 +97,36 @@ while (have_posts()) : the_post();
                         </div>
                     <?php endif; ?>
 
+                    <!-- Group Chat (only for participants and organizer) -->
+                    <?php if (is_user_logged_in() && ($is_participant || $is_organizer)) : ?>
+                        <div class="group-chat-section">
+                            <div class="group-chat-header">
+                                <h3>Chat di Gruppo</h3>
+                                <span class="participants-count" id="chat-participants-count">
+                                    <?php echo count($participants) + 1; ?> partecipanti
+                                </span>
+                            </div>
+
+                            <div class="group-chat-container">
+                                <div class="group-chat-messages" id="group-chat-messages">
+                                    <div class="loading-indicator">Caricamento messaggi...</div>
+                                </div>
+
+                                <div class="group-chat-input">
+                                    <textarea
+                                        id="group-message-input"
+                                        placeholder="Scrivi un messaggio al gruppo..."
+                                        rows="2"
+                                    ></textarea>
+                                    <button id="send-group-message" class="btn btn-primary">
+                                        <span class="button-text">Invia</span>
+                                        <span class="button-loading" style="display: none;">...</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Pending Requests (only for organizer) -->
                     <?php if ($is_organizer && !empty($pending_requests)) : ?>
                         <div class="pending-requests-section">
@@ -435,9 +465,135 @@ while (have_posts()) : the_post();
             background-color: #fffbeb;
             border: 2px solid var(--warning-color);
         }
+        /* Group Chat Styles */
+        .group-chat-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            margin-top: calc(var(--spacing-unit) * 4);
+        }
+        .group-chat-header {
+            background: var(--primary-color);
+            color: white;
+            padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .group-chat-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+        .participants-count {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+        .group-chat-container {
+            padding: calc(var(--spacing-unit) * 3);
+        }
+        .group-chat-messages {
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            padding: calc(var(--spacing-unit) * 2);
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: calc(var(--spacing-unit) * 2);
+            display: flex;
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 2);
+        }
+        .loading-indicator {
+            text-align: center;
+            color: #999;
+            padding: calc(var(--spacing-unit) * 4);
+        }
+        .group-message {
+            display: flex;
+            gap: calc(var(--spacing-unit) * 1.5);
+            animation: fadeInMessage 0.3s ease-in;
+        }
+        @keyframes fadeInMessage {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .group-message.own-message {
+            flex-direction: row-reverse;
+        }
+        .group-message .avatar {
+            flex-shrink: 0;
+        }
+        .group-message .avatar img {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+        }
+        .message-bubble {
+            background: white;
+            padding: calc(var(--spacing-unit) * 1.5);
+            border-radius: var(--border-radius);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            max-width: 70%;
+        }
+        .group-message.own-message .message-bubble {
+            background: var(--primary-color);
+            color: white;
+        }
+        .message-user {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: calc(var(--spacing-unit) * 0.5);
+        }
+        .group-message.own-message .message-user {
+            text-align: right;
+        }
+        .message-text {
+            margin-bottom: calc(var(--spacing-unit) * 0.5);
+            line-height: 1.5;
+        }
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+        .group-chat-input {
+            display: flex;
+            gap: calc(var(--spacing-unit) * 2);
+        }
+        .group-chat-input textarea {
+            flex: 1;
+            padding: calc(var(--spacing-unit) * 1.5);
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        .group-chat-input textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .group-chat-input button {
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+            white-space: nowrap;
+        }
+        .button-loading {
+            display: inline-block;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         @media (max-width: 768px) {
             .travel-layout {
                 grid-template-columns: 1fr;
+            }
+            .group-chat-messages {
+                height: 300px;
+            }
+            .message-bubble {
+                max-width: 85%;
             }
         }
     </style>
@@ -529,6 +685,159 @@ while (have_posts()) : the_post();
                     }
                 }
             });
+        });
+
+        // === GROUP CHAT FUNCTIONALITY ===
+        const $groupChatMessages = $('#group-chat-messages');
+        const $groupMessageInput = $('#group-message-input');
+        const $sendGroupMessageBtn = $('#send-group-message');
+        const travelId = <?php echo $travel_id; ?>;
+        let chatRefreshInterval = null;
+
+        // Load group chat messages on page load
+        if ($groupChatMessages.length > 0) {
+            loadGroupMessages();
+
+            // Refresh messages every 5 seconds
+            chatRefreshInterval = setInterval(function() {
+                loadGroupMessages(true); // true = silent refresh (no loading indicator)
+            }, 5000);
+        }
+
+        // Send message
+        $sendGroupMessageBtn.on('click', function() {
+            sendGroupMessage();
+        });
+
+        // Send on Enter (without Shift)
+        $groupMessageInput.on('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendGroupMessage();
+            }
+        });
+
+        function loadGroupMessages(silent = false) {
+            if (!silent) {
+                $groupChatMessages.html('<div class="loading-indicator">Caricamento messaggi...</div>');
+            }
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_get_group_messages',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        displayGroupMessages(response.data.messages);
+
+                        // Update participants count
+                        if (response.data.participants_count) {
+                            $('#chat-participants-count').text(response.data.participants_count + ' partecipanti');
+                        }
+                    } else {
+                        if (!silent) {
+                            $groupChatMessages.html('<div class="loading-indicator" style="color: #dc3545;">Errore: ' + (response.data.message || 'Impossibile caricare i messaggi') + '</div>');
+                        }
+                    }
+                },
+                error: function() {
+                    if (!silent) {
+                        $groupChatMessages.html('<div class="loading-indicator" style="color: #dc3545;">Errore di connessione</div>');
+                    }
+                }
+            });
+        }
+
+        function displayGroupMessages(messages) {
+            if (!messages || messages.length === 0) {
+                $groupChatMessages.html('<div class="loading-indicator">Nessun messaggio ancora. Inizia la conversazione!</div>');
+                return;
+            }
+
+            // Save scroll position
+            const wasAtBottom = $groupChatMessages[0].scrollHeight - $groupChatMessages.scrollTop() <= $groupChatMessages.outerHeight() + 50;
+
+            let html = '';
+            messages.forEach(function(msg) {
+                const ownClass = msg.is_own ? 'own-message' : '';
+                html += `
+                    <div class="group-message ${ownClass}" data-message-id="${msg.id}">
+                        <div class="avatar">${msg.avatar}</div>
+                        <div class="message-bubble">
+                            <div class="message-user">${msg.user_name}</div>
+                            <div class="message-text">${msg.message}</div>
+                            <div class="message-time">${msg.time_ago}</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            $groupChatMessages.html(html);
+
+            // Scroll to bottom if was already at bottom or if it's the first load
+            if (wasAtBottom || $groupChatMessages.find('.group-message').length === messages.length) {
+                scrollToBottom();
+            }
+        }
+
+        function sendGroupMessage() {
+            const message = $groupMessageInput.val().trim();
+
+            if (!message) {
+                alert('Scrivi un messaggio prima di inviare');
+                return;
+            }
+
+            // Show loading state
+            $sendGroupMessageBtn.find('.button-text').hide();
+            $sendGroupMessageBtn.find('.button-loading').show();
+            $sendGroupMessageBtn.prop('disabled', true);
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_send_group_message',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId,
+                    message: message
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $groupMessageInput.val('');
+                        loadGroupMessages();
+                    } else {
+                        alert('Errore: ' + (response.data.message || 'Impossibile inviare il messaggio'));
+                    }
+                },
+                error: function() {
+                    alert('Errore di connessione');
+                },
+                complete: function() {
+                    // Hide loading state
+                    $sendGroupMessageBtn.find('.button-text').show();
+                    $sendGroupMessageBtn.find('.button-loading').hide();
+                    $sendGroupMessageBtn.prop('disabled', false);
+                    $groupMessageInput.focus();
+                }
+            });
+        }
+
+        function scrollToBottom() {
+            $groupChatMessages.animate({
+                scrollTop: $groupChatMessages[0].scrollHeight
+            }, 300);
+        }
+
+        // Clean up interval on page unload
+        $(window).on('beforeunload', function() {
+            if (chatRefreshInterval) {
+                clearInterval(chatRefreshInterval);
+            }
         });
     });
     </script>

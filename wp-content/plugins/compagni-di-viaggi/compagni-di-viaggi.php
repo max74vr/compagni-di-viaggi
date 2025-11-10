@@ -88,6 +88,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-badges.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-travel-stories.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-private-messages.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-group-chat.php';
 
         // REST API
         require_once CDV_PLUGIN_DIR . 'includes/api/class-rest-api.php';
