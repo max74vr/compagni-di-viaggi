@@ -534,7 +534,7 @@ class CDV_Ajax_Handlers {
                 'user_id' => $user_id,
                 'status' => 'accepted',
                 'is_organizer' => 1,
-                'created_at' => current_time('mysql'),
+                'requested_at' => current_time('mysql'),
             ),
             array('%d', '%d', '%s', '%d', '%s')
         );

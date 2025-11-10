@@ -27,6 +27,7 @@ class CDV_Database {
             user_id bigint(20) UNSIGNED NOT NULL,
             status varchar(20) NOT NULL DEFAULT 'pending',
             message text,
+            is_organizer tinyint(1) NOT NULL DEFAULT 0,
             requested_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (id),

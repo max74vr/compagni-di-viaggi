@@ -32,7 +32,7 @@ $my_travels = new WP_Query(array(
 
 // Query viaggi a cui partecipo
 global $wpdb;
-$participants_table = $wpdb->prefix . 'cdv_participants';
+$participants_table = $wpdb->prefix . 'cdv_travel_participants';
 $participated_ids = $wpdb->get_col($wpdb->prepare(
     "SELECT travel_id FROM $participants_table WHERE user_id = %d AND status = 'accepted'",
     $current_user->ID
@@ -55,7 +55,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON p.user_id = u.ID
     WHERE t.post_author = %d AND p.status = 'pending'
-    ORDER BY p.created_at DESC",
+    ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
 
@@ -216,7 +216,7 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
                                     <p class="request-travel">Viaggio: <strong><?php echo esc_html($request->post_title); ?></strong></p>
                                     <p class="request-date">
                                         <i class="icon-clock"></i>
-                                        <?php echo human_time_diff(strtotime($request->created_at), current_time('timestamp')); ?> fa
+                                        <?php echo human_time_diff(strtotime($request->requested_at), current_time('timestamp')); ?> fa
                                     </p>
                                     <?php if (!empty($request->message)) : ?>
                                         <p class="request-message">"<?php echo esc_html($request->message); ?>"</p>
