@@ -22,39 +22,38 @@ if ($success) {
 <main class="site-main email-verification">
     <div class="container">
         <div class="verification-box">
-            <?php if ($user_id && !$error) : ?>
+            <?php if ($success) : ?>
                 <!-- Successo -->
                 <div class="verification-success">
                     <div class="success-icon">✓</div>
                     <h1>Email Confermata con Successo!</h1>
                     <p>Il tuo indirizzo email è stato verificato correttamente.</p>
 
-                    <?php
-                    $user_approved = get_user_meta($user_id, 'cdv_user_approved', true);
-                    if ($user_approved === 'approved') :
-                    ?>
-                        <div class="next-steps">
-                            <h3>Benvenuto su Compagni di Viaggi!</h3>
-                            <p>Il tuo account è attivo e pronto all'uso.</p>
-                            <div class="action-buttons">
+                    <div class="next-steps">
+                        <h3>🎉 Benvenuto su Compagni di Viaggi!</h3>
+                        <p><strong>Il tuo account è ora attivo e pronto all'uso.</strong></p>
+                        <p>Puoi iniziare subito a:</p>
+                        <ul style="text-align: left; display: inline-block;">
+                            <li>Cercare compagni di viaggio</li>
+                            <li>Creare i tuoi annunci di viaggio</li>
+                            <li>Partecipare ai viaggi di altri</li>
+                            <li>Condividere le tue esperienze</li>
+                        </ul>
+                        <div class="action-buttons">
+                            <?php if(is_user_logged_in()): ?>
                                 <a href="<?php echo home_url('/dashboard/'); ?>" class="btn btn-primary">
                                     Vai alla Dashboard
                                 </a>
-                                <a href="<?php echo get_post_type_archive_link('viaggio'); ?>" class="btn btn-secondary">
-                                    Scopri i Viaggi
+                            <?php else: ?>
+                                <a href="<?php echo wp_login_url(); ?>" class="btn btn-primary">
+                                    Accedi Ora
                                 </a>
-                            </div>
-                        </div>
-                    <?php else : ?>
-                        <div class="next-steps">
-                            <h3>Prossimi Passi</h3>
-                            <p>Il tuo account è in attesa di approvazione da parte del team.</p>
-                            <p>Riceverai una notifica via email quando il tuo profilo sarà approvato.</p>
-                            <a href="<?php echo home_url('/profilo-in-attesa/'); ?>" class="btn btn-primary">
-                                Visualizza Stato Profilo
+                            <?php endif; ?>
+                            <a href="<?php echo get_post_type_archive_link('viaggio'); ?>" class="btn btn-secondary">
+                                Scopri i Viaggi
                             </a>
                         </div>
-                    <?php endif; ?>
+                    </div>
                 </div>
 
             <?php elseif ($error) : ?>

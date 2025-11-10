@@ -52,26 +52,55 @@ class CDV_Email_Verification {
         // Crea link di verifica
         $verification_link = home_url('/conferma-email/?token=' . $token);
 
-        // Invia email
+        // Invia email HTML
         $subject = 'Conferma il tuo account - Compagni di Viaggi';
-        $message = "
-Ciao {$user->display_name},
+        $message = '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .button { display: inline-block; padding: 15px 30px; background: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Ciao ' . esc_html($user->display_name) . ',</h2>
 
-Grazie per esserti registrato su Compagni di Viaggi!
+        <p>Grazie per esserti registrato su <strong>Compagni di Viaggi</strong>!</p>
 
-Per completare la registrazione e attivare il tuo account, clicca sul link qui sotto:
+        <p>Per completare la registrazione e attivare il tuo account, clicca sul pulsante qui sotto:</p>
 
-{$verification_link}
+        <p style="text-align: center;">
+            <a href="' . esc_url($verification_link) . '" class="button" style="color: #ffffff;">
+                ✓ CONFERMA IL TUO ACCOUNT
+            </a>
+        </p>
 
-Questo link è valido per 24 ore.
+        <p>Oppure copia e incolla questo link nel tuo browser:</p>
+        <p style="background: #f5f5f5; padding: 10px; word-break: break-all; font-size: 12px;">
+            ' . esc_url($verification_link) . '
+        </p>
 
-Se non hai richiesto questa registrazione, ignora questa email.
+        <p><strong>Questo link è valido per 24 ore.</strong></p>
 
-A presto,
-Il team di Compagni di Viaggi
-        ";
+        <p>Una volta confermata l\'email potrai accedere alla piattaforma e iniziare a organizzare i tuoi viaggi!</p>
 
-        $headers = array('Content-Type: text/plain; charset=UTF-8');
+        <p>Se non hai richiesto questa registrazione, ignora questa email.</p>
+
+        <div class="footer">
+            <p>A presto,<br>
+            Il team di Compagni di Viaggi</p>
+        </div>
+    </div>
+</body>
+</html>
+        ';
+
+        $headers = array('Content-Type: text/html; charset=UTF-8');
 
         $result = wp_mail($user->user_email, $subject, $message, $headers);
 
