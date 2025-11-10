@@ -6,11 +6,12 @@
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
     <?php
+    $show_image = !is_front_page(); // Non mostrare immagine in home
     $has_thumbnail = has_post_thumbnail();
     $taxonomy_image_url = false;
 
     // Se non ha immagine, cerca l'immagine del tipo di viaggio
-    if (!$has_thumbnail && class_exists('CDV_Taxonomy_Images')) {
+    if ($show_image && !$has_thumbnail && class_exists('CDV_Taxonomy_Images')) {
         $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
         if (!empty($travel_types)) {
             // Ottieni immagine random se ci sono più tipi
@@ -19,19 +20,19 @@
     }
     ?>
 
-    <?php if ($has_thumbnail) : ?>
+    <?php if ($show_image && $has_thumbnail) : ?>
         <div class="card-image">
             <a href="<?php the_permalink(); ?>">
                 <?php the_post_thumbnail('travel-card'); ?>
             </a>
         </div>
-    <?php elseif ($taxonomy_image_url) : ?>
+    <?php elseif ($show_image && $taxonomy_image_url) : ?>
         <div class="card-image">
             <a href="<?php the_permalink(); ?>">
                 <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
             </a>
         </div>
-    <?php else : ?>
+    <?php elseif ($show_image) : ?>
         <div class="card-image card-image-placeholder">
             <a href="<?php the_permalink(); ?>">
                 <div class="placeholder-content">
@@ -69,7 +70,7 @@
         <div class="card-footer">
             <?php cdv_organizer_info(get_the_author_meta('ID')); ?>
 
-            <a href="<?php the_permalink(); ?>" class="btn-primary btn-sm">
+            <a href="<?php the_permalink(); ?>" class="travel-details-link">
                 Vedi Dettagli →
             </a>
         </div>
@@ -228,5 +229,21 @@
 
 .organizer-info:hover .organizer-name {
     color: var(--primary-color);
+}
+
+.travel-details-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.travel-details-link:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
 }
 </style>

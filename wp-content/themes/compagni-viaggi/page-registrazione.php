@@ -58,8 +58,13 @@ get_header();
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="display_name">Nome e Cognome <span class="required">*</span></label>
-                            <input type="text" id="display_name" name="display_name" required>
+                            <label for="first_name">Nome <span class="required">*</span></label>
+                            <input type="text" id="first_name" name="first_name" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="last_name">Cognome <span class="required">*</span></label>
+                            <input type="text" id="last_name" name="last_name" required>
                         </div>
                     </div>
 
@@ -92,10 +97,35 @@ get_header();
                         </div>
                     </div>
 
+                    <div class="disclaimer-box">
+                        <h4>⚠️ Informativa Importante</h4>
+                        <p>
+                            Registrandoti, comprendi e accetti che:
+                        </p>
+                        <ul>
+                            <li>La piattaforma <strong>facilita l'incontro tra viaggiatori</strong> ma non organizza materialmente i viaggi</li>
+                            <li>Sei <strong>l'unico responsabile</strong> per i contenuti che pubblichi (testi, foto, recensioni)</li>
+                            <li>Sei <strong>responsabile</strong> per le informazioni fornite nel tuo profilo e per i tuoi comportamenti</li>
+                            <li>La piattaforma <strong>non verifica l'identità</strong> degli utenti oltre l'email e <strong>non garantisce</strong> la veridicità dei profili</li>
+                            <li>Ogni <strong>accordo di viaggio</strong> avviene direttamente tra te e gli altri viaggiatori, <strong>senza intermediazione</strong> della piattaforma</li>
+                            <li>La piattaforma <strong>non è responsabile</strong> per comportamenti, danni o disservizi derivanti da incontri o viaggi organizzati tramite il servizio</li>
+                        </ul>
+                        <p>
+                            <strong>Ti invitiamo a usare prudenza, buonsenso e a incontrare sempre altre persone in luoghi pubblici prima di partire.</strong>
+                        </p>
+                    </div>
+
                     <div class="form-group checkbox-group">
                         <label>
                             <input type="checkbox" name="terms" required>
-                            Accetto i <a href="<?php echo home_url('/termini'); ?>" target="_blank">Termini e Condizioni</a> e la <a href="<?php echo home_url('/privacy'); ?>" target="_blank">Privacy Policy</a>
+                            <strong>Accetto</strong> i <a href="<?php echo home_url('/termini'); ?>" target="_blank">Termini e Condizioni</a> e la <a href="<?php echo home_url('/privacy'); ?>" target="_blank">Privacy Policy</a> e <strong>dichiaro di aver letto e compreso</strong> l'informativa sopra riportata.
+                        </label>
+                    </div>
+
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" name="disclaimer_understood" required>
+                            <strong>Comprendo</strong> che la piattaforma declina ogni responsabilità per contenuti pubblicati dagli utenti, comportamenti al di fuori della piattaforma e per l'organizzazione dei viaggi che avviene esclusivamente tra viaggiatori.
                         </label>
                     </div>
 
@@ -703,6 +733,42 @@ get_header();
     pointer-events: none;
 }
 
+/* Disclaimer Box */
+.disclaimer-box {
+    background: #fff3cd;
+    border-left: 4px solid #ff9800;
+    padding: calc(var(--spacing-unit) * 3);
+    margin-bottom: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+}
+
+.disclaimer-box h4 {
+    margin: 0 0 calc(var(--spacing-unit) * 2) 0;
+    color: #e65100;
+    font-size: 1.1rem;
+}
+
+.disclaimer-box p {
+    margin: 0 0 calc(var(--spacing-unit) * 1.5) 0;
+    color: #7954;
+    line-height: 1.6;
+}
+
+.disclaimer-box ul {
+    margin: 0 0 calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+    padding: 0;
+}
+
+.disclaimer-box li {
+    margin-bottom: calc(var(--spacing-unit) * 1);
+    color: #795548;
+    line-height: 1.5;
+}
+
+.disclaimer-box strong {
+    color: #e65100;
+}
+
 @media (max-width: 768px) {
     .form-row {
         grid-template-columns: 1fr;
@@ -809,7 +875,10 @@ jQuery(document).ready(function($) {
             username: $('#username').val(),
             email: $('#email').val(),
             password: password,
-            display_name: $('#display_name').val(),
+            first_name: $('#first_name').val(),
+            last_name: $('#last_name').val(),
+            terms: $('input[name="terms"]').is(':checked') ? '1' : '0',
+            disclaimer_understood: $('input[name="disclaimer_understood"]').is(':checked') ? '1' : '0',
         };
 
         $(this).addClass('loading');
