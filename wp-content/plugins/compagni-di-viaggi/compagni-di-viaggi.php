@@ -97,6 +97,7 @@ class Compagni_Di_Viaggi {
         // Admin
         if (is_admin()) {
             require_once CDV_PLUGIN_DIR . 'admin/class-admin.php';
+            require_once CDV_PLUGIN_DIR . 'includes/class-admin-approvals.php';
             require_once CDV_PLUGIN_DIR . 'import-users.php';
         }
 
@@ -130,6 +131,7 @@ class Compagni_Di_Viaggi {
 
         if (is_admin()) {
             CDV_Admin::init();
+            CDV_Admin_Approvals::init();
         }
     }
 
