@@ -11,7 +11,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         var button = $(this);
-        var wrapper = button.closest('.cdv-taxonomy-image-wrapper').parent();
+        var wrapper = button.closest('.term-image-wrap');
         var imagePreview = wrapper.find('.cdv-taxonomy-image-preview');
         var imageId = wrapper.find('.cdv-taxonomy-image-id');
         var removeButton = wrapper.find('.cdv-remove-taxonomy-image');
@@ -50,7 +50,7 @@ jQuery(document).ready(function($) {
         e.preventDefault();
 
         var button = $(this);
-        var wrapper = button.closest('.cdv-taxonomy-image-wrapper').parent();
+        var wrapper = button.closest('.term-image-wrap');
         var imagePreview = wrapper.find('.cdv-taxonomy-image-preview');
         var imageId = wrapper.find('.cdv-taxonomy-image-id');
 
