@@ -120,10 +120,14 @@ class CDV_Registration {
         $username = sanitize_user($_POST['username']);
         $email = sanitize_email($_POST['email']);
         $password = $_POST['password'];
-        $display_name = sanitize_text_field($_POST['display_name']);
+        $first_name = isset($_POST['first_name']) ? sanitize_text_field($_POST['first_name']) : '';
+        $last_name = isset($_POST['last_name']) ? sanitize_text_field($_POST['last_name']) : '';
+
+        // Create display name from first and last name
+        $display_name = trim($first_name . ' ' . $last_name);
 
         // Validation
-        if (empty($username) || empty($email) || empty($password) || empty($display_name)) {
+        if (empty($username) || empty($email) || empty($password) || empty($first_name) || empty($last_name)) {
             wp_send_json_error(array('message' => 'Tutti i campi sono obbligatori'));
         }
 
@@ -154,9 +158,11 @@ class CDV_Registration {
         $user = new WP_User($user_id);
         $user->set_role('viaggiatore');
 
-        // Set display name
+        // Set names
         wp_update_user(array(
             'ID' => $user_id,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
             'display_name' => $display_name,
         ));
 
