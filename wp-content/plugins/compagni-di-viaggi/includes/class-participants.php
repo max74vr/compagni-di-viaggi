@@ -58,6 +58,16 @@ class CDV_Participants {
         );
 
         if ($result) {
+            // Get travel organizer
+            $travel = get_post($travel_id);
+            $organizer_id = $travel->post_author;
+
+            // Create initial private message with the request
+            if (!empty($message) && class_exists('CDV_Private_Messages')) {
+                $formatted_message = "📋 Richiesta di Partecipazione:\n\n" . $message;
+                CDV_Private_Messages::send_message($user_id, $organizer_id, $travel_id, $formatted_message);
+            }
+
             // Notify organizer
             self::notify_organizer($travel_id, $user_id);
             return $wpdb->insert_id;

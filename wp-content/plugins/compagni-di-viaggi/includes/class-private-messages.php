@@ -81,22 +81,39 @@ class CDV_Private_Messages {
     public static function can_message($sender_id, $receiver_id, $travel_id) {
         global $wpdb;
 
-        // Check if they are both participants
+        // Get travel organizer
+        $travel = get_post($travel_id);
+        if (!$travel) {
+            return false;
+        }
+        $organizer_id = $travel->post_author;
+
+        // Check if they are both participants or have pending request
         $participants_table = $wpdb->prefix . 'cdv_travel_participants';
 
         $sender_participant = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM $participants_table
-            WHERE travel_id = %d AND user_id = %d AND status = 'accepted'",
+            WHERE travel_id = %d AND user_id = %d AND status IN ('accepted', 'pending')",
             $travel_id, $sender_id
         ));
 
         $receiver_participant = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM $participants_table
-            WHERE travel_id = %d AND user_id = %d AND status = 'accepted'",
+            WHERE travel_id = %d AND user_id = %d AND status IN ('accepted', 'pending')",
             $travel_id, $receiver_id
         ));
 
-        if (!$sender_participant || !$receiver_participant) {
+        // Allow messaging if:
+        // 1. Both are participants (accepted or pending)
+        // 2. OR one is the organizer and the other has a request (pending or accepted)
+        $sender_is_organizer = ($sender_id == $organizer_id);
+        $receiver_is_organizer = ($receiver_id == $organizer_id);
+
+        if (!$sender_participant && !$sender_is_organizer) {
+            return false;
+        }
+
+        if (!$receiver_participant && !$receiver_is_organizer) {
             return false;
         }
 
