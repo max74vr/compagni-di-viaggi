@@ -6,31 +6,15 @@
 
 get_header();
 
-$token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
-$session_id = session_id();
-if (empty($session_id)) {
-    session_start();
-    $session_id = session_id();
-}
+// Check for verification result in query params
+$error = isset($_GET['verification_error']) ? urldecode(sanitize_text_field($_GET['verification_error'])) : '';
+$success = isset($_GET['verification_success']) && $_GET['verification_success'] === '1';
+$user_id = false;
 
-$error = get_transient('cdv_verification_error_' . $session_id);
-$user_id = get_transient('cdv_verification_success_' . $session_id);
-
-// Clear transients
-if ($error) {
-    delete_transient('cdv_verification_error_' . $session_id);
-}
-if ($user_id) {
-    delete_transient('cdv_verification_success_' . $session_id);
-}
-
-// Se non c'è token, verifica nello step corrente
-if ($token && !$error && !$user_id) {
-    $result = CDV_Email_Verification::verify_token($token);
-    if (is_wp_error($result)) {
-        $error = $result->get_error_message();
-    } else {
-        $user_id = $result;
+if ($success) {
+    // Get current user or the last verified user
+    if (is_user_logged_in()) {
+        $user_id = get_current_user_id();
     }
 }
 ?>

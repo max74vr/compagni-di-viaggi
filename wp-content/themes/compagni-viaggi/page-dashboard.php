@@ -32,7 +32,7 @@ $my_travels = new WP_Query(array(
 
 // Query viaggi a cui partecipo
 global $wpdb;
-$participants_table = $wpdb->prefix . 'cdv_participants';
+$participants_table = $wpdb->prefix . 'cdv_travel_participants';
 $participated_ids = $wpdb->get_col($wpdb->prepare(
     "SELECT travel_id FROM $participants_table WHERE user_id = %d AND status = 'accepted'",
     $current_user->ID

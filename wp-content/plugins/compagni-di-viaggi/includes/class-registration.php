@@ -77,8 +77,19 @@ class CDV_Registration {
                 wp_send_json_error(array('message' => 'Username o password non corretti'));
             }
 
-            // Check if user is approved (viaggiatori are auto-approved with value '1')
+            // Check if user email is verified
+            $email_verified = get_user_meta($user->ID, 'cdv_email_verified', true);
+            if ($email_verified !== 'yes') {
+                error_log('CDV: Login blocked - email not verified for user: ' . $username);
+                wp_send_json_error(array('message' => 'Devi confermare la tua email prima di accedere. Controlla la tua casella di posta.'));
+            }
+
+            // Check if user is approved
             $approved = get_user_meta($user->ID, 'cdv_user_approved', true);
+            if ($approved !== '1') {
+                error_log('CDV: Login blocked - account not approved for user: ' . $username);
+                wp_send_json_error(array('message' => 'Il tuo account è in attesa di approvazione da parte degli amministratori.'));
+            }
 
             // Log user in
             wp_set_current_user($user->ID);
@@ -220,7 +231,8 @@ class CDV_Registration {
                 // This handles the auto-login scenario
                 $registration_date = get_user_meta($user_id, 'cdv_registration_date', true);
                 if ($registration_date) {
-                    $time_diff = strtotime('now') - strtotime($registration_date);
+                    // Use current_time('timestamp') instead of strtotime('now') to match WordPress timezone
+                    $time_diff = current_time('timestamp') - strtotime($registration_date);
                     if ($time_diff > 600) { // More than 10 minutes
                         error_log('CDV: Nonce verification failed and user not recently created');
                         wp_send_json_error(array('message' => 'Sessione scaduta'));
