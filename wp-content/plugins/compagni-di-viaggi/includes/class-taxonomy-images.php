@@ -105,8 +105,22 @@ class CDV_Taxonomy_Images {
      * Save image field
      */
     public static function save_image_field($term_id) {
-        if (isset($_POST['cdv_taxonomy_image'])) {
-            update_term_meta($term_id, 'cdv_taxonomy_image', sanitize_text_field($_POST['cdv_taxonomy_image']));
+        // Check if our field is set
+        if (!isset($_POST['cdv_taxonomy_image'])) {
+            return;
+        }
+
+        // Get the image ID
+        $image_id = absint($_POST['cdv_taxonomy_image']);
+
+        // If empty, delete the meta
+        if (empty($image_id)) {
+            delete_term_meta($term_id, 'cdv_taxonomy_image');
+        } else {
+            // Verify it's a valid attachment
+            if (wp_attachment_is_image($image_id)) {
+                update_term_meta($term_id, 'cdv_taxonomy_image', $image_id);
+            }
         }
     }
 
