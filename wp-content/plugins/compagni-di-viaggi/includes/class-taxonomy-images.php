@@ -45,6 +45,7 @@ class CDV_Taxonomy_Images {
      * Add image field to add term form
      */
     public static function add_image_field($taxonomy) {
+        wp_nonce_field('cdv_taxonomy_image_nonce', 'cdv_taxonomy_image_nonce_field');
         ?>
         <div class="form-field term-image-wrap">
             <label><?php _e('Immagine in Evidenza', 'compagni-di-viaggi'); ?></label>
@@ -73,6 +74,7 @@ class CDV_Taxonomy_Images {
     public static function edit_image_field($term) {
         $image_id = get_term_meta($term->term_id, 'cdv_taxonomy_image', true);
         $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'medium') : '';
+        wp_nonce_field('cdv_taxonomy_image_nonce', 'cdv_taxonomy_image_nonce_field');
         ?>
         <tr class="form-field term-image-wrap">
             <th scope="row">
@@ -107,6 +109,17 @@ class CDV_Taxonomy_Images {
     public static function save_image_field($term_id) {
         // Check if our field is set
         if (!isset($_POST['cdv_taxonomy_image'])) {
+            return;
+        }
+
+        // Verify nonce
+        if (!isset($_POST['cdv_taxonomy_image_nonce_field']) ||
+            !wp_verify_nonce($_POST['cdv_taxonomy_image_nonce_field'], 'cdv_taxonomy_image_nonce')) {
+            return;
+        }
+
+        // Check user permissions
+        if (!current_user_can('manage_categories')) {
             return;
         }
 
