@@ -89,7 +89,9 @@ get_header();
                     endwhile;
                     wp_reset_postdata();
 
-                    $total_travels = count($active_travels) + count($expired_travels);
+                    // Get total count from query (not just current page)
+                    global $wp_query;
+                    $total_travels = $wp_query->found_posts;
                     ?>
                     <div class="results-header">
                         <p>

@@ -311,8 +311,10 @@ function cdv_get_travel_status_label($post_id = null) {
 function cdv_pagination() {
     the_posts_pagination(array(
         'mid_size' => 2,
-        'prev_text' => __('« Precedente', 'compagni-viaggi'),
-        'next_text' => __('Successivo »', 'compagni-viaggi'),
+        'prev_text' => '<span class="pagination-arrow">←</span> <span class="pagination-text">Precedente</span>',
+        'next_text' => '<span class="pagination-text">Successivo</span> <span class="pagination-arrow">→</span>',
+        'before_page_number' => '<span class="screen-reader-text">Pagina </span>',
+        'class' => 'cdv-pagination',
     ));
 }
 
