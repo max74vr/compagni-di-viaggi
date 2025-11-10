@@ -659,10 +659,13 @@ class CDV_Registration {
             // Award badge for first travel
             CDV_Badges::award_badge($user_id, 'first_travel');
 
+            // Notify admin of new travel pending approval
+            self::notify_admin_new_travel($post_id, $user_id);
+
             error_log('CDV: First travel creation completed successfully');
 
             wp_send_json_success(array(
-                'message' => 'Viaggio creato! Sarà pubblicato dopo l\'approvazione.',
+                'message' => 'Viaggio creato! Sarà pubblicato dopo l\'approvazione dell\'amministrazione.',
                 'travel_id' => $post_id,
             ));
 
@@ -672,5 +675,102 @@ class CDV_Registration {
                 'message' => 'Si è verificato un errore: ' . $e->getMessage()
             ));
         }
+    }
+
+    /**
+     * Notify admin of new travel pending approval
+     */
+    private static function notify_admin_new_travel($travel_id, $user_id) {
+        $travel = get_post($travel_id);
+        $user = get_userdata($user_id);
+
+        if (!$travel || !$user) {
+            error_log('CDV: Failed to notify admin - travel or user not found');
+            return false;
+        }
+
+        // Get admin email
+        $admin_email = get_option('admin_email');
+
+        if (empty($admin_email)) {
+            error_log('CDV: No admin email configured');
+            return false;
+        }
+
+        $edit_link = admin_url('post.php?post=' . $travel_id . '&action=edit');
+        $destination = get_post_meta($travel_id, 'cdv_destination', true);
+        $start_date = get_post_meta($travel_id, 'cdv_start_date', true);
+        $end_date = get_post_meta($travel_id, 'cdv_end_date', true);
+
+        $subject = '🌍 Nuovo Viaggio da Approvare - ' . $travel->post_title;
+
+        $message = '
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 8px 8px 0 0; }
+        .content { background: #f8f9fa; padding: 20px; }
+        .info-box { background: white; padding: 15px; margin: 10px 0; border-left: 4px solid #667eea; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: #ffffff !important; text-decoration: none; border-radius: 5px; margin: 15px 0; font-weight: bold; }
+        .footer { margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2 style="margin: 0;">🌍 Nuovo Viaggio in Attesa di Approvazione</h2>
+        </div>
+
+        <div class="content">
+            <p>Un nuovo viaggio è stato creato sulla piattaforma e richiede la tua approvazione.</p>
+
+            <div class="info-box">
+                <h3 style="margin-top: 0;">📋 Dettagli del Viaggio</h3>
+                <p><strong>Titolo:</strong> ' . esc_html($travel->post_title) . '</p>
+                <p><strong>Destinazione:</strong> ' . esc_html($destination) . '</p>
+                <p><strong>Date:</strong> ' . esc_html($start_date) . ' - ' . esc_html($end_date) . '</p>
+                <p><strong>Organizzatore:</strong> ' . esc_html($user->display_name) . ' (' . esc_html($user->user_email) . ')</p>
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-top: 0;">📝 Descrizione</h3>
+                <p>' . wp_trim_words($travel->post_content, 50) . '</p>
+            </div>
+
+            <p style="text-align: center;">
+                <a href="' . esc_url($edit_link) . '" class="button" style="color: #ffffff;">
+                    👁️ VISUALIZZA E APPROVA
+                </a>
+            </p>
+
+            <p style="font-size: 12px; color: #666;">
+                Accedi al pannello admin per approvare o rifiutare questo viaggio.<br>
+                Il viaggio non sarà visibile pubblicamente fino all\'approvazione.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Questa email è stata inviata automaticamente da Compagni di Viaggi</p>
+        </div>
+    </div>
+</body>
+</html>
+        ';
+
+        $headers = array('Content-Type: text/html; charset=UTF-8');
+
+        $result = wp_mail($admin_email, $subject, $message, $headers);
+
+        if (!$result) {
+            error_log('CDV: Failed to send admin notification email for travel ' . $travel_id);
+        } else {
+            error_log('CDV: Admin notification sent successfully for travel ' . $travel_id);
+        }
+
+        return $result;
     }
 }
