@@ -54,7 +54,7 @@ $pending_requests = $wpdb->get_results($wpdb->prepare(
     FROM $participants_table p
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON p.user_id = u.ID
-    WHERE t.post_author = %d AND p.status = 'pending'
+    WHERE t.post_author = %d AND p.status = 'pending' AND t.post_status = 'publish'
     ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
@@ -65,10 +65,19 @@ $my_pending_requests = $wpdb->get_results($wpdb->prepare(
     FROM $participants_table p
     LEFT JOIN {$wpdb->posts} t ON p.travel_id = t.ID
     LEFT JOIN {$wpdb->users} u ON t.post_author = u.ID
-    WHERE p.user_id = %d AND p.status = 'pending'
+    WHERE p.user_id = %d AND p.status = 'pending' AND t.post_status = 'publish'
     ORDER BY p.requested_at DESC",
     $current_user->ID
 ));
+
+// TEMPORARY DEBUG - Remove after testing
+error_log("DEBUG Dashboard - User ID: " . $current_user->ID);
+error_log("DEBUG Dashboard - Pending Requests Received: " . count($pending_requests));
+error_log("DEBUG Dashboard - My Pending Requests Sent: " . count($my_pending_requests));
+error_log("DEBUG Dashboard - Last Query: " . $wpdb->last_query);
+if ($wpdb->last_error) {
+    error_log("DEBUG Dashboard - SQL Error: " . $wpdb->last_error);
+}
 
 // Query racconti dell'utente
 $my_stories = new WP_Query(array(
@@ -86,6 +95,28 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
 
 <main class="site-main dashboard">
     <div class="container">
+        <!-- TEMPORARY DEBUG - Remove after testing -->
+        <div style="background: #fff3cd; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; font-size: 0.875rem;">
+            <strong>DEBUG INFO:</strong><br>
+            User ID: <?php echo $current_user->ID; ?><br>
+            Username: <?php echo $current_user->user_login; ?><br>
+            Richieste Ricevute: <?php echo count($pending_requests); ?><br>
+            Richieste Inviate: <?php echo count($my_pending_requests); ?><br>
+            <?php if (!empty($pending_requests)) : ?>
+                <details>
+                    <summary>Dettagli Richieste Ricevute</summary>
+                    <pre><?php print_r($pending_requests); ?></pre>
+                </details>
+            <?php endif; ?>
+            <?php if (!empty($my_pending_requests)) : ?>
+                <details>
+                    <summary>Dettagli Richieste Inviate</summary>
+                    <pre><?php print_r($my_pending_requests); ?></pre>
+                </details>
+            <?php endif; ?>
+        </div>
+        <!-- END DEBUG -->
+
         <div class="dashboard-header">
             <div>
                 <h1>Benvenuto, <?php echo esc_html($current_user->user_login); ?>!</h1>
