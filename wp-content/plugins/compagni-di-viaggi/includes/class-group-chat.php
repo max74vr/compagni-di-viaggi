@@ -14,8 +14,15 @@ class CDV_Group_Chat {
      */
     public static function is_participant($travel_id, $user_id) {
         global $wpdb;
-        $table = $wpdb->prefix . 'cdv_travel_participants';
 
+        // Check if user is the travel author (organizer)
+        $post = get_post($travel_id);
+        if ($post && $post->post_author == $user_id) {
+            return true;
+        }
+
+        // Check if user is an accepted participant
+        $table = $wpdb->prefix . 'cdv_travel_participants';
         $is_participant = $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM $table
             WHERE travel_id = %d
