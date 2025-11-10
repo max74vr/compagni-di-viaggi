@@ -428,6 +428,20 @@ function cdv_customize_register($wp_customize) {
         'priority'    => 50,
     ));
 
+    // How it Works Background Color
+    $wp_customize->add_setting('cdv_how_bg_color', array(
+        'default'           => '#667eea',
+        'sanitize_callback' => 'sanitize_hex_color',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Color_Control($wp_customize, 'cdv_how_bg_color', array(
+        'label'       => 'Colore Sfondo Sezione',
+        'description' => 'Sfondo colorato con testi in bianco',
+        'section'     => 'cdv_how_it_works',
+        'settings'    => 'cdv_how_bg_color',
+    )));
+
     // How it Works Title
     $wp_customize->add_setting('cdv_how_title', array(
         'default'           => 'Come Funziona',
@@ -587,6 +601,65 @@ function cdv_customize_register($wp_customize) {
         'settings' => 'cdv_stories_button_text',
         'type'     => 'text',
     ));
+
+    // ========================================
+    // SECTION: Footer
+    // ========================================
+    $wp_customize->add_section('cdv_footer', array(
+        'title'       => 'Footer',
+        'description' => 'Personalizza il footer del sito',
+        'priority'    => 60,
+    ));
+
+    // Footer Logo
+    $wp_customize->add_setting('cdv_footer_logo', array(
+        'default'           => '',
+        'sanitize_callback' => 'absint',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control(new WP_Customize_Media_Control($wp_customize, 'cdv_footer_logo', array(
+        'label'       => 'Logo Footer',
+        'description' => 'Carica un logo per il footer (sostituisce il titolo del sito)',
+        'section'     => 'cdv_footer',
+        'settings'    => 'cdv_footer_logo',
+        'mime_type'   => 'image',
+    )));
+
+    // Footer Logo Height
+    $wp_customize->add_setting('cdv_footer_logo_height', array(
+        'default'           => '50',
+        'sanitize_callback' => 'absint',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_footer_logo_height', array(
+        'label'       => 'Altezza Logo Footer (px)',
+        'description' => 'Imposta l\'altezza del logo in pixel',
+        'section'     => 'cdv_footer',
+        'settings'    => 'cdv_footer_logo_height',
+        'type'        => 'number',
+        'input_attrs' => array(
+            'min'  => 30,
+            'max'  => 150,
+            'step' => 5,
+        ),
+    ));
+
+    // Footer Copyright Text
+    $wp_customize->add_setting('cdv_footer_copyright', array(
+        'default'           => '© ' . date('Y') . ' Compagni di viaggi. Tutti i diritti riservati.',
+        'sanitize_callback' => 'wp_kses_post',
+        'transport'         => 'refresh',
+    ));
+
+    $wp_customize->add_control('cdv_footer_copyright', array(
+        'label'       => 'Testo Copyright',
+        'description' => 'Testo del copyright nel footer. Puoi usare HTML.',
+        'section'     => 'cdv_footer',
+        'settings'    => 'cdv_footer_copyright',
+        'type'        => 'textarea',
+    ));
 }
 add_action('customize_register', 'cdv_customize_register');
 
@@ -646,6 +719,12 @@ function cdv_customizer_css() {
     $hero_bg_image_id = get_theme_mod('cdv_hero_bg_image', '');
     $hero_overlay_color = get_theme_mod('cdv_hero_overlay_color', '#000000');
     $hero_overlay_opacity = get_theme_mod('cdv_hero_overlay_opacity', '0.5');
+
+    // Footer settings
+    $footer_logo_height = get_theme_mod('cdv_footer_logo_height', '50');
+
+    // How it works settings
+    $how_bg_color = get_theme_mod('cdv_how_bg_color', '#667eea');
     ?>
     <style type="text/css">
         :root {
@@ -758,6 +837,38 @@ function cdv_customizer_css() {
         <?php
             endif;
         endif; ?>
+
+        /* Footer Logo */
+        .footer-logo-img {
+            max-height: <?php echo esc_attr($footer_logo_height); ?>px;
+            width: auto;
+            height: auto;
+        }
+
+        /* Come Funziona Section - Negative Colors */
+        .how-it-works-section {
+            background: <?php echo esc_attr($how_bg_color); ?> !important;
+            color: #ffffff !important;
+        }
+
+        .how-it-works-section h2,
+        .how-it-works-section h3,
+        .how-it-works-section h4,
+        .how-it-works-section p,
+        .how-it-works-section .subtitle {
+            color: #ffffff !important;
+        }
+
+        .how-it-works-section .step-card {
+            background: rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .how-it-works-section .step-number {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff !important;
+        }
     </style>
     <?php
 }

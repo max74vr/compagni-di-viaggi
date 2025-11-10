@@ -2,7 +2,17 @@
     <div class="container">
         <div class="footer-content">
             <div class="footer-section">
-                <h3><?php bloginfo('name'); ?></h3>
+                <?php
+                $footer_logo_id = get_theme_mod('cdv_footer_logo', '');
+                if ($footer_logo_id) {
+                    $footer_logo_url = wp_get_attachment_url($footer_logo_id);
+                    if ($footer_logo_url) {
+                        echo '<img src="' . esc_url($footer_logo_url) . '" alt="' . esc_attr(get_bloginfo('name')) . '" class="footer-logo-img" />';
+                    }
+                } else {
+                    echo '<h3>' . esc_html(get_bloginfo('name')) . '</h3>';
+                }
+                ?>
                 <p><?php bloginfo('description'); ?></p>
                 <p>Trova compagni di viaggio e organizza avventure insieme.</p>
             </div>
@@ -27,8 +37,7 @@
         </div>
 
         <div class="footer-bottom">
-            <p>&copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. Tutti i diritti riservati.</p>
-            <p>Sviluppato con ❤️ per viaggiatori da <a href="https://github.com/max74vr" target="_blank">Max74vr</a></p>
+            <p><?php echo wp_kses_post(get_theme_mod('cdv_footer_copyright', '© ' . date('Y') . ' Compagni di viaggi. Tutti i diritti riservati.')); ?></p>
         </div>
     </div>
 </footer>

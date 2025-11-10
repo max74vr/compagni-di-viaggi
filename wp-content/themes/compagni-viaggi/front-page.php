@@ -104,44 +104,55 @@ get_header();
     </section>
 
     <!-- How It Works -->
-    <section class="section" style="background-color: white;">
+    <section class="section how-it-works-section">
         <div class="container">
             <div class="section-title">
                 <h2><?php echo esc_html(get_theme_mod('cdv_how_title', 'Come Funziona')); ?></h2>
-                <p><?php echo esc_html(get_theme_mod('cdv_how_subtitle', 'In pochi semplici passi puoi trovare i tuoi compagni di viaggio')); ?></p>
+                <p class="subtitle"><?php echo esc_html(get_theme_mod('cdv_how_subtitle', 'In pochi semplici passi puoi trovare i tuoi compagni di viaggio')); ?></p>
             </div>
 
             <div class="grid">
-                <div class="feature-card">
-                    <div class="feature-icon">👤</div>
+                <div class="step-card">
+                    <div class="step-number">1</div>
                     <h3><?php echo esc_html(get_theme_mod('cdv_step1_title', '1. Crea il Tuo Profilo')); ?></h3>
                     <p><?php echo esc_html(get_theme_mod('cdv_step1_text', 'Registrati e completa il tuo profilo con interessi, lingue parlate e stili di viaggio preferiti.')); ?></p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">🔍</div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
                     <h3><?php echo esc_html(get_theme_mod('cdv_step2_title', '2. Cerca o Crea un Viaggio')); ?></h3>
                     <p><?php echo esc_html(get_theme_mod('cdv_step2_text', 'Cerca tra i viaggi disponibili o crea il tuo e aspetta che altri viaggiatori si uniscano.')); ?></p>
                 </div>
 
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
                     <h3><?php echo esc_html(get_theme_mod('cdv_step3_title', '3. Connettiti e Organizza')); ?></h3>
                     <p><?php echo esc_html(get_theme_mod('cdv_step3_text', 'Usa la chat di gruppo per conoscere i compagni di viaggio e organizzare i dettagli insieme.')); ?></p>
                 </div>
             </div>
 
             <style>
-                .feature-card {
+                .step-card {
                     text-align: center;
                     padding: calc(var(--spacing-unit) * 4);
+                    border-radius: 12px;
+                    transition: transform 0.3s ease;
                 }
-                .feature-icon {
-                    font-size: 4rem;
-                    margin-bottom: calc(var(--spacing-unit) * 2);
+                .step-card:hover {
+                    transform: translateY(-5px);
                 }
-                .feature-card h3 {
-                    color: var(--primary-color);
+                .step-number {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    margin: 0 auto calc(var(--spacing-unit) * 2);
+                }
+                .step-card h3 {
                     margin-bottom: calc(var(--spacing-unit) * 2);
                 }
             </style>
