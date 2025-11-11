@@ -67,6 +67,9 @@ class CDV_Ajax_Handlers {
             wp_send_json_error(array('message' => $result->get_error_message()));
         }
 
+        // Send notification to organizer
+        CDV_Notifications::notify_join_request($travel_id, get_current_user_id());
+
         wp_send_json_success(array(
             'message' => 'Richiesta inviata con successo',
             'id' => $result,
@@ -224,6 +227,9 @@ class CDV_Ajax_Handlers {
             wp_send_json_error(array('message' => $result->get_error_message()));
         }
 
+        // Send notification to participant
+        CDV_Notifications::notify_request_accepted($travel_id, $user_id);
+
         wp_send_json_success(array('message' => 'Partecipante accettato'));
     }
 
@@ -255,6 +261,9 @@ class CDV_Ajax_Handlers {
         if (is_wp_error($result)) {
             wp_send_json_error(array('message' => $result->get_error_message()));
         }
+
+        // Send notification to participant
+        CDV_Notifications::notify_request_rejected($travel_id, $user_id);
 
         wp_send_json_success(array('message' => 'Partecipante rifiutato'));
     }

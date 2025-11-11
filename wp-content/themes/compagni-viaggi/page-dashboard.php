@@ -137,6 +137,14 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     <span class="badge-count"><?php echo $pending_reviews_count; ?></span>
                 <?php endif; ?>
             </button>
+            <button class="tab-button" data-tab="notifications">
+                🔔 Notifiche
+                <?php
+                $notifications_count = CDV_Notifications::get_unread_count(get_current_user_id());
+                if ($notifications_count > 0) : ?>
+                    <span class="badge-count"><?php echo $notifications_count; ?></span>
+                <?php endif; ?>
+            </button>
             <button class="tab-button" data-tab="wishlist">
                 💝 Wishlist
                 <?php
@@ -590,6 +598,22 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                         <p>Non hai ancora ricevuto recensioni</p>
                     </div>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Tab: Notifiche -->
+        <div class="tab-content" id="tab-notifications">
+            <div class="section-header">
+                <h2>🔔 Notifiche</h2>
+                <button class="btn btn-sm btn-secondary" id="mark-all-read-btn">
+                    Segna Tutte Come Lette
+                </button>
+            </div>
+
+            <div id="notifications-container">
+                <div class="loading-spinner" style="text-align: center; padding: 40px;">
+                    <p>Caricamento notifiche...</p>
+                </div>
             </div>
         </div>
 
@@ -1912,6 +1936,99 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
         grid-template-columns: 1fr;
     }
 }
+
+/* Notifications Styles */
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 3);
+}
+
+.notification-item {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 2);
+    padding: calc(var(--spacing-unit) * 3);
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+    border-left: 4px solid transparent;
+    text-decoration: none;
+    color: inherit;
+}
+
+.notification-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+}
+
+.notification-item.unread {
+    background: #f0f7ff;
+    border-left-color: var(--primary-color);
+}
+
+.notification-item.read {
+    opacity: 0.7;
+}
+
+.notification-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border-radius: 50%;
+}
+
+.notification-item.unread .notification-icon {
+    background: var(--primary-color);
+    color: white;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: bold;
+    font-size: 1.05rem;
+    margin-bottom: calc(var(--spacing-unit) * 0.5);
+    color: var(--text-dark);
+}
+
+.notification-message {
+    color: var(--text-medium);
+    margin-bottom: calc(var(--spacing-unit) * 1);
+    line-height: 1.5;
+}
+
+.notification-time {
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.loading-spinner {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-medium);
+}
+
+@media (max-width: 768px) {
+    .notification-item {
+        gap: calc(var(--spacing-unit) * 1.5);
+        padding: calc(var(--spacing-unit) * 2);
+    }
+
+    .notification-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+    }
+}
 </style>
 
 <script>
@@ -2760,6 +2877,156 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Notifications functionality
+    function loadNotifications() {
+        const container = document.getElementById('notifications-container');
+        if (!container) return;
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_notifications',
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const notifications = response.data.notifications;
+                    if (notifications.length === 0) {
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <span class="empty-icon">🔔</span>
+                                <h3>Nessuna notifica</h3>
+                                <p>Al momento non hai notifiche.</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = '<div class="notifications-list">';
+                        notifications.forEach(function(notif) {
+                            const readClass = notif.is_read ? 'read' : 'unread';
+                            const linkStart = notif.link ? `<a href="${notif.link}" class="notification-item ${readClass}" data-id="${notif.id}">` : `<div class="notification-item ${readClass}" data-id="${notif.id}">`;
+                            const linkEnd = notif.link ? '</a>' : '</div>';
+
+                            html += linkStart;
+                            html += `
+                                <div class="notification-icon">${notif.icon}</div>
+                                <div class="notification-content">
+                                    <div class="notification-title">${notif.title}</div>
+                                    <div class="notification-message">${notif.message}</div>
+                                    <div class="notification-time">${notif.time_ago}</div>
+                                </div>
+                            `;
+                            html += linkEnd;
+                        });
+                        html += '</div>';
+                        container.innerHTML = html;
+                    }
+                } else {
+                    container.innerHTML = '<div class="error-message">Errore nel caricamento delle notifiche</div>';
+                }
+            },
+            error: function() {
+                container.innerHTML = '<div class="error-message">Errore di connessione</div>';
+            }
+        });
+    }
+
+    // Load notifications when tab is opened
+    document.addEventListener('click', function(e) {
+        const tabButton = e.target.closest('[data-tab="notifications"]');
+        if (tabButton) {
+            loadNotifications();
+        }
+
+        // Mark notification as read when clicked
+        const notificationItem = e.target.closest('.notification-item.unread');
+        if (notificationItem) {
+            const notifId = notificationItem.dataset.id;
+            jQuery.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_mark_notification_read',
+                    nonce: cdvAjax.nonce,
+                    notification_id: notifId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        notificationItem.classList.remove('unread');
+                        notificationItem.classList.add('read');
+
+                        // Update badges
+                        updateNotificationBadges(response.data.unread_count);
+                    }
+                }
+            });
+        }
+    });
+
+    // Mark all as read
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', function() {
+            jQuery.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_mark_all_notifications_read',
+                    nonce: cdvAjax.nonce
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Mark all as read visually
+                        document.querySelectorAll('.notification-item.unread').forEach(function(item) {
+                            item.classList.remove('unread');
+                            item.classList.add('read');
+                        });
+
+                        // Update badges
+                        updateNotificationBadges(0);
+                    }
+                }
+            });
+        });
+    }
+
+    function updateNotificationBadges(count) {
+        // Update tab badge
+        const tabBadge = document.querySelector('[data-tab="notifications"] .badge-count');
+        if (count > 0) {
+            if (tabBadge) {
+                tabBadge.textContent = count;
+            } else {
+                const tab = document.querySelector('[data-tab="notifications"]');
+                const newBadge = document.createElement('span');
+                newBadge.className = 'badge-count';
+                newBadge.textContent = count;
+                tab.appendChild(newBadge);
+            }
+        } else if (tabBadge) {
+            tabBadge.remove();
+        }
+
+        // Update header badge
+        const headerBadge = document.querySelector('.notifications-badge');
+        if (count > 0) {
+            if (headerBadge) {
+                headerBadge.textContent = count;
+            }
+        } else if (headerBadge) {
+            headerBadge.remove();
+        }
+    }
+
+    // Check if we should open notifications tab on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'notifications') {
+        const notifTab = document.querySelector('[data-tab="notifications"]');
+        if (notifTab) {
+            notifTab.click();
+        }
+    }
 });
 </script>
 
