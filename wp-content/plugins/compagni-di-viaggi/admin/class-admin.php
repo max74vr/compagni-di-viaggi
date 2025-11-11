@@ -80,6 +80,15 @@ class CDV_Admin {
             'cdv-settings',
             array(__CLASS__, 'settings_page')
         );
+
+        add_submenu_page(
+            'cdv-dashboard',
+            'Performance',
+            '⚡ Performance',
+            'manage_options',
+            'cdv-performance',
+            array(__CLASS__, 'performance_page')
+        );
     }
 
     /**
@@ -799,6 +808,13 @@ class CDV_Admin {
     public static function get_pending_stories_count() {
         $count = wp_count_posts('racconto');
         return isset($count->pending) ? intval($count->pending) : 0;
+    }
+
+    /**
+     * Performance monitoring page
+     */
+    public static function performance_page() {
+        require_once CDV_PLUGIN_DIR . 'admin/page-performance.php';
     }
 
     /**

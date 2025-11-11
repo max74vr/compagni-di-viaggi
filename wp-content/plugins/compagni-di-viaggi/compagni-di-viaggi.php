@@ -94,6 +94,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-travel-maps.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-wishlist.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-gdpr.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-performance.php';
 
         // REST API
         require_once CDV_PLUGIN_DIR . 'includes/api/class-rest-api.php';
@@ -136,6 +137,7 @@ class Compagni_Di_Viaggi {
         CDV_Travel_Maps::init();
         CDV_Wishlist::init();
         CDV_GDPR::init();
+        CDV_Performance::init();
         CDV_REST_API::init();
         CDV_Ajax_Handlers::init();
 
