@@ -598,7 +598,16 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     </div>
                     <div class="upload-controls">
                         <input type="file" id="dashboard_profile_image" name="profile_image" accept="image/jpeg,image/png,image/jpg" style="display: none;">
-                        <button type="button" class="btn btn-secondary" id="dashboard-upload-btn">Cambia Foto</button>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button type="button" class="btn btn-secondary" id="dashboard-upload-btn">Cambia Foto</button>
+                            <?php
+                            // Show remove button only if user has custom avatar
+                            $custom_avatar = get_user_meta($current_user->ID, 'cdv_profile_image', true);
+                            if (!empty($custom_avatar)) :
+                            ?>
+                                <button type="button" class="btn btn-danger" id="dashboard-remove-photo-btn">Rimuovi Foto</button>
+                            <?php endif; ?>
+                        </div>
                         <small>JPG o PNG, max 5MB</small>
                         <div id="upload-status" style="margin-top: 10px;"></div>
                     </div>
@@ -1068,6 +1077,15 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
 .btn-sm {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
 }
 
 @media (max-width: 768px) {
@@ -1866,6 +1884,43 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             error: function() {
                 document.getElementById('upload-status').innerHTML = '<div class="error-message">Errore di connessione</div>';
+            }
+        });
+    });
+
+    // Remove Profile Photo
+    document.getElementById('dashboard-remove-photo-btn')?.addEventListener('click', function() {
+        if (!confirm('Sei sicuro di voler rimuovere la tua foto profilo? Verrà ripristinato il Gravatar predefinito.')) {
+            return;
+        }
+
+        const $btn = jQuery(this);
+        const originalText = $btn.text();
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_remove_profile_image',
+                nonce: cdvAjax.nonce
+            },
+            beforeSend: function() {
+                $btn.prop('disabled', true).text('Rimozione...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    document.getElementById('upload-status').innerHTML = '<div class="success-message">Foto rimossa con successo!</div>';
+                    setTimeout(function() {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    document.getElementById('upload-status').innerHTML = '<div class="error-message">' + (response.data.message || 'Errore durante la rimozione') + '</div>';
+                    $btn.prop('disabled', false).text(originalText);
+                }
+            },
+            error: function() {
+                document.getElementById('upload-status').innerHTML = '<div class="error-message">Errore di connessione</div>';
+                $btn.prop('disabled', false).text(originalText);
             }
         });
     });

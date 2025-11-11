@@ -28,6 +28,7 @@ class CDV_Ajax_Handlers {
         // Profile management
         add_action('wp_ajax_cdv_update_profile', array(__CLASS__, 'update_profile'));
         add_action('wp_ajax_cdv_change_password', array(__CLASS__, 'change_password'));
+        add_action('wp_ajax_cdv_remove_profile_image', array(__CLASS__, 'remove_profile_image'));
         add_action('wp_ajax_cdv_delete_account', array(__CLASS__, 'delete_account'));
         add_action('wp_ajax_cdv_upload_profile_image', array(__CLASS__, 'upload_profile_image'));
 
@@ -679,6 +680,41 @@ class CDV_Ajax_Handlers {
         wp_send_json_success(array(
             'message' => 'Immagine profilo aggiornata con successo',
             'image_url' => $image_url,
+        ));
+    }
+
+    /**
+     * AJAX: Remove profile image
+     */
+    public static function remove_profile_image() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $user_id = get_current_user_id();
+
+        // Get attachment ID
+        $attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+
+        if (!$attachment_id) {
+            wp_send_json_error(array('message' => 'Nessuna foto profilo personalizzata da rimuovere'));
+        }
+
+        // Delete attachment from media library
+        $deleted = wp_delete_attachment($attachment_id, true);
+
+        if (!$deleted) {
+            wp_send_json_error(array('message' => 'Errore durante la rimozione dell\'immagine'));
+        }
+
+        // Remove user meta
+        delete_user_meta($user_id, 'cdv_profile_image_id');
+        delete_user_meta($user_id, 'cdv_profile_image');
+
+        wp_send_json_success(array(
+            'message' => 'Foto profilo rimossa con successo. Verrà utilizzato il Gravatar predefinito.',
         ));
     }
 
