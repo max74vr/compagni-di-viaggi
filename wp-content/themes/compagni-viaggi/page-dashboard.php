@@ -2671,6 +2671,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Wishlist remove button handler
+    const travelsArchiveUrl = '<?php echo esc_js(get_post_type_archive_link('viaggio')); ?>';
+
     document.addEventListener('click', function(e) {
         if (e.target.closest('.wishlist-remove-btn')) {
             e.preventDefault();
@@ -2737,7 +2739,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <h3>La tua wishlist è vuota</h3>
                                         <p>Non hai ancora salvato nessun viaggio nella tua wishlist.</p>
                                         <p>Esplora i viaggi disponibili e salva quelli che ti interessano per trovarli facilmente!</p>
-                                        <a href="<?php echo get_post_type_archive_link('viaggio'); ?>" class="btn btn-primary">Esplora Viaggi</a>
+                                        <a href="${travelsArchiveUrl}" class="btn btn-primary">Esplora Viaggi</a>
                                     </div>
                                 `;
                             }
