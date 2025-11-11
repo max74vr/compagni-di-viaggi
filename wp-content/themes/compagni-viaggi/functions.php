@@ -443,3 +443,175 @@ function cdv_output_page_custom_css() {
     }
 }
 add_action('wp_head', 'cdv_output_page_custom_css', 100);
+
+/**
+ * Advanced Search and Filters for Viaggi Archive
+ */
+function cdv_filter_viaggi_archive($query) {
+    // Only modify main query on viaggio archive pages
+    if (!is_admin() && $query->is_main_query() && is_post_type_archive('viaggio')) {
+
+        // Meta query array
+        $meta_query = array('relation' => 'AND');
+
+        // Filter by date range
+        if (!empty($_GET['date_from']) || !empty($_GET['date_to'])) {
+            $date_meta = array('relation' => 'AND');
+
+            if (!empty($_GET['date_from'])) {
+                $date_from = sanitize_text_field($_GET['date_from']) . '-01'; // YYYY-MM-01
+                $date_meta[] = array(
+                    'key' => 'cdv_start_date',
+                    'value' => $date_from,
+                    'compare' => '>=',
+                    'type' => 'DATE'
+                );
+            }
+
+            if (!empty($_GET['date_to'])) {
+                // Get last day of the month
+                $date_to = sanitize_text_field($_GET['date_to']);
+                $last_day = date('t', strtotime($date_to . '-01'));
+                $date_to_full = $date_to . '-' . $last_day;
+                $date_meta[] = array(
+                    'key' => 'cdv_start_date',
+                    'value' => $date_to_full,
+                    'compare' => '<=',
+                    'type' => 'DATE'
+                );
+            }
+
+            $meta_query[] = $date_meta;
+        }
+
+        // Filter by budget range
+        if (!empty($_GET['budget_min'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_budget',
+                'value' => intval($_GET['budget_min']),
+                'compare' => '>=',
+                'type' => 'NUMERIC'
+            );
+        }
+
+        if (!empty($_GET['budget_max'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_budget',
+                'value' => intval($_GET['budget_max']),
+                'compare' => '<=',
+                'type' => 'NUMERIC'
+            );
+        }
+
+        // Filter by number of participants
+        if (!empty($_GET['max_participants'])) {
+            $participants_filter = sanitize_text_field($_GET['max_participants']);
+
+            switch ($participants_filter) {
+                case '2-5':
+                    $meta_query[] = array(
+                        'key' => 'cdv_max_participants',
+                        'value' => array(2, 5),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '6-10':
+                    $meta_query[] = array(
+                        'key' => 'cdv_max_participants',
+                        'value' => array(6, 10),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '11-20':
+                    $meta_query[] = array(
+                        'key' => 'cdv_max_participants',
+                        'value' => array(11, 20),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '20+':
+                    $meta_query[] = array(
+                        'key' => 'cdv_max_participants',
+                        'value' => 20,
+                        'compare' => '>',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+            }
+        }
+
+        // Filter by travel status
+        if (!empty($_GET['travel_status'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_travel_status',
+                'value' => sanitize_text_field($_GET['travel_status']),
+                'compare' => '='
+            );
+        }
+
+        // Apply meta query if we have filters
+        if (count($meta_query) > 1) {
+            $query->set('meta_query', $meta_query);
+        }
+
+        // Taxonomy filters (already handled by WordPress, but we make them explicit)
+        if (!empty($_GET['tipo_viaggio'])) {
+            $query->set('tax_query', array(
+                array(
+                    'taxonomy' => 'tipo_viaggio',
+                    'field' => 'slug',
+                    'terms' => sanitize_text_field($_GET['tipo_viaggio'])
+                )
+            ));
+        }
+
+        if (!empty($_GET['destinazione'])) {
+            $tax_query = $query->get('tax_query') ?: array();
+            $tax_query[] = array(
+                'taxonomy' => 'destinazione',
+                'field' => 'slug',
+                'terms' => sanitize_text_field($_GET['destinazione'])
+            );
+            $query->set('tax_query', $tax_query);
+        }
+
+        // Sorting
+        $orderby = isset($_GET['orderby']) ? sanitize_text_field($_GET['orderby']) : 'date';
+
+        switch ($orderby) {
+            case 'start_date':
+                $query->set('meta_key', 'cdv_start_date');
+                $query->set('orderby', 'meta_value');
+                $query->set('meta_type', 'DATE');
+                $query->set('order', 'ASC');
+                break;
+
+            case 'budget_asc':
+                $query->set('meta_key', 'cdv_budget');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'ASC');
+                break;
+
+            case 'budget_desc':
+                $query->set('meta_key', 'cdv_budget');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'DESC');
+                break;
+
+            case 'participants':
+                $query->set('meta_key', 'cdv_max_participants');
+                $query->set('orderby', 'meta_value_num');
+                $query->set('order', 'DESC');
+                break;
+
+            default: // 'date'
+                $query->set('orderby', 'date');
+                $query->set('order', 'DESC');
+                break;
+        }
+    }
+}
+add_action('pre_get_posts', 'cdv_filter_viaggi_archive');
