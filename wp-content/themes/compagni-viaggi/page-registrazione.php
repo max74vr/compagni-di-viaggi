@@ -440,6 +440,20 @@ get_header();
                         </div>
                     </div>
 
+                    <div class="disclaimer-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                        <h4 style="margin-top: 0; color: #856404;">⚠️ Informativa Importante</h4>
+                        <p style="margin-bottom: 15px;">Pubblicando questo viaggio, dichiari di comprendere e accettare che:</p>
+                        <ul style="margin: 0 0 15px 0; padding-left: 20px;">
+                            <li style="margin-bottom: 8px;">La piattaforma facilita l'incontro tra viaggiatori ma <strong>non organizza</strong> materialmente i viaggi</li>
+                            <li style="margin-bottom: 8px;">Sei <strong>l'unico responsabile</strong> per organizzazione, sicurezza e gestione del viaggio</li>
+                            <li style="margin-bottom: 8px;">La piattaforma <strong>non è responsabile</strong> per comportamenti, danni o disservizi</li>
+                        </ul>
+                        <label style="display: flex; align-items: start; gap: 10px; cursor: pointer;">
+                            <input type="checkbox" id="accept_travel_disclaimer_reg" name="accept_travel_disclaimer" style="margin-top: 4px;">
+                            <span>Accetto e comprendo di essere l'unico responsabile per questo viaggio</span>
+                        </label>
+                    </div>
+
                     <div class="form-actions">
                         <button type="button" class="btn-secondary btn-prev-travel">← Indietro</button>
                         <button type="button" class="btn-secondary" id="skip-travel-from-form">Salta e Completa</button>
