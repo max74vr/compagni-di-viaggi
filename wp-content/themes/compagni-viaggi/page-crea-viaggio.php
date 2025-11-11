@@ -54,8 +54,125 @@ get_header();
                             </div>
 
                             <div class="form-group">
-                                <label for="travel_country">Paese <span class="required">*</span></label>
-                                <input type="text" id="travel_country" name="travel_country" required placeholder="Es: Italia, Francia">
+                                <label for="travel_country_select">Paese <span class="required">*</span></label>
+                                <select id="travel_country_select" name="travel_country_select" required>
+                                    <option value="">Seleziona un paese</option>
+
+                                    <optgroup label="🇪🇺 Europa">
+                                        <option value="Italia">Italia</option>
+                                        <option value="Francia">Francia</option>
+                                        <option value="Spagna">Spagna</option>
+                                        <option value="Germania">Germania</option>
+                                        <option value="Regno Unito">Regno Unito</option>
+                                        <option value="Portogallo">Portogallo</option>
+                                        <option value="Grecia">Grecia</option>
+                                        <option value="Paesi Bassi">Paesi Bassi</option>
+                                        <option value="Svizzera">Svizzera</option>
+                                        <option value="Austria">Austria</option>
+                                        <option value="Croazia">Croazia</option>
+                                        <option value="Irlanda">Irlanda</option>
+                                        <option value="Islanda">Islanda</option>
+                                        <option value="Norvegia">Norvegia</option>
+                                        <option value="Svezia">Svezia</option>
+                                        <option value="Danimarca">Danimarca</option>
+                                        <option value="Polonia">Polonia</option>
+                                        <option value="Repubblica Ceca">Repubblica Ceca</option>
+                                        <option value="Ungheria">Ungheria</option>
+                                        <option value="Romania">Romania</option>
+                                        <option value="Bulgaria">Bulgaria</option>
+                                        <option value="Slovenia">Slovenia</option>
+                                        <option value="Montenegro">Montenegro</option>
+                                        <option value="Albania">Albania</option>
+                                        <option value="Serbia">Serbia</option>
+                                        <option value="Bosnia ed Erzegovina">Bosnia ed Erzegovina</option>
+                                        <option value="Macedonia del Nord">Macedonia del Nord</option>
+                                        <option value="Belgio">Belgio</option>
+                                        <option value="Lussemburgo">Lussemburgo</option>
+                                        <option value="Finlandia">Finlandia</option>
+                                        <option value="Estonia">Estonia</option>
+                                        <option value="Lettonia">Lettonia</option>
+                                        <option value="Lituania">Lituania</option>
+                                        <option value="Slovacchia">Slovacchia</option>
+                                        <option value="Malta">Malta</option>
+                                        <option value="Cipro">Cipro</option>
+                                    </optgroup>
+
+                                    <optgroup label="🌍 Africa">
+                                        <option value="Marocco">Marocco</option>
+                                        <option value="Egitto">Egitto</option>
+                                        <option value="Tunisia">Tunisia</option>
+                                        <option value="Sudafrica">Sudafrica</option>
+                                        <option value="Kenya">Kenya</option>
+                                        <option value="Tanzania">Tanzania</option>
+                                        <option value="Madagascar">Madagascar</option>
+                                        <option value="Namibia">Namibia</option>
+                                        <option value="Botswana">Botswana</option>
+                                        <option value="Zanzibar">Zanzibar</option>
+                                        <option value="Mauritius">Mauritius</option>
+                                        <option value="Seychelles">Seychelles</option>
+                                        <option value="Senegal">Senegal</option>
+                                        <option value="Etiopia">Etiopia</option>
+                                    </optgroup>
+
+                                    <optgroup label="🌏 Asia">
+                                        <option value="Giappone">Giappone</option>
+                                        <option value="Thailandia">Thailandia</option>
+                                        <option value="Vietnam">Vietnam</option>
+                                        <option value="Cina">Cina</option>
+                                        <option value="India">India</option>
+                                        <option value="Indonesia">Indonesia</option>
+                                        <option value="Maldive">Maldive</option>
+                                        <option value="Sri Lanka">Sri Lanka</option>
+                                        <option value="Emirati Arabi Uniti">Emirati Arabi Uniti</option>
+                                        <option value="Giordania">Giordania</option>
+                                        <option value="Israele">Israele</option>
+                                        <option value="Turchia">Turchia</option>
+                                        <option value="Cambogia">Cambogia</option>
+                                        <option value="Malesia">Malesia</option>
+                                        <option value="Singapore">Singapore</option>
+                                        <option value="Filippine">Filippine</option>
+                                        <option value="Nepal">Nepal</option>
+                                        <option value="Corea del Sud">Corea del Sud</option>
+                                        <option value="Oman">Oman</option>
+                                        <option value="Qatar">Qatar</option>
+                                        <option value="Bali">Bali</option>
+                                    </optgroup>
+
+                                    <optgroup label="🌎 Americhe">
+                                        <option value="Stati Uniti">Stati Uniti</option>
+                                        <option value="Canada">Canada</option>
+                                        <option value="Messico">Messico</option>
+                                        <option value="Brasile">Brasile</option>
+                                        <option value="Argentina">Argentina</option>
+                                        <option value="Perù">Perù</option>
+                                        <option value="Cile">Cile</option>
+                                        <option value="Colombia">Colombia</option>
+                                        <option value="Costa Rica">Costa Rica</option>
+                                        <option value="Cuba">Cuba</option>
+                                        <option value="Repubblica Dominicana">Repubblica Dominicana</option>
+                                        <option value="Ecuador">Ecuador</option>
+                                        <option value="Bolivia">Bolivia</option>
+                                        <option value="Uruguay">Uruguay</option>
+                                        <option value="Panama">Panama</option>
+                                        <option value="Guatemala">Guatemala</option>
+                                        <option value="Nicaragua">Nicaragua</option>
+                                    </optgroup>
+
+                                    <optgroup label="🌏 Oceania">
+                                        <option value="Australia">Australia</option>
+                                        <option value="Nuova Zelanda">Nuova Zelanda</option>
+                                        <option value="Polinesia Francese">Polinesia Francese</option>
+                                        <option value="Fiji">Fiji</option>
+                                    </optgroup>
+
+                                    <option value="altro">📝 Altro (specifica)</option>
+                                </select>
+
+                                <!-- Campo "Altro" che appare quando selezionato -->
+                                <input type="text" id="travel_country_other" name="travel_country_other" style="display: none; margin-top: 10px;" placeholder="Specifica il paese">
+
+                                <!-- Hidden field che conterrà il valore finale -->
+                                <input type="hidden" id="travel_country" name="travel_country">
                             </div>
                         </div>
                     </div>
@@ -337,6 +454,31 @@ jQuery(document).ready(function($) {
         const startDate = $(this).val();
         $('#travel_end_date').attr('min', startDate);
     });
+
+    // Handle country select with "Altro" option
+    $('#travel_country_select').on('change', function() {
+        const selectedValue = $(this).val();
+        const $otherField = $('#travel_country_other');
+        const $hiddenField = $('#travel_country');
+
+        if (selectedValue === 'altro') {
+            // Show the "other" text field
+            $otherField.show().prop('required', true).focus();
+            $hiddenField.val(''); // Clear hidden field
+        } else {
+            // Hide the "other" text field and set hidden field value
+            $otherField.hide().prop('required', false).val('');
+            $hiddenField.val(selectedValue);
+        }
+    });
+
+    // Update hidden field when "other" text field changes
+    $('#travel_country_other').on('input', function() {
+        $('#travel_country').val($(this).val());
+    });
+
+    // Initialize on page load
+    $('#travel_country_select').trigger('change');
 
     $('#create-travel-form').on('submit', function(e) {
         e.preventDefault();

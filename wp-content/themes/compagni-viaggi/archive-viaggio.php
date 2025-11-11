@@ -21,10 +21,11 @@ get_header();
                 <h3>Filtra Viaggi</h3>
 
                 <form method="get" action="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="filters-form">
-                    <div class="filter-group">
-                        <label for="search">Cerca</label>
-                        <input type="text" id="search" name="s" value="<?php echo get_search_query(); ?>" placeholder="Destinazione...">
-                    </div>
+                    <div class="filters-form-scroll">
+                        <div class="filter-group">
+                            <label for="search">Cerca</label>
+                            <input type="text" id="search" name="s" value="<?php echo get_search_query(); ?>" placeholder="Destinazione...">
+                        </div>
 
                     <div class="filter-group">
                         <label for="tipo_viaggio">Tipo di Viaggio</label>
@@ -68,9 +69,9 @@ get_header();
 
                     <div class="filter-group">
                         <label>Budget per Persona (€)</label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="number" name="budget_min" value="<?php echo isset($_GET['budget_min']) ? esc_attr($_GET['budget_min']) : ''; ?>" placeholder="Min" min="0">
-                            <input type="number" name="budget_max" value="<?php echo isset($_GET['budget_max']) ? esc_attr($_GET['budget_max']) : ''; ?>" placeholder="Max" min="0">
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <input type="number" name="budget_min" value="<?php echo isset($_GET['budget_min']) ? esc_attr($_GET['budget_min']) : ''; ?>" placeholder="Min €" min="0" style="width: 100%;">
+                            <input type="number" name="budget_max" value="<?php echo isset($_GET['budget_max']) ? esc_attr($_GET['budget_max']) : ''; ?>" placeholder="Max €" min="0" style="width: 100%;">
                         </div>
                     </div>
 
@@ -105,17 +106,20 @@ get_header();
                             <option value="participants" <?php selected(isset($_GET['orderby']) && $_GET['orderby'] === 'participants'); ?>>Posti Disponibili</option>
                         </select>
                     </div>
+                    </div>
 
-                    <button type="submit" class="btn-primary" style="width: 100%;">Applica Filtri</button>
+                    <div class="filters-form-actions">
+                        <button type="submit" class="btn-primary" style="width: 100%;">Applica Filtri</button>
 
-                    <?php if (!empty($_GET['s']) || !empty($_GET['tipo_viaggio']) || !empty($_GET['destinazione']) ||
-                              !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['budget_min']) ||
-                              !empty($_GET['budget_max']) || !empty($_GET['max_participants']) || !empty($_GET['travel_status']) ||
-                              (isset($_GET['orderby']) && $_GET['orderby'] !== 'date')) : ?>
-                        <a href="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="btn-secondary" style="width: 100%; text-align: center; margin-top: 10px;">
-                            Reset Filtri
-                        </a>
-                    <?php endif; ?>
+                        <?php if (!empty($_GET['s']) || !empty($_GET['tipo_viaggio']) || !empty($_GET['destinazione']) ||
+                                  !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['budget_min']) ||
+                                  !empty($_GET['budget_max']) || !empty($_GET['max_participants']) || !empty($_GET['travel_status']) ||
+                                  (isset($_GET['orderby']) && $_GET['orderby'] !== 'date')) : ?>
+                            <a href="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="btn-secondary" style="width: 100%; text-align: center;">
+                                Reset Filtri
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </form>
             </aside>
 
@@ -213,24 +217,68 @@ get_header();
 
 .filters-sidebar {
     background: white;
-    padding: calc(var(--spacing-unit) * 3);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
-    height: fit-content;
     position: sticky;
     top: calc(var(--spacing-unit) * 10);
+    max-height: calc(100vh - calc(var(--spacing-unit) * 12));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .filters-sidebar h3 {
-    margin-bottom: calc(var(--spacing-unit) * 3);
+    margin: 0;
+    padding: calc(var(--spacing-unit) * 3);
     padding-bottom: calc(var(--spacing-unit) * 2);
     border-bottom: 2px solid var(--primary-color);
+    background: white;
+    flex-shrink: 0;
 }
 
 .filters-form {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.filters-form-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: calc(var(--spacing-unit) * 3);
+    padding-bottom: calc(var(--spacing-unit) * 2);
+    display: flex;
+    flex-direction: column;
     gap: calc(var(--spacing-unit) * 2);
+}
+
+.filters-form-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filters-form-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filters-form-scroll::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+.filters-form-scroll::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.filters-form-actions {
+    padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 3);
+    background: white;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 1.5);
 }
 
 .filter-group {

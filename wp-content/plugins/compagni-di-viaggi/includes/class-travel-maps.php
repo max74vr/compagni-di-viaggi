@@ -26,8 +26,8 @@ class CDV_Travel_Maps {
      * Enqueue Leaflet scripts and styles
      */
     public static function enqueue_scripts() {
-        // Only enqueue on single travel pages or travel creation pages
-        if (is_singular('viaggio') || is_page(array('crea-viaggio', 'registrazione', 'dashboard'))) {
+        // Enqueue on single travel pages, travel creation pages, and calendar
+        if (is_singular('viaggio') || is_page(array('crea-viaggio', 'registrazione', 'dashboard', 'calendario-viaggi')) || is_post_type_archive('viaggio')) {
             // Leaflet CSS
             wp_enqueue_style(
                 'leaflet',
@@ -36,14 +36,22 @@ class CDV_Travel_Maps {
                 '1.9.4'
             );
 
-            // Leaflet JS
+            // Leaflet JS - load in footer
             wp_enqueue_script(
                 'leaflet',
                 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
                 array(),
                 '1.9.4',
-                true
+                true // Load in footer
             );
+
+            // Add integrity check
+            add_filter('script_loader_tag', function($tag, $handle) {
+                if ('leaflet' === $handle) {
+                    $tag = str_replace(' src', ' crossorigin="anonymous" src', $tag);
+                }
+                return $tag;
+            }, 10, 2);
         }
     }
 
@@ -230,23 +238,42 @@ class CDV_Travel_Maps {
 
         ob_start();
         ?>
-        <div id="<?php echo esc_attr($map_id); ?>" style="height: <?php echo esc_attr($height); ?>; border-radius: 8px; overflow: hidden;"></div>
+        <div id="<?php echo esc_attr($map_id); ?>" style="height: <?php echo esc_attr($height); ?>; border-radius: 8px; overflow: hidden; background: #f0f0f0;"></div>
         <script>
         (function() {
-            if (typeof L === 'undefined') {
-                console.error('Leaflet not loaded');
-                return;
+            // Wait for Leaflet to be loaded
+            function initMap() {
+                if (typeof L === 'undefined') {
+                    console.error('Leaflet library not loaded');
+                    document.getElementById('<?php echo $map_id; ?>').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">📍 Impossibile caricare la mappa</div>';
+                    return;
+                }
+
+                try {
+                    const map = L.map('<?php echo $map_id; ?>').setView([<?php echo $coords['lat']; ?>, <?php echo $coords['lon']; ?>], 10);
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                        maxZoom: 19
+                    }).addTo(map);
+
+                    const marker = L.marker([<?php echo $coords['lat']; ?>, <?php echo $coords['lon']; ?>]).addTo(map);
+                    marker.bindPopup('<strong><?php echo esc_js(get_the_title($travel_id)); ?></strong><br><?php echo esc_js(get_post_meta($travel_id, 'cdv_destination', true)); ?>').openPopup();
+                } catch (error) {
+                    console.error('Error initializing map:', error);
+                    document.getElementById('<?php echo $map_id; ?>').innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #999;">📍 Errore nel caricamento della mappa</div>';
+                }
             }
 
-            const map = L.map('<?php echo $map_id; ?>').setView([<?php echo $coords['lat']; ?>, <?php echo $coords['lon']; ?>], 10);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-                maxZoom: 19
-            }).addTo(map);
-
-            const marker = L.marker([<?php echo $coords['lat']; ?>, <?php echo $coords['lon']; ?>]).addTo(map);
-            marker.bindPopup('<strong><?php echo esc_js(get_the_title($travel_id)); ?></strong><br><?php echo esc_js(get_post_meta($travel_id, 'cdv_destination', true)); ?>').openPopup();
+            // Initialize when DOM and Leaflet are ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Give Leaflet a moment to initialize
+                    setTimeout(initMap, 100);
+                });
+            } else {
+                setTimeout(initMap, 100);
+            }
         })();
         </script>
         <?php
