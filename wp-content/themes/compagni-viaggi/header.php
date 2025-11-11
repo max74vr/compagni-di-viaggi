@@ -96,6 +96,12 @@ function cdv_fallback_mobile_menu() {
     echo '<li><a href="' . esc_url(home_url('/racconti')) . '">📖 Racconti</a></li>';
     if (is_user_logged_in()) {
         echo '<li><a href="' . esc_url(home_url('/dashboard')) . '">👤 Dashboard</a></li>';
+
+        // Wishlist with count badge
+        $wishlist_count = CDV_Wishlist::get_wishlist_count(get_current_user_id());
+        $wishlist_badge = $wishlist_count > 0 ? ' <span style="background: #ff6b6b; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; font-weight: bold;">' . $wishlist_count . '</span>' : '';
+        echo '<li><a href="' . esc_url(home_url('/wishlist')) . '">💝 Wishlist' . $wishlist_badge . '</a></li>';
+
         echo '<li><a href="' . esc_url(home_url('/crea-viaggio')) . '">➕ Crea Annuncio</a></li>';
         echo '<li><a href="' . esc_url(wp_logout_url(home_url())) . '" style="background: rgba(220, 53, 69, 0.2); color: #ff6b6b;">Esci</a></li>';
     } else {
