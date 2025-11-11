@@ -42,6 +42,47 @@ while (have_posts()) : the_post();
                         <?php the_content(); ?>
                     </div>
 
+                    <!-- Photo Gallery -->
+                    <?php
+                    $gallery_images = CDV_Travel_Gallery::get_gallery_images($travel_id);
+                    if (!empty($gallery_images)) :
+                    ?>
+                        <div class="travel-gallery-section">
+                            <h3>📸 Galleria Fotografica (<?php echo count($gallery_images); ?> foto)</h3>
+                            <div class="travel-gallery-grid">
+                                <?php foreach ($gallery_images as $image) : ?>
+                                    <div class="gallery-item" data-image-id="<?php echo $image['id']; ?>">
+                                        <img src="<?php echo esc_url($image['medium']); ?>"
+                                             alt="<?php echo esc_attr($image['alt'] ?: 'Foto di viaggio'); ?>"
+                                             data-full="<?php echo esc_url($image['full']); ?>">
+                                        <div class="gallery-item-overlay">
+                                            <button class="gallery-view-btn" data-full-url="<?php echo esc_url($image['full']); ?>">
+                                                <span>🔍</span> Visualizza
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+
+                            <?php if ($is_organizer) : ?>
+                                <div class="gallery-manage-link">
+                                    <a href="#" id="manage-gallery-btn" class="btn btn-secondary">
+                                        <span>📷</span> Gestisci Galleria
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php elseif ($is_organizer) : ?>
+                        <div class="travel-gallery-section empty">
+                            <div class="gallery-empty-state">
+                                <p>📷 Nessuna foto ancora. Aggiungi foto per far vedere la bellezza di questo viaggio!</p>
+                                <a href="#" id="add-first-photo-btn" class="btn btn-primary">
+                                    Aggiungi Prime Foto
+                                </a>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Participants Section -->
                     <?php if (!empty($participants)) : ?>
                         <div class="participants-section">
@@ -288,6 +329,14 @@ while (have_posts()) : the_post();
                         </div>
                     </div>
                 </aside>
+            </div>
+        </div>
+
+        <!-- Gallery Lightbox -->
+        <div id="gallery-lightbox" class="gallery-lightbox">
+            <div class="gallery-lightbox-content">
+                <button class="gallery-lightbox-close">&times;</button>
+                <img id="gallery-lightbox-image" class="gallery-lightbox-image" src="" alt="">
             </div>
         </div>
     </main>
@@ -596,6 +645,134 @@ while (have_posts()) : the_post();
                 max-width: 85%;
             }
         }
+
+        /* Photo Gallery Styles */
+        .travel-gallery-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .travel-gallery-section h3 {
+            margin-bottom: 25px;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .travel-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 4/3;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .gallery-item:hover {
+            transform: scale(1.02);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .gallery-item-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .gallery-item:hover .gallery-item-overlay {
+            opacity: 1;
+        }
+
+        .gallery-view-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .gallery-view-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .gallery-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .gallery-manage-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        /* Gallery Lightbox Modal */
+        .gallery-lightbox {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+        }
+
+        .gallery-lightbox-content {
+            position: relative;
+            width: 90%;
+            max-width: 1200px;
+            margin: 50px auto;
+            text-align: center;
+        }
+
+        .gallery-lightbox-image {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+        }
+
+        .gallery-lightbox-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .gallery-lightbox-close:hover {
+            color: #ccc;
+        }
     </style>
 
     <script>
@@ -837,6 +1014,35 @@ while (have_posts()) : the_post();
         $(window).on('beforeunload', function() {
             if (chatRefreshInterval) {
                 clearInterval(chatRefreshInterval);
+            }
+        });
+
+        // Gallery Lightbox
+        const lightbox = $('#gallery-lightbox');
+        const lightboxImage = $('#gallery-lightbox-image');
+
+        $('.gallery-view-btn').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const fullUrl = $(this).data('full-url');
+            lightboxImage.attr('src', fullUrl);
+            lightbox.fadeIn(300);
+        });
+
+        $('.gallery-lightbox-close').on('click', function() {
+            lightbox.fadeOut(300);
+        });
+
+        lightbox.on('click', function(e) {
+            if (e.target === this) {
+                lightbox.fadeOut(300);
+            }
+        });
+
+        // Close lightbox with ESC key
+        $(document).on('keydown', function(e) {
+            if (e.key === 'Escape' && lightbox.is(':visible')) {
+                lightbox.fadeOut(300);
             }
         });
     });
