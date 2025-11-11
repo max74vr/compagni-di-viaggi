@@ -90,10 +90,19 @@ class CDV_User_Roles {
         // Add custom capabilities to administrator
         $admin_role = get_role('administrator');
         if ($admin_role) {
+            // Admin-specific capabilities
             $admin_role->add_cap('approve_users');
             $admin_role->add_cap('approve_viaggi');
             $admin_role->add_cap('moderate_chat');
             $admin_role->add_cap('manage_viaggiatori');
+
+            // Viaggiatore capabilities (so admins can do everything viaggiatori can)
+            $admin_role->add_cap('create_viaggi');
+            $admin_role->add_cap('edit_own_viaggi');
+            $admin_role->add_cap('delete_own_viaggi');
+            $admin_role->add_cap('join_viaggi');
+            $admin_role->add_cap('use_chat');
+            $admin_role->add_cap('leave_reviews');
         }
     }
 

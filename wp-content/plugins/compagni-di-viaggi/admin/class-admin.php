@@ -821,6 +821,27 @@ class CDV_Admin {
      * Enqueue admin scripts
      */
     public static function enqueue_scripts($hook) {
-        // Add admin-specific CSS/JS if needed
+        // Enqueue admin JavaScript
+        wp_enqueue_script(
+            'cdv-admin',
+            CDV_PLUGIN_URL . 'admin/js/admin.js',
+            array('jquery'),
+            CDV_VERSION,
+            true
+        );
+
+        // Localize script with AJAX nonce
+        wp_localize_script('cdv-admin', 'cdvAdmin', array(
+            'nonce' => wp_create_nonce('cdv_ajax_nonce'),
+            'ajaxurl' => admin_url('admin-ajax.php')
+        ));
+
+        // Enqueue admin CSS
+        wp_enqueue_style(
+            'cdv-admin',
+            CDV_PLUGIN_URL . 'admin/css/admin.css',
+            array(),
+            CDV_VERSION
+        );
     }
 }
