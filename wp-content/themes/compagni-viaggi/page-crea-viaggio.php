@@ -507,6 +507,22 @@ get_header();
     text-align: center;
 }
 
+.info-message {
+    background: #3498db;
+    color: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.warning-message {
+    background: #f39c12;
+    color: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: 8px;
+    text-align: center;
+}
+
 @media (max-width: 768px) {
     .create-travel-wrapper {
         padding: calc(var(--spacing-unit) * 4);
@@ -640,30 +656,82 @@ jQuery(document).ready(function($) {
             dataToSend.date_type = 'month';
         }
 
-        // Disable submit button
-        $submitBtn.prop('disabled', true).text('Creazione in corso...');
-        $messages.empty();
+        // Disable submit button and show validation message
+        $submitBtn.prop('disabled', true).text('Validazione indirizzo...');
+        $messages.html('<div class="info-message">🔍 Verifica che l\'indirizzo esista...</div>');
 
+        // First, validate the address with geocoding
         $.ajax({
             url: cdvAjax.ajaxurl,
             type: 'POST',
-            data: dataToSend,
-            success: function(response) {
-                if (response.success) {
-                    $messages.html('<div class="success-message">' + response.data.message + '</div>');
+            data: {
+                action: 'cdv_validate_address',
+                nonce: cdvAjax.nonce,
+                destination: dataToSend.destination,
+                country: dataToSend.country
+            },
+            success: function(validationResponse) {
+                if (validationResponse.success) {
+                    // Address is valid, proceed with travel creation
+                    $submitBtn.text('Creazione in corso...');
+                    $messages.html('<div class="success-message">✅ Indirizzo valido! Creazione viaggio in corso...</div>');
 
-                    // Redirect to the travel page after 1.5 seconds
-                    setTimeout(function() {
-                        window.location.href = response.data.redirect_url;
-                    }, 1500);
+                    $.ajax({
+                        url: cdvAjax.ajaxurl,
+                        type: 'POST',
+                        data: dataToSend,
+                        success: function(response) {
+                            if (response.success) {
+                                $messages.html('<div class="success-message">' + response.data.message + '</div>');
+
+                                // Redirect to the travel page after 1.5 seconds
+                                setTimeout(function() {
+                                    window.location.href = response.data.redirect_url;
+                                }, 1500);
+                            } else {
+                                $messages.html('<div class="error-message">' + response.data.message + '</div>');
+                                $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
+                            }
+                        },
+                        error: function() {
+                            $messages.html('<div class="error-message">Si è verificato un errore. Riprova più tardi.</div>');
+                            $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
+                        }
+                    });
                 } else {
-                    $messages.html('<div class="error-message">' + response.data.message + '</div>');
+                    // Address validation failed
+                    $messages.html('<div class="error-message">❌ ' + validationResponse.data.message + '</div>');
                     $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
                 }
             },
             error: function() {
-                $messages.html('<div class="error-message">Si è verificato un errore. Riprova più tardi.</div>');
-                $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
+                // Validation request failed, but allow creation anyway (fallback)
+                console.warn('Address validation failed, proceeding anyway');
+                $submitBtn.text('Creazione in corso...');
+                $messages.html('<div class="warning-message">⚠️ Impossibile validare l\'indirizzo, ma procedo comunque...</div>');
+
+                $.ajax({
+                    url: cdvAjax.ajaxurl,
+                    type: 'POST',
+                    data: dataToSend,
+                    success: function(response) {
+                        if (response.success) {
+                            $messages.html('<div class="success-message">' + response.data.message + '</div>');
+
+                            // Redirect to the travel page after 1.5 seconds
+                            setTimeout(function() {
+                                window.location.href = response.data.redirect_url;
+                            }, 1500);
+                        } else {
+                            $messages.html('<div class="error-message">' + response.data.message + '</div>');
+                            $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
+                        }
+                    },
+                    error: function() {
+                        $messages.html('<div class="error-message">Si è verificato un errore. Riprova più tardi.</div>');
+                        $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
+                    }
+                });
             }
         });
     });

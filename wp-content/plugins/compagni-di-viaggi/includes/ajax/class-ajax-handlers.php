@@ -34,6 +34,7 @@ class CDV_Ajax_Handlers {
 
         // Travel creation
         add_action('wp_ajax_cdv_create_travel', array(__CLASS__, 'create_travel'));
+        add_action('wp_ajax_cdv_validate_address', array(__CLASS__, 'validate_address'));
 
         // Group Chat
         add_action('wp_ajax_cdv_send_group_message', array(__CLASS__, 'send_group_message'));
@@ -783,5 +784,40 @@ class CDV_Ajax_Handlers {
             'participants' => $participants,
             'participants_count' => count($participants),
         ));
+    }
+
+    /**
+     * AJAX: Validate address with geocoding
+     */
+    public static function validate_address() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $destination = isset($_POST['destination']) ? sanitize_text_field($_POST['destination']) : '';
+        $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+
+        if (empty($destination) || empty($country)) {
+            wp_send_json_error(array('message' => 'Destinazione e paese sono obbligatori'));
+        }
+
+        // Try to geocode the address
+        $address = $destination . ', ' . $country;
+        $geocoded = CDV_Travel_Maps::geocode($address);
+
+        if ($geocoded && isset($geocoded['lat']) && isset($geocoded['lon'])) {
+            wp_send_json_success(array(
+                'message' => 'Indirizzo valido',
+                'lat' => $geocoded['lat'],
+                'lon' => $geocoded['lon'],
+                'display_name' => isset($geocoded['display_name']) ? $geocoded['display_name'] : $address
+            ));
+        } else {
+            wp_send_json_error(array(
+                'message' => 'Indirizzo non trovato. Verifica che destinazione e paese siano corretti e riprova.'
+            ));
+        }
     }
 }

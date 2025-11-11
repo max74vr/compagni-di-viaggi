@@ -254,19 +254,25 @@ while (have_posts()) : the_post();
                     <?php endif; ?>
 
                     <!-- Travel Map -->
-                    <div class="travel-map-section">
-                        <h3>📍 Posizione</h3>
-                        <?php echo CDV_Travel_Maps::get_map_html($travel_id, '450px'); ?>
-                        <?php
-                        $destination = get_post_meta($travel_id, 'cdv_destination', true);
-                        $country = get_post_meta($travel_id, 'cdv_country', true);
-                        if ($destination || $country) :
-                        ?>
-                            <p class="map-location-text">
-                                <strong>Destinazione:</strong> <?php echo esc_html($destination); ?><?php echo $country ? ', ' . esc_html($country) : ''; ?>
-                            </p>
-                        <?php endif; ?>
-                    </div>
+                    <?php
+                    // Only show map section if coordinates exist
+                    $map_coords = CDV_Travel_Maps::get_travel_coordinates($travel_id);
+                    if ($map_coords && isset($map_coords['lat']) && isset($map_coords['lon'])) :
+                    ?>
+                        <div class="travel-map-section">
+                            <h3>📍 Posizione</h3>
+                            <?php echo CDV_Travel_Maps::get_map_html($travel_id, '450px'); ?>
+                            <?php
+                            $destination = get_post_meta($travel_id, 'cdv_destination', true);
+                            $country = get_post_meta($travel_id, 'cdv_country', true);
+                            if ($destination || $country) :
+                            ?>
+                                <p class="map-location-text">
+                                    <strong>Destinazione:</strong> <?php echo esc_html($destination); ?><?php echo $country ? ', ' . esc_html($country) : ''; ?>
+                                </p>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Participants Section -->
                     <?php if (!empty($participants)) : ?>

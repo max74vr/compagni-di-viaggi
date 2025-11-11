@@ -137,6 +137,14 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     <span class="badge-count"><?php echo $pending_reviews_count; ?></span>
                 <?php endif; ?>
             </button>
+            <button class="tab-button" data-tab="wishlist">
+                💝 Wishlist
+                <?php
+                $wishlist_count = CDV_Wishlist::get_wishlist_count(get_current_user_id());
+                if ($wishlist_count > 0) : ?>
+                    <span class="badge-count"><?php echo $wishlist_count; ?></span>
+                <?php endif; ?>
+            </button>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
         </div>
 
@@ -583,6 +591,98 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
+
+        <!-- Tab: Wishlist -->
+        <div class="tab-content" id="tab-wishlist">
+            <div class="section-header">
+                <h2>💝 La Mia Wishlist</h2>
+                <p>I viaggi che hai salvato per dopo</p>
+            </div>
+
+            <?php
+            $wishlist_travels = CDV_Wishlist::get_wishlist_travels($current_user->ID);
+
+            if ($wishlist_travels && $wishlist_travels->have_posts()) : ?>
+                <div class="wishlist-grid">
+                    <?php while ($wishlist_travels->have_posts()) : $wishlist_travels->the_post();
+                        $travel_id = get_the_ID();
+                        $author_id = get_the_author_meta('ID');
+                        $destination = get_post_meta($travel_id, 'cdv_destination', true);
+                        $country = get_post_meta($travel_id, 'cdv_country', true);
+                        $start_date = get_post_meta($travel_id, 'cdv_start_date', true);
+                        $budget = get_post_meta($travel_id, 'cdv_budget', true);
+                        $max_participants = get_post_meta($travel_id, 'cdv_max_participants', true);
+                        $participants_count = CDV_Participants::get_participants_count($travel_id, 'accepted');
+                    ?>
+                        <div class="wishlist-card">
+                            <?php if (has_post_thumbnail()) : ?>
+                                <div class="wishlist-card-image">
+                                    <a href="<?php the_permalink(); ?>">
+                                        <?php the_post_thumbnail('medium'); ?>
+                                    </a>
+                                    <button class="wishlist-remove-btn" data-travel-id="<?php echo $travel_id; ?>" title="Rimuovi dalla wishlist">
+                                        ❤️
+                                    </button>
+                                </div>
+                            <?php endif; ?>
+
+                            <div class="wishlist-card-content">
+                                <div class="wishlist-card-badges">
+                                    <?php cdv_travel_type_badges(); ?>
+                                    <?php echo cdv_get_travel_status_label(); ?>
+                                </div>
+
+                                <h3 class="wishlist-card-title">
+                                    <a href="<?php the_permalink(); ?>"><?php the_title(); ?></a>
+                                </h3>
+
+                                <div class="wishlist-card-meta">
+                                    <?php if ($destination) : ?>
+                                        <span class="meta-item">
+                                            <strong>📍</strong> <?php echo esc_html($destination); ?><?php echo $country ? ', ' . esc_html($country) : ''; ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if ($start_date) : ?>
+                                        <span class="meta-item">
+                                            <strong>📅</strong> <?php echo date_i18n('d M Y', strtotime($start_date)); ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if ($budget) : ?>
+                                        <span class="meta-item">
+                                            <strong>💰</strong> €<?php echo number_format($budget, 0, ',', '.'); ?>
+                                        </span>
+                                    <?php endif; ?>
+
+                                    <?php if ($max_participants) : ?>
+                                        <span class="meta-item">
+                                            <strong>👥</strong> <?php echo $participants_count; ?>/<?php echo $max_participants; ?>
+                                        </span>
+                                    <?php endif; ?>
+                                </div>
+
+                                <div class="wishlist-card-footer">
+                                    <a href="<?php the_permalink(); ?>" class="btn btn-primary btn-sm">
+                                        Vedi Dettagli
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endwhile; wp_reset_postdata(); ?>
+                </div>
+            <?php else : ?>
+                <div class="empty-state">
+                    <span class="empty-icon">💝</span>
+                    <h3>La tua wishlist è vuota</h3>
+                    <p>Non hai ancora salvato nessun viaggio nella tua wishlist.</p>
+                    <p>Esplora i viaggi disponibili e salva quelli che ti interessano per trovarli facilmente!</p>
+                    <a href="<?php echo get_post_type_archive_link('viaggio'); ?>" class="btn btn-primary">
+                        Esplora Viaggi
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <!-- Tab: Impostazioni -->
@@ -1696,6 +1796,115 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
     font-size: 1.2rem;
     margin-bottom: 10px;
 }
+
+/* Wishlist Tab Styles */
+.wishlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: calc(var(--spacing-unit) * 3);
+    margin-top: calc(var(--spacing-unit) * 3);
+}
+
+.wishlist-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s;
+}
+
+.wishlist-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.wishlist-card-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+}
+
+.wishlist-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
+
+.wishlist-card:hover .wishlist-card-image img {
+    transform: scale(1.05);
+}
+
+.wishlist-remove-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+    font-size: 1.3rem;
+    z-index: 10;
+}
+
+.wishlist-remove-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.wishlist-card-content {
+    padding: calc(var(--spacing-unit) * 2);
+}
+
+.wishlist-card-badges {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 1);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+    flex-wrap: wrap;
+}
+
+.wishlist-card-title {
+    font-size: 1.1rem;
+    margin-bottom: calc(var(--spacing-unit) * 2);
+}
+
+.wishlist-card-title a {
+    color: var(--text-dark);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.wishlist-card-title a:hover {
+    color: var(--primary-color);
+}
+
+.wishlist-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 1);
+    margin-bottom: calc(var(--spacing-unit) * 2);
+    font-size: 0.9rem;
+    color: var(--text-medium);
+}
+
+.wishlist-card-footer {
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .wishlist-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <script>
@@ -2459,6 +2668,88 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.textContent = 'Invia Recensione';
             }
         });
+    });
+
+    // Wishlist remove button handler
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.wishlist-remove-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target.closest('.wishlist-remove-btn');
+            const travelId = btn.dataset.travelId;
+            const card = btn.closest('.wishlist-card');
+
+            if (!confirm('Rimuovere questo viaggio dalla wishlist?')) {
+                return;
+            }
+
+            jQuery.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_toggle_wishlist',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId
+                },
+                beforeSend: function() {
+                    btn.disabled = true;
+                },
+                success: function(response) {
+                    if (response.success) {
+                        // Fade out and remove the card
+                        card.style.opacity = '0';
+                        card.style.transform = 'scale(0.9)';
+
+                        setTimeout(function() {
+                            card.remove();
+
+                            // Update badge count
+                            const wishlistTab = document.querySelector('[data-tab="wishlist"]');
+                            const badge = wishlistTab.querySelector('.badge-count');
+                            const currentCount = badge ? parseInt(badge.textContent) : 0;
+                            const newCount = currentCount - 1;
+
+                            if (newCount > 0) {
+                                if (badge) {
+                                    badge.textContent = newCount;
+                                } else {
+                                    const newBadge = document.createElement('span');
+                                    newBadge.className = 'badge-count';
+                                    newBadge.textContent = newCount;
+                                    wishlistTab.appendChild(newBadge);
+                                }
+                            } else if (badge) {
+                                badge.remove();
+                            }
+
+                            // Check if wishlist is now empty
+                            const remainingCards = document.querySelectorAll('.wishlist-card');
+                            if (remainingCards.length === 0) {
+                                const wishlistContent = document.getElementById('tab-wishlist');
+                                wishlistContent.innerHTML = `
+                                    <div class="section-header">
+                                        <h2>💝 La Mia Wishlist</h2>
+                                        <p>I viaggi che hai salvato per dopo</p>
+                                    </div>
+                                    <div class="empty-state">
+                                        <span class="empty-icon">💝</span>
+                                        <h3>La tua wishlist è vuota</h3>
+                                        <p>Non hai ancora salvato nessun viaggio nella tua wishlist.</p>
+                                        <p>Esplora i viaggi disponibili e salva quelli che ti interessano per trovarli facilmente!</p>
+                                        <a href="<?php echo get_post_type_archive_link('viaggio'); ?>" class="btn btn-primary">Esplora Viaggi</a>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }
+                },
+                error: function() {
+                    alert('Errore durante la rimozione dalla wishlist');
+                    btn.disabled = false;
+                }
+            });
+        }
     });
 });
 </script>
