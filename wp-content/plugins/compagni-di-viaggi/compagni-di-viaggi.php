@@ -79,6 +79,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-travel-moderation.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-user-profiles.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-email-verification.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-email-notifications.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-custom-avatars.php';
 
         // Features
@@ -119,6 +120,7 @@ class Compagni_Di_Viaggi {
         CDV_Travel_Moderation::init();
         CDV_User_Profiles::init();
         CDV_Email_Verification::init();
+        CDV_Email_Notifications::init();
         CDV_Custom_Avatars::init();
         CDV_Chat::init();
         CDV_Reviews::init();
@@ -164,6 +166,9 @@ class Compagni_Di_Viaggi {
      * Plugin deactivation
      */
     public function deactivate() {
+        // Clean up scheduled events
+        CDV_Email_Notifications::deactivate();
+
         // Flush rewrite rules
         flush_rewrite_rules();
     }
