@@ -376,16 +376,34 @@ get_header();
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="travel_start_date">Data Inizio <span class="required">*</span></label>
-                            <input type="date" id="travel_start_date" name="travel_start_date">
-                        </div>
+                    <div class="form-group">
+                        <label for="travel_month">Mese di Partenza <span class="required">*</span></label>
+                        <select id="travel_month" name="travel_month">
+                            <option value="">Seleziona il mese</option>
+                            <?php
+                            $months = array(
+                                '01' => 'Gennaio', '02' => 'Febbraio', '03' => 'Marzo',
+                                '04' => 'Aprile', '05' => 'Maggio', '06' => 'Giugno',
+                                '07' => 'Luglio', '08' => 'Agosto', '09' => 'Settembre',
+                                '10' => 'Ottobre', '11' => 'Novembre', '12' => 'Dicembre'
+                            );
+                            $current_month = (int)date('n');
+                            $current_year = (int)date('Y');
 
-                        <div class="form-group">
-                            <label for="travel_end_date">Data Fine <span class="required">*</span></label>
-                            <input type="date" id="travel_end_date" name="travel_end_date">
-                        </div>
+                            // Mostra mesi dell'anno corrente (da questo mese in poi)
+                            for ($i = $current_month; $i <= 12; $i++) {
+                                $month_num = str_pad($i, 2, '0', STR_PAD_LEFT);
+                                echo '<option value="' . $current_year . '-' . $month_num . '">' . $months[$month_num] . ' ' . $current_year . '</option>';
+                            }
+
+                            // Mostra tutti i mesi del prossimo anno
+                            $next_year = $current_year + 1;
+                            foreach ($months as $num => $name) {
+                                echo '<option value="' . $next_year . '-' . $num . '">' . $name . ' ' . $next_year . '</option>';
+                            }
+                            ?>
+                        </select>
+                        <small>Il viaggio sarà disponibile per tutto il mese selezionato</small>
                     </div>
 
                     <div class="form-row">

@@ -587,8 +587,7 @@ class CDV_Registration {
             $description = isset($_POST['travel_description']) ? sanitize_textarea_field($_POST['travel_description']) : '';
             $destination = isset($_POST['travel_destination']) ? sanitize_text_field($_POST['travel_destination']) : '';
             $country = isset($_POST['travel_country']) ? sanitize_text_field($_POST['travel_country']) : '';
-            $start_date = isset($_POST['travel_start_date']) ? sanitize_text_field($_POST['travel_start_date']) : '';
-            $end_date = isset($_POST['travel_end_date']) ? sanitize_text_field($_POST['travel_end_date']) : '';
+            $travel_month = isset($_POST['travel_month']) ? sanitize_text_field($_POST['travel_month']) : '';
             $budget = isset($_POST['travel_budget']) ? intval($_POST['travel_budget']) : 0;
             $max_participants = isset($_POST['travel_max_participants']) ? intval($_POST['travel_max_participants']) : 0;
             $travel_types = isset($_POST['travel_types']) ? array_map('intval', $_POST['travel_types']) : array();
@@ -601,19 +600,27 @@ class CDV_Registration {
                 wp_send_json_error(array('message' => 'Compila tutti i campi obbligatori'));
             }
 
-            if (empty($start_date) || empty($end_date)) {
-                error_log('CDV: Missing travel dates');
-                wp_send_json_error(array('message' => 'Inserisci le date del viaggio'));
+            if (empty($travel_month)) {
+                error_log('CDV: Missing travel month');
+                wp_send_json_error(array('message' => 'Seleziona il mese del viaggio'));
             }
+
+            // Convert month to first and last day
+            // Format: YYYY-MM
+            if (!preg_match('/^\d{4}-\d{2}$/', $travel_month)) {
+                error_log('CDV: Invalid month format: ' . $travel_month);
+                wp_send_json_error(array('message' => 'Formato mese non valido'));
+            }
+
+            $start_date = $travel_month . '-01'; // First day of month
+            $last_day = date('t', strtotime($start_date)); // Number of days in month
+            $end_date = $travel_month . '-' . $last_day; // Last day of month
+
+            error_log('CDV: Converted month ' . $travel_month . ' to dates: ' . $start_date . ' - ' . $end_date);
 
             if (strtotime($start_date) < strtotime('today')) {
                 error_log('CDV: Start date in the past');
-                wp_send_json_error(array('message' => 'La data di inizio deve essere futura'));
-            }
-
-            if (strtotime($end_date) < strtotime($start_date)) {
-                error_log('CDV: End date before start date');
-                wp_send_json_error(array('message' => 'La data di fine deve essere dopo la data di inizio'));
+                wp_send_json_error(array('message' => 'Il mese selezionato deve essere futuro'));
             }
 
             error_log('CDV: Validation passed, creating travel post');
@@ -641,6 +648,7 @@ class CDV_Registration {
             update_post_meta($post_id, 'cdv_country', $country);
             update_post_meta($post_id, 'cdv_start_date', $start_date);
             update_post_meta($post_id, 'cdv_end_date', $end_date);
+            update_post_meta($post_id, 'cdv_travel_month', $travel_month); // Store original month for display
             update_post_meta($post_id, 'cdv_budget', $budget);
             update_post_meta($post_id, 'cdv_max_participants', $max_participants);
             update_post_meta($post_id, 'cdv_travel_status', 'open');
