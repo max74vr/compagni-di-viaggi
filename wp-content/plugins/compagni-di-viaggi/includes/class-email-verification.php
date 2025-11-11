@@ -8,7 +8,7 @@
 class CDV_Email_Verification {
 
     public static function init() {
-        add_action('init', array(__CLASS__, 'handle_verification'));
+        add_action('template_redirect', array(__CLASS__, 'handle_verification'));
         add_filter('authenticate', array(__CLASS__, 'block_unverified_login'), 30, 3);
     }
 
@@ -124,10 +124,18 @@ class CDV_Email_Verification {
         global $wpdb;
 
         if (empty($token)) {
+            error_log('CDV: Empty token provided to verify_token()');
             return new WP_Error('invalid_token', 'Token non valido');
         }
 
         $table_name = $wpdb->prefix . 'cdv_email_verification';
+
+        // Verifica che la tabella esista
+        $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$table_name'") === $table_name;
+        if (!$table_exists) {
+            error_log('CDV: Email verification table does not exist!');
+            return new WP_Error('system_error', 'Errore di sistema. Contatta l\'amministratore.');
+        }
 
         // Cerca il token
         $record = $wpdb->get_row($wpdb->prepare(
@@ -136,25 +144,54 @@ class CDV_Email_Verification {
         ));
 
         if (!$record) {
+            error_log('CDV: Token not found or already verified: ' . substr($token, 0, 10) . '...');
+            // Controlla se il token esiste ma è già stato verificato
+            $verified_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT * FROM $table_name WHERE token = %s",
+                $token
+            ));
+            if ($verified_record && $verified_record->verified_at) {
+                return new WP_Error('already_verified', 'Questo link è già stato utilizzato. Il tuo account è già attivo.');
+            }
             return new WP_Error('invalid_token', 'Token non valido o già utilizzato');
         }
 
+        error_log('CDV: Token found for user ID: ' . $record->user_id);
+
         // Controlla scadenza
         if (strtotime($record->expires_at) < current_time('timestamp')) {
+            error_log('CDV: Token expired. Expires at: ' . $record->expires_at . ', Current time: ' . current_time('mysql'));
             return new WP_Error('expired_token', 'Token scaduto. Richiedi una nuova email di conferma.');
         }
 
         // Marca come verificato
-        $wpdb->update(
+        $updated = $wpdb->update(
             $table_name,
             array('verified_at' => current_time('mysql')),
-            array('id' => $record->id)
+            array('id' => $record->id),
+            array('%s'),
+            array('%d')
         );
 
+        if ($updated === false) {
+            error_log('CDV: Failed to update verification record in database');
+            return new WP_Error('database_error', 'Errore durante l\'aggiornamento. Riprova.');
+        }
+
+        error_log('CDV: Successfully marked token as verified');
+
         // Aggiorna user meta e approva l'utente
+        $user = get_userdata($record->user_id);
+        if (!$user) {
+            error_log('CDV: User not found with ID: ' . $record->user_id);
+            return new WP_Error('user_not_found', 'Utente non trovato.');
+        }
+
         update_user_meta($record->user_id, 'cdv_email_verified', 'yes');
         update_user_meta($record->user_id, 'cdv_user_approved', '1');
         update_user_meta($record->user_id, 'cdv_email_verified_date', current_time('mysql'));
+
+        error_log('CDV: Successfully activated user account: ' . $user->user_login . ' (ID: ' . $record->user_id . ')');
 
         return $record->user_id;
     }
@@ -204,22 +241,35 @@ class CDV_Email_Verification {
      * Gestisce la verifica via URL
      */
     public static function handle_verification() {
-        // Controlla se siamo sulla pagina di conferma
-        if (isset($_GET['token']) && is_page('conferma-email')) {
-            $token = sanitize_text_field($_GET['token']);
-            $result = self::verify_token($token);
+        // Controlla se c'è un token nella query string
+        if (!isset($_GET['token'])) {
+            return;
+        }
 
-            if (is_wp_error($result)) {
-                // Redirect with error message in query var
-                $redirect_url = add_query_arg('verification_error', urlencode($result->get_error_message()), home_url('/conferma-email/'));
-                wp_safe_redirect($redirect_url);
-                exit;
-            } else {
-                // Redirect with success message in query var
-                $redirect_url = add_query_arg('verification_success', '1', home_url('/conferma-email/'));
-                wp_safe_redirect($redirect_url);
-                exit;
-            }
+        // Controlla se siamo sulla pagina di conferma email
+        // Supporta sia slug che template name
+        if (!is_page('conferma-email') && !is_page_template('page-conferma-email.php')) {
+            return;
+        }
+
+        $token = sanitize_text_field($_GET['token']);
+
+        error_log('CDV: Processing email verification for token: ' . substr($token, 0, 10) . '...');
+
+        $result = self::verify_token($token);
+
+        if (is_wp_error($result)) {
+            error_log('CDV: Email verification failed: ' . $result->get_error_message());
+            // Redirect with error message in query var
+            $redirect_url = add_query_arg('verification_error', urlencode($result->get_error_message()), home_url('/conferma-email/'));
+            wp_safe_redirect($redirect_url);
+            exit;
+        } else {
+            error_log('CDV: Email verification successful for user ID: ' . $result);
+            // Redirect with success message in query var
+            $redirect_url = add_query_arg('verification_success', '1', home_url('/conferma-email/'));
+            wp_safe_redirect($redirect_url);
+            exit;
         }
     }
 
