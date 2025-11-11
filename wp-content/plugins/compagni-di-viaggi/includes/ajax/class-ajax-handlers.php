@@ -590,6 +590,16 @@ class CDV_Ajax_Handlers {
             wp_set_post_terms($travel_id, $travel_types, 'tipo_viaggio');
         }
 
+        // Geocode and save map coordinates
+        if ($destination && $country) {
+            $address = $destination . ', ' . $country;
+            $geocoded = CDV_Travel_Maps::geocode($address);
+
+            if ($geocoded && isset($geocoded['lat']) && isset($geocoded['lon'])) {
+                CDV_Travel_Maps::save_travel_coordinates($travel_id, $geocoded['lat'], $geocoded['lon']);
+            }
+        }
+
         // Add organizer as first participant
         global $wpdb;
         $table_name = $wpdb->prefix . 'cdv_travel_participants';
