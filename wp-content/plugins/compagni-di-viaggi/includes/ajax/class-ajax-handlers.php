@@ -558,6 +558,32 @@ class CDV_Ajax_Handlers {
         update_post_meta($travel_id, 'cdv_max_participants', $max_participants);
         update_post_meta($travel_id, 'cdv_travel_status', 'open');
 
+        // Save optional travel details
+        if (isset($_POST['travel_transport']) && is_array($_POST['travel_transport'])) {
+            $transport = array_map('sanitize_text_field', $_POST['travel_transport']);
+            update_post_meta($travel_id, 'cdv_travel_transport', $transport);
+        }
+
+        if (!empty($_POST['travel_accommodation'])) {
+            update_post_meta($travel_id, 'cdv_travel_accommodation', sanitize_text_field($_POST['travel_accommodation']));
+        }
+
+        if (!empty($_POST['travel_difficulty'])) {
+            update_post_meta($travel_id, 'cdv_travel_difficulty', sanitize_text_field($_POST['travel_difficulty']));
+        }
+
+        if (!empty($_POST['travel_meals'])) {
+            update_post_meta($travel_id, 'cdv_travel_meals', sanitize_text_field($_POST['travel_meals']));
+        }
+
+        if (!empty($_POST['travel_guide_type'])) {
+            update_post_meta($travel_id, 'cdv_travel_guide_type', sanitize_text_field($_POST['travel_guide_type']));
+        }
+
+        if (!empty($_POST['travel_requirements'])) {
+            update_post_meta($travel_id, 'cdv_travel_requirements', sanitize_textarea_field($_POST['travel_requirements']));
+        }
+
         // Set travel types
         if (isset($_POST['travel_types']) && is_array($_POST['travel_types'])) {
             $travel_types = array_map('intval', $_POST['travel_types']);

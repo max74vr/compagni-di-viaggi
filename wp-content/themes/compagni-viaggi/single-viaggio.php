@@ -295,56 +295,169 @@ while (have_posts()) : the_post();
 
                     <!-- Travel Details -->
                     <div class="sidebar-card">
-                        <h3>Dettagli Viaggio</h3>
-                        <div class="travel-details-list">
+                        <h3>📋 Dettagli Viaggio</h3>
+                        <div class="travel-details-grid">
                             <?php
+                            // Core fields
                             $start_date = get_post_meta($travel_id, 'cdv_start_date', true);
                             $end_date = get_post_meta($travel_id, 'cdv_end_date', true);
+                            $date_type = get_post_meta($travel_id, 'cdv_date_type', true);
+                            $travel_month = get_post_meta($travel_id, 'cdv_travel_month', true);
                             $destination = get_post_meta($travel_id, 'cdv_destination', true);
                             $country = get_post_meta($travel_id, 'cdv_country', true);
                             $budget = get_post_meta($travel_id, 'cdv_budget', true);
                             $max_participants = get_post_meta($travel_id, 'cdv_max_participants', true);
+
+                            // Optional fields
+                            $transport = get_post_meta($travel_id, 'cdv_travel_transport', true);
+                            $accommodation = get_post_meta($travel_id, 'cdv_travel_accommodation', true);
+                            $difficulty = get_post_meta($travel_id, 'cdv_travel_difficulty', true);
+                            $meals = get_post_meta($travel_id, 'cdv_travel_meals', true);
+                            $guide_type = get_post_meta($travel_id, 'cdv_travel_guide_type', true);
+                            $requirements = get_post_meta($travel_id, 'cdv_travel_requirements', true);
+
+                            // Transport labels with emoji
+                            $transport_labels = array(
+                                'aereo' => '✈️ Aereo',
+                                'treno' => '🚂 Treno',
+                                'bus' => '🚌 Bus',
+                                'auto_propria' => '🚗 Auto propria',
+                                'auto_noleggio' => '🚙 Auto a noleggio',
+                                'nave' => '🚢 Nave/Traghetto'
+                            );
+
+                            // Accommodation labels
+                            $accommodation_labels = array(
+                                'hotel' => 'Hotel',
+                                'ostello' => 'Ostello',
+                                'bb' => 'B&B',
+                                'airbnb' => 'Airbnb/Casa vacanze',
+                                'camping' => 'Camping/Tenda',
+                                'rifugio' => 'Rifugio',
+                                'misto' => 'Misto',
+                                'altro' => 'Altro'
+                            );
+
+                            // Difficulty labels
+                            $difficulty_labels = array(
+                                'facile' => 'Facile - Per tutti',
+                                'moderato' => 'Moderato',
+                                'impegnativo' => 'Impegnativo',
+                                'molto_impegnativo' => 'Molto impegnativo'
+                            );
+
+                            // Meals labels
+                            $meals_labels = array(
+                                'non_inclusi' => 'Non inclusi',
+                                'colazione' => 'Solo colazione',
+                                'mezza_pensione' => 'Mezza pensione',
+                                'pensione_completa' => 'Pensione completa'
+                            );
+
+                            // Guide type labels
+                            $guide_labels = array(
+                                'autonomo' => 'Viaggio autonomo',
+                                'guida_locale' => 'Con guida locale',
+                                'tour_organizzato' => 'Tour organizzato'
+                            );
                             ?>
 
-                            <?php if ($start_date) : ?>
+                            <?php if ($date_type === 'month' && $travel_month) : ?>
                                 <div class="detail-item">
-                                    <strong>Data Inizio:</strong>
-                                    <span><?php echo date_i18n('d F Y', strtotime($start_date)); ?></span>
+                                    <strong>📅 Periodo:</strong>
+                                    <span><?php echo date_i18n('F Y', strtotime($travel_month . '-01')); ?> (flessibile)</span>
                                 </div>
-                            <?php endif; ?>
+                            <?php else : ?>
+                                <?php if ($start_date) : ?>
+                                    <div class="detail-item">
+                                        <strong>📅 Inizio:</strong>
+                                        <span><?php echo date_i18n('d M Y', strtotime($start_date)); ?></span>
+                                    </div>
+                                <?php endif; ?>
 
-                            <?php if ($end_date) : ?>
-                                <div class="detail-item">
-                                    <strong>Data Fine:</strong>
-                                    <span><?php echo date_i18n('d F Y', strtotime($end_date)); ?></span>
-                                </div>
+                                <?php if ($end_date) : ?>
+                                    <div class="detail-item">
+                                        <strong>📅 Fine:</strong>
+                                        <span><?php echo date_i18n('d M Y', strtotime($end_date)); ?></span>
+                                    </div>
+                                <?php endif; ?>
                             <?php endif; ?>
 
                             <?php if ($destination) : ?>
                                 <div class="detail-item">
-                                    <strong>Destinazione:</strong>
+                                    <strong>📍 Destinazione:</strong>
                                     <span><?php echo esc_html($destination); ?></span>
                                 </div>
                             <?php endif; ?>
 
                             <?php if ($country) : ?>
                                 <div class="detail-item">
-                                    <strong>Paese:</strong>
+                                    <strong>🌍 Paese:</strong>
                                     <span><?php echo esc_html($country); ?></span>
                                 </div>
                             <?php endif; ?>
 
                             <?php if ($budget) : ?>
                                 <div class="detail-item">
-                                    <strong>Budget Stimato:</strong>
+                                    <strong>💰 Budget:</strong>
                                     <span>€<?php echo number_format($budget, 0, ',', '.'); ?></span>
                                 </div>
                             <?php endif; ?>
 
                             <?php if ($max_participants) : ?>
                                 <div class="detail-item">
-                                    <strong>Partecipanti:</strong>
+                                    <strong>👥 Partecipanti:</strong>
                                     <span><?php echo count($participants); ?>/<?php echo $max_participants; ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($transport) && is_array($transport)) : ?>
+                                <div class="detail-item detail-item-full">
+                                    <strong>🚗 Trasporti:</strong>
+                                    <span><?php
+                                        $transport_texts = array();
+                                        foreach ($transport as $t) {
+                                            if (isset($transport_labels[$t])) {
+                                                $transport_texts[] = $transport_labels[$t];
+                                            }
+                                        }
+                                        echo implode(', ', $transport_texts);
+                                    ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($accommodation) : ?>
+                                <div class="detail-item">
+                                    <strong>🏨 Alloggio:</strong>
+                                    <span><?php echo isset($accommodation_labels[$accommodation]) ? esc_html($accommodation_labels[$accommodation]) : esc_html($accommodation); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($difficulty) : ?>
+                                <div class="detail-item">
+                                    <strong>📈 Difficoltà:</strong>
+                                    <span><?php echo isset($difficulty_labels[$difficulty]) ? esc_html($difficulty_labels[$difficulty]) : esc_html($difficulty); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($meals) : ?>
+                                <div class="detail-item">
+                                    <strong>🍽️ Pasti:</strong>
+                                    <span><?php echo isset($meals_labels[$meals]) ? esc_html($meals_labels[$meals]) : esc_html($meals); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($guide_type) : ?>
+                                <div class="detail-item">
+                                    <strong>👥 Organizzazione:</strong>
+                                    <span><?php echo isset($guide_labels[$guide_type]) ? esc_html($guide_labels[$guide_type]) : esc_html($guide_type); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if ($requirements) : ?>
+                                <div class="detail-item detail-item-full detail-item-requirements">
+                                    <strong>📝 Requisiti e Note:</strong>
+                                    <span><?php echo nl2br(esc_html($requirements)); ?></span>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -506,20 +619,44 @@ while (have_posts()) : the_post();
             border-left: 4px solid #f56565;
             color: #742a2a;
         }
-        .travel-details-list {
-            display: flex;
-            flex-direction: column;
+        .travel-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: calc(var(--spacing-unit) * 2);
         }
         .detail-item {
             display: flex;
-            justify-content: space-between;
-            padding-bottom: calc(var(--spacing-unit) * 2);
-            border-bottom: 1px solid var(--border-color);
+            flex-direction: column;
+            gap: calc(var(--spacing-unit) * 0.5);
+            padding: calc(var(--spacing-unit) * 1.5);
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
         }
-        .detail-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
+        .detail-item strong {
+            color: var(--text-dark);
+            font-size: 0.85rem;
+            display: block;
+        }
+        .detail-item span {
+            color: var(--text-medium);
+            font-size: 0.95rem;
+        }
+        .detail-item-full {
+            grid-column: 1 / -1;
+        }
+        .detail-item-requirements {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .detail-item-requirements span {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+        @media (max-width: 768px) {
+            .travel-details-grid {
+                grid-template-columns: 1fr;
+            }
         }
         .participants-section,
         .pending-requests-section {

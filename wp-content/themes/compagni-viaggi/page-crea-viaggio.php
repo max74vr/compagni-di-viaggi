@@ -280,6 +280,100 @@ get_header();
                     </div>
 
                     <div class="form-section">
+                        <h3>Dettagli Aggiuntivi <span style="font-weight: normal; font-size: 0.9rem; color: var(--text-medium);">(Facoltativi)</span></h3>
+                        <p style="color: var(--text-medium); margin-bottom: calc(var(--spacing-unit) * 3);">Questi dettagli aiutano i viaggiatori a capire meglio il viaggio</p>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="travel_transport">🚗 Mezzi di Trasporto</label>
+                                <div class="checkbox-group" style="grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));">
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="aereo">
+                                        ✈️ Aereo
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="treno">
+                                        🚂 Treno
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="bus">
+                                        🚌 Bus
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="auto_propria">
+                                        🚗 Auto propria
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="auto_noleggio">
+                                        🚙 Auto a noleggio
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" name="travel_transport[]" value="nave">
+                                        🚢 Nave/Traghetto
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="travel_accommodation">🏨 Tipologia Alloggio</label>
+                                <select id="travel_accommodation" name="travel_accommodation">
+                                    <option value="">Non specificato</option>
+                                    <option value="hotel">Hotel</option>
+                                    <option value="ostello">Ostello</option>
+                                    <option value="bb">B&B</option>
+                                    <option value="airbnb">Airbnb/Casa vacanze</option>
+                                    <option value="camping">Camping/Tenda</option>
+                                    <option value="rifugio">Rifugio</option>
+                                    <option value="misto">Misto</option>
+                                    <option value="altro">Altro</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="travel_difficulty">📈 Livello di Difficoltà</label>
+                                <select id="travel_difficulty" name="travel_difficulty">
+                                    <option value="">Non specificato</option>
+                                    <option value="facile">Facile - Per tutti</option>
+                                    <option value="moderato">Moderato - Serve minima preparazione</option>
+                                    <option value="impegnativo">Impegnativo - Richiede buona forma fisica</option>
+                                    <option value="molto_impegnativo">Molto impegnativo - Solo esperti</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="travel_meals">🍽️ Pasti</label>
+                                <select id="travel_meals" name="travel_meals">
+                                    <option value="">Non specificato</option>
+                                    <option value="non_inclusi">Non inclusi</option>
+                                    <option value="colazione">Solo colazione inclusa</option>
+                                    <option value="mezza_pensione">Mezza pensione</option>
+                                    <option value="pensione_completa">Pensione completa</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="travel_guide_type">👥 Organizzazione</label>
+                                <select id="travel_guide_type" name="travel_guide_type">
+                                    <option value="">Non specificato</option>
+                                    <option value="autonomo">Viaggio autonomo</option>
+                                    <option value="guida_locale">Con guida locale</option>
+                                    <option value="tour_organizzato">Tour organizzato</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travel_requirements">📝 Requisiti e Note Particolari</label>
+                            <textarea id="travel_requirements" name="travel_requirements" rows="4" placeholder="Es: Documenti necessari (visto, passaporto), vaccinazioni richieste, equipaggiamento speciale, requisiti fisici specifici..."></textarea>
+                            <small style="display: block; margin-top: 8px; color: #666;">Inserisci qui eventuali requisiti particolari, documenti necessari o informazioni importanti per i partecipanti</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
                         <div class="disclaimer-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
                             <h4 style="margin-top: 0; color: #856404;">⚠️ Informativa Importante</h4>
                             <p style="margin-bottom: 15px;">Pubblicando questo viaggio, dichiari di comprendere e accettare che:</p>
@@ -497,12 +591,23 @@ jQuery(document).ready(function($) {
             country: $('#travel_country').val(),
             budget: $('#travel_budget').val(),
             max_participants: $('#travel_max_participants').val(),
-            travel_types: []
+            travel_types: [],
+            travel_transport: [],
+            travel_accommodation: $('#travel_accommodation').val(),
+            travel_difficulty: $('#travel_difficulty').val(),
+            travel_meals: $('#travel_meals').val(),
+            travel_guide_type: $('#travel_guide_type').val(),
+            travel_requirements: $('#travel_requirements').val()
         };
 
         // Get travel types
         $('input[name="travel_types[]"]:checked').each(function() {
             dataToSend.travel_types.push($(this).val());
+        });
+
+        // Get travel transport methods
+        $('input[name="travel_transport[]"]:checked').each(function() {
+            dataToSend.travel_transport.push($(this).val());
         });
 
         // Add date info based on type
