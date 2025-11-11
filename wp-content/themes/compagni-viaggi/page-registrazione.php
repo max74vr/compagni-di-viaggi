@@ -377,33 +377,63 @@ get_header();
                     </div>
 
                     <div class="form-group">
-                        <label for="travel_month">Mese di Partenza <span class="required">*</span></label>
-                        <select id="travel_month" name="travel_month">
-                            <option value="">Seleziona il mese</option>
-                            <?php
-                            $months = array(
-                                '01' => 'Gennaio', '02' => 'Febbraio', '03' => 'Marzo',
-                                '04' => 'Aprile', '05' => 'Maggio', '06' => 'Giugno',
-                                '07' => 'Luglio', '08' => 'Agosto', '09' => 'Settembre',
-                                '10' => 'Ottobre', '11' => 'Novembre', '12' => 'Dicembre'
-                            );
-                            $current_month = (int)date('n');
-                            $current_year = (int)date('Y');
+                        <label>Tipo di Data <span class="required">*</span></label>
+                        <div class="radio-group" style="display: flex; gap: 20px; margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="travel_date_type" value="precise" checked>
+                                <span>Date precise</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="radio" name="travel_date_type" value="month">
+                                <span>Solo mese</span>
+                            </label>
+                        </div>
+                    </div>
 
-                            // Mostra mesi dell'anno corrente (da questo mese in poi)
-                            for ($i = $current_month; $i <= 12; $i++) {
-                                $month_num = str_pad($i, 2, '0', STR_PAD_LEFT);
-                                echo '<option value="' . $current_year . '-' . $month_num . '">' . $months[$month_num] . ' ' . $current_year . '</option>';
-                            }
+                    <div id="precise-dates-container-reg">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="travel_start_date">Data Inizio <span class="required">*</span></label>
+                                <input type="date" id="travel_start_date" name="travel_start_date" min="<?php echo date('Y-m-d'); ?>">
+                            </div>
 
-                            // Mostra tutti i mesi del prossimo anno
-                            $next_year = $current_year + 1;
-                            foreach ($months as $num => $name) {
-                                echo '<option value="' . $next_year . '-' . $num . '">' . $name . ' ' . $next_year . '</option>';
-                            }
-                            ?>
-                        </select>
-                        <small>Il viaggio sarà disponibile per tutto il mese selezionato</small>
+                            <div class="form-group">
+                                <label for="travel_end_date">Data Fine <span class="required">*</span></label>
+                                <input type="date" id="travel_end_date" name="travel_end_date" min="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="month-container-reg" style="display: none;">
+                        <div class="form-group">
+                            <label for="travel_month">Mese di Partenza <span class="required">*</span></label>
+                            <select id="travel_month" name="travel_month">
+                                <option value="">Seleziona il mese</option>
+                                <?php
+                                $months = array(
+                                    '01' => 'Gennaio', '02' => 'Febbraio', '03' => 'Marzo',
+                                    '04' => 'Aprile', '05' => 'Maggio', '06' => 'Giugno',
+                                    '07' => 'Luglio', '08' => 'Agosto', '09' => 'Settembre',
+                                    '10' => 'Ottobre', '11' => 'Novembre', '12' => 'Dicembre'
+                                );
+                                $current_month = (int)date('n');
+                                $current_year = (int)date('Y');
+
+                                // Mostra mesi dell'anno corrente (da questo mese in poi)
+                                for ($i = $current_month; $i <= 12; $i++) {
+                                    $month_num = str_pad($i, 2, '0', STR_PAD_LEFT);
+                                    echo '<option value="' . $current_year . '-' . $month_num . '">' . $months[$month_num] . ' ' . $current_year . '</option>';
+                                }
+
+                                // Mostra tutti i mesi del prossimo anno
+                                $next_year = $current_year + 1;
+                                foreach ($months as $num => $name) {
+                                    echo '<option value="' . $next_year . '-' . $num . '">' . $name . ' ' . $next_year . '</option>';
+                                }
+                                ?>
+                            </select>
+                            <small>Il viaggio sarà disponibile per tutto il mese selezionato</small>
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -1109,6 +1139,31 @@ jQuery(document).ready(function($) {
         console.log('Step 4 - Going back, hiding travel form');
         $('#travel-form-fields').hide();
         $('.optional-choice').fadeIn();
+    });
+
+    // Toggle between precise dates and month selection
+    $('input[name="travel_date_type"]').on('change', function() {
+        const dateType = $(this).val();
+
+        if (dateType === 'precise') {
+            $('#precise-dates-container-reg').show();
+            $('#month-container-reg').hide();
+            $('#travel_start_date').prop('required', true);
+            $('#travel_end_date').prop('required', true);
+            $('#travel_month').prop('required', false);
+        } else {
+            $('#precise-dates-container-reg').hide();
+            $('#month-container-reg').show();
+            $('#travel_start_date').prop('required', false);
+            $('#travel_end_date').prop('required', false);
+            $('#travel_month').prop('required', true);
+        }
+    });
+
+    // Update end date min when start date changes
+    $('#travel_start_date').on('change', function() {
+        const startDate = $(this).val();
+        $('#travel_end_date').attr('min', startDate);
     });
 
     // Step 4: Create Travel (Optional)

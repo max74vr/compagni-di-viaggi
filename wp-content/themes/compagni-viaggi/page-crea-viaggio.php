@@ -63,10 +63,38 @@ get_header();
                     <div class="form-section">
                         <h3>Quando Partire</h3>
 
-                        <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo di Data <span class="required">*</span></label>
+                            <div class="radio-group" style="display: flex; gap: calc(var(--spacing-unit) * 3); margin-bottom: calc(var(--spacing-unit) * 2);">
+                                <label style="display: flex; align-items: center; gap: calc(var(--spacing-unit) * 1); cursor: pointer;">
+                                    <input type="radio" name="date_type" value="precise" checked>
+                                    <span>Date precise</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: calc(var(--spacing-unit) * 1); cursor: pointer;">
+                                    <input type="radio" name="date_type" value="month">
+                                    <span>Solo mese (date flessibili)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="precise-dates-container">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="travel_start_date">Data Inizio <span class="required">*</span></label>
+                                    <input type="date" id="travel_start_date" name="travel_start_date" min="<?php echo date('Y-m-d'); ?>">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="travel_end_date">Data Fine <span class="required">*</span></label>
+                                    <input type="date" id="travel_end_date" name="travel_end_date" min="<?php echo date('Y-m-d'); ?>">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="month-container" style="display: none;">
                             <div class="form-group">
-                                <label for="travel_month">Mese <span class="required">*</span></label>
-                                <select id="travel_month" name="travel_month" required>
+                                <label for="travel_month">Mese di Partenza <span class="required">*</span></label>
+                                <select id="travel_month" name="travel_month">
                                     <option value="">Seleziona il mese</option>
                                     <?php
                                     $months = array(
@@ -78,7 +106,7 @@ get_header();
                                     $current_month = (int)date('n');
                                     $current_year = (int)date('Y');
 
-                                    // Mostra mesi del anno corrente (da questo mese in poi)
+                                    // Mostra mesi dell'anno corrente (da questo mese in poi)
                                     for ($i = $current_month; $i <= 12; $i++) {
                                         $month_num = str_pad($i, 2, '0', STR_PAD_LEFT);
                                         echo '<option value="' . $current_year . '-' . $month_num . '">' . $months[$month_num] . ' ' . $current_year . '</option>';
@@ -92,7 +120,7 @@ get_header();
                                     ?>
                                 </select>
                                 <small style="display: block; margin-top: calc(var(--spacing-unit) * 0.5); color: #666;">
-                                    Il viaggio sarà disponibile per tutto il mese selezionato
+                                    Il viaggio sarà disponibile per tutto il mese selezionato (date flessibili)
                                 </small>
                             </div>
                         </div>
@@ -285,6 +313,31 @@ get_header();
 
 <script>
 jQuery(document).ready(function($) {
+    // Toggle between precise dates and month
+    $('input[name="date_type"]').on('change', function() {
+        const dateType = $(this).val();
+
+        if (dateType === 'precise') {
+            $('#precise-dates-container').show();
+            $('#month-container').hide();
+            $('#travel_start_date').prop('required', true);
+            $('#travel_end_date').prop('required', true);
+            $('#travel_month').prop('required', false);
+        } else {
+            $('#precise-dates-container').hide();
+            $('#month-container').show();
+            $('#travel_start_date').prop('required', false);
+            $('#travel_end_date').prop('required', false);
+            $('#travel_month').prop('required', true);
+        }
+    });
+
+    // Update end date min when start date changes
+    $('#travel_start_date').on('change', function() {
+        const startDate = $(this).val();
+        $('#travel_end_date').attr('min', startDate);
+    });
+
     $('#create-travel-form').on('submit', function(e) {
         e.preventDefault();
 
@@ -292,18 +345,53 @@ jQuery(document).ready(function($) {
         const $submitBtn = $form.find('button[type="submit"]');
         const $messages = $('#form-messages');
 
-        // Validate month selection
-        const monthValue = $('#travel_month').val();
-        if (!monthValue) {
-            $messages.html('<div class="error-message">Seleziona il mese di partenza.</div>');
-            return;
-        }
+        const dateType = $('input[name="date_type"]:checked').val();
+        let dataToSend = {
+            action: 'cdv_create_travel',
+            nonce: cdvAjax.nonce,
+            title: $('#travel_title').val(),
+            description: $('#travel_description').val(),
+            destination: $('#travel_destination').val(),
+            country: $('#travel_country').val(),
+            budget: $('#travel_budget').val(),
+            max_participants: $('#travel_max_participants').val(),
+            travel_types: []
+        };
 
         // Get travel types
-        const travelTypes = [];
         $('input[name="travel_types[]"]:checked').each(function() {
-            travelTypes.push($(this).val());
+            dataToSend.travel_types.push($(this).val());
         });
+
+        // Add date info based on type
+        if (dateType === 'precise') {
+            const startDate = $('#travel_start_date').val();
+            const endDate = $('#travel_end_date').val();
+
+            if (!startDate || !endDate) {
+                $messages.html('<div class="error-message">Inserisci sia la data di inizio che di fine.</div>');
+                return;
+            }
+
+            if (new Date(endDate) <= new Date(startDate)) {
+                $messages.html('<div class="error-message">La data di fine deve essere successiva alla data di inizio.</div>');
+                return;
+            }
+
+            dataToSend.start_date = startDate;
+            dataToSend.end_date = endDate;
+            dataToSend.date_type = 'precise';
+        } else {
+            const monthValue = $('#travel_month').val();
+
+            if (!monthValue) {
+                $messages.html('<div class="error-message">Seleziona il mese di partenza.</div>');
+                return;
+            }
+
+            dataToSend.travel_month = monthValue;
+            dataToSend.date_type = 'month';
+        }
 
         // Disable submit button
         $submitBtn.prop('disabled', true).text('Creazione in corso...');
@@ -312,18 +400,7 @@ jQuery(document).ready(function($) {
         $.ajax({
             url: cdvAjax.ajaxurl,
             type: 'POST',
-            data: {
-                action: 'cdv_create_travel',
-                nonce: cdvAjax.nonce,
-                title: $('#travel_title').val(),
-                description: $('#travel_description').val(),
-                destination: $('#travel_destination').val(),
-                country: $('#travel_country').val(),
-                travel_month: monthValue,
-                budget: $('#travel_budget').val(),
-                max_participants: $('#travel_max_participants').val(),
-                travel_types: travelTypes
-            },
+            data: dataToSend,
             success: function(response) {
                 if (response.success) {
                     $messages.html('<div class="success-message">' + response.data.message + '</div>');
@@ -334,7 +411,7 @@ jQuery(document).ready(function($) {
                     }, 1500);
                 } else {
                     $messages.html('<div class="error-message">' + response.data.message + '</div>');
-                    $submitBtn.prop('disabled', false').text('Crea Annuncio 🚀');
+                    $submitBtn.prop('disabled', false).text('Crea Annuncio 🚀');
                 }
             },
             error: function() {
