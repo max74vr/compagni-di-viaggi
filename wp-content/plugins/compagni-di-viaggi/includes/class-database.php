@@ -66,6 +66,8 @@ class CDV_Database {
             respect tinyint(1) NOT NULL,
             adaptability tinyint(1) NOT NULL,
             comment text,
+            reply text,
+            reply_date datetime DEFAULT NULL,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY unique_review (travel_id, reviewer_id, reviewed_id),
@@ -75,6 +77,38 @@ class CDV_Database {
         ) $charset_collate;";
 
         dbDelta($sql_reviews);
+
+        // Table: review_reports
+        $table_review_reports = $wpdb->prefix . 'cdv_review_reports';
+        $sql_review_reports = "CREATE TABLE IF NOT EXISTS $table_review_reports (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            review_id bigint(20) UNSIGNED NOT NULL,
+            reporter_id bigint(20) UNSIGNED NOT NULL,
+            reason varchar(255) NOT NULL,
+            status varchar(20) DEFAULT 'pending',
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY review_id (review_id),
+            KEY reporter_id (reporter_id),
+            KEY status (status)
+        ) $charset_collate;";
+
+        dbDelta($sql_review_reports);
+
+        // Table: review_helpful
+        $table_review_helpful = $wpdb->prefix . 'cdv_review_helpful';
+        $sql_review_helpful = "CREATE TABLE IF NOT EXISTS $table_review_helpful (
+            id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            review_id bigint(20) UNSIGNED NOT NULL,
+            user_id bigint(20) UNSIGNED NOT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY unique_helpful (review_id, user_id),
+            KEY review_id (review_id),
+            KEY user_id (user_id)
+        ) $charset_collate;";
+
+        dbDelta($sql_review_helpful);
 
         // Table: user_badges
         $table_badges = $wpdb->prefix . 'cdv_user_badges';
@@ -113,7 +147,7 @@ class CDV_Database {
         CDV_Notifications::create_table();
 
         // Update version
-        update_option('cdv_db_version', '1.3.0');
+        update_option('cdv_db_version', '1.4.0');
     }
 
     /**
@@ -126,6 +160,8 @@ class CDV_Database {
             $wpdb->prefix . 'cdv_travel_participants',
             $wpdb->prefix . 'cdv_travel_group_messages',
             $wpdb->prefix . 'cdv_reviews',
+            $wpdb->prefix . 'cdv_review_reports',
+            $wpdb->prefix . 'cdv_review_helpful',
             $wpdb->prefix . 'cdv_user_badges',
             $wpdb->prefix . 'cdv_email_verification',
             $wpdb->prefix . 'cdv_private_messages',

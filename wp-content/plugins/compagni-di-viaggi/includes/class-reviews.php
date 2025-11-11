@@ -167,4 +167,248 @@ class CDV_Reviews {
 
         return $pending;
     }
+
+    /**
+     * Get detailed review statistics for a user
+     */
+    public static function get_user_review_stats($user_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_reviews';
+
+        $stats = $wpdb->get_row($wpdb->prepare(
+            "SELECT
+                COUNT(*) as total_reviews,
+                AVG(punctuality) as avg_punctuality,
+                AVG(group_spirit) as avg_group_spirit,
+                AVG(respect) as avg_respect,
+                AVG(adaptability) as avg_adaptability,
+                (AVG(punctuality) + AVG(group_spirit) + AVG(respect) + AVG(adaptability)) / 4 as overall_average
+            FROM $table
+            WHERE reviewed_id = %d",
+            $user_id
+        ));
+
+        // Get rating distribution
+        $distribution = $wpdb->get_results($wpdb->prepare(
+            "SELECT
+                ROUND((punctuality + group_spirit + respect + adaptability) / 4) as rating,
+                COUNT(*) as count
+            FROM $table
+            WHERE reviewed_id = %d
+            GROUP BY rating
+            ORDER BY rating DESC",
+            $user_id
+        ), OBJECT_K);
+
+        return array(
+            'stats' => $stats,
+            'distribution' => $distribution,
+        );
+    }
+
+    /**
+     * Add reply to a review (from reviewed user)
+     */
+    public static function add_review_reply($review_id, $user_id, $reply_text) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_reviews';
+
+        // Get the review
+        $review = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE id = %d",
+            $review_id
+        ));
+
+        if (!$review) {
+            return new WP_Error('review_not_found', 'Recensione non trovata');
+        }
+
+        // Check if user is the reviewed person
+        if ($review->reviewed_id != $user_id) {
+            return new WP_Error('not_authorized', 'Non sei autorizzato a rispondere a questa recensione');
+        }
+
+        // Check if reply already exists
+        if (!empty($review->reply)) {
+            return new WP_Error('reply_exists', 'Hai già risposto a questa recensione');
+        }
+
+        // Add reply
+        $result = $wpdb->update(
+            $table,
+            array(
+                'reply' => sanitize_textarea_field($reply_text),
+                'reply_date' => current_time('mysql')
+            ),
+            array('id' => $review_id),
+            array('%s', '%s'),
+            array('%d')
+        );
+
+        return $result !== false;
+    }
+
+    /**
+     * Report a review as inappropriate
+     */
+    public static function report_review($review_id, $user_id, $reason) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_review_reports';
+
+        // Check if already reported by this user
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE review_id = %d AND reporter_id = %d",
+            $review_id,
+            $user_id
+        ));
+
+        if ($exists) {
+            return new WP_Error('already_reported', 'Hai già segnalato questa recensione');
+        }
+
+        $result = $wpdb->insert(
+            $table,
+            array(
+                'review_id' => $review_id,
+                'reporter_id' => $user_id,
+                'reason' => sanitize_text_field($reason),
+                'status' => 'pending',
+            ),
+            array('%d', '%d', '%s', '%s')
+        );
+
+        return $result ? $wpdb->insert_id : false;
+    }
+
+    /**
+     * Get review badge based on stats
+     */
+    public static function get_review_badge($user_id) {
+        $stats = self::get_user_review_stats($user_id);
+
+        if (!$stats['stats'] || $stats['stats']->total_reviews < 3) {
+            return null;
+        }
+
+        $avg = $stats['stats']->overall_average;
+        $total = $stats['stats']->total_reviews;
+
+        if ($avg >= 4.8 && $total >= 20) {
+            return array('badge' => 'super_host', 'label' => '🌟 Super Host', 'color' => '#FFD700');
+        } elseif ($avg >= 4.5 && $total >= 10) {
+            return array('badge' => 'trusted_traveler', 'label' => '✨ Viaggiatore Fidato', 'color' => '#4CAF50');
+        } elseif ($avg >= 4.0 && $total >= 5) {
+            return array('badge' => 'reliable', 'label' => '👍 Affidabile', 'color' => '#2196F3');
+        }
+
+        return null;
+    }
+
+    /**
+     * Render star rating HTML
+     */
+    public static function render_stars($rating, $max = 5) {
+        $rating = floatval($rating);
+        $full_stars = floor($rating);
+        $half_star = ($rating - $full_stars) >= 0.5 ? 1 : 0;
+        $empty_stars = $max - $full_stars - $half_star;
+
+        $html = '<div class="star-rating" data-rating="' . esc_attr($rating) . '">';
+
+        // Full stars
+        for ($i = 0; $i < $full_stars; $i++) {
+            $html .= '<span class="star star-full">★</span>';
+        }
+
+        // Half star
+        if ($half_star) {
+            $html .= '<span class="star star-half">★</span>';
+        }
+
+        // Empty stars
+        for ($i = 0; $i < $empty_stars; $i++) {
+            $html .= '<span class="star star-empty">☆</span>';
+        }
+
+        $html .= '<span class="rating-value">' . number_format($rating, 1) . '</span>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Get reviews with pagination and filters
+     */
+    public static function get_reviews_paginated($user_id, $page = 1, $per_page = 10, $min_rating = null) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_reviews';
+
+        $offset = ($page - 1) * $per_page;
+
+        $where = $wpdb->prepare("WHERE reviewed_id = %d", $user_id);
+
+        if ($min_rating !== null) {
+            $where .= $wpdb->prepare(" AND (punctuality + group_spirit + respect + adaptability) / 4 >= %f", $min_rating);
+        }
+
+        $reviews = $wpdb->get_results(
+            "SELECT * FROM $table
+            $where
+            ORDER BY created_at DESC
+            LIMIT $per_page OFFSET $offset"
+        );
+
+        $total = $wpdb->get_var(
+            "SELECT COUNT(*) FROM $table $where"
+        );
+
+        return array(
+            'reviews' => $reviews,
+            'total' => $total,
+            'pages' => ceil($total / $per_page),
+            'current_page' => $page,
+        );
+    }
+
+    /**
+     * Check if review is helpful (likes system)
+     */
+    public static function mark_review_helpful($review_id, $user_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_review_helpful';
+
+        // Check if already marked
+        $exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT id FROM $table WHERE review_id = %d AND user_id = %d",
+            $review_id,
+            $user_id
+        ));
+
+        if ($exists) {
+            // Remove helpful mark
+            $wpdb->delete($table, array('id' => $exists));
+            return array('action' => 'removed', 'count' => self::get_helpful_count($review_id));
+        } else {
+            // Add helpful mark
+            $wpdb->insert(
+                $table,
+                array('review_id' => $review_id, 'user_id' => $user_id),
+                array('%d', '%d')
+            );
+            return array('action' => 'added', 'count' => self::get_helpful_count($review_id));
+        }
+    }
+
+    /**
+     * Get helpful count for a review
+     */
+    public static function get_helpful_count($review_id) {
+        global $wpdb;
+        $table = $wpdb->prefix . 'cdv_review_helpful';
+
+        return (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM $table WHERE review_id = %d",
+            $review_id
+        ));
+    }
 }

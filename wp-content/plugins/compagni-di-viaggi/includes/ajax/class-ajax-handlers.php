@@ -18,6 +18,9 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_send_message', array(__CLASS__, 'send_message'));
         add_action('wp_ajax_cdv_get_new_messages', array(__CLASS__, 'get_new_messages'));
         add_action('wp_ajax_cdv_add_review', array(__CLASS__, 'add_review'));
+        add_action('wp_ajax_cdv_reply_review', array(__CLASS__, 'reply_review'));
+        add_action('wp_ajax_cdv_report_review', array(__CLASS__, 'report_review'));
+        add_action('wp_ajax_cdv_mark_review_helpful', array(__CLASS__, 'mark_review_helpful'));
         add_action('wp_ajax_cdv_accept_participant', array(__CLASS__, 'accept_participant'));
         add_action('wp_ajax_cdv_reject_participant', array(__CLASS__, 'reject_participant'));
         add_action('wp_ajax_cdv_approve_participant', array(__CLASS__, 'accept_participant'));
@@ -828,5 +831,82 @@ class CDV_Ajax_Handlers {
                 'message' => 'Indirizzo non trovato. Verifica che destinazione e paese siano corretti e riprova.'
             ));
         }
+    }
+
+    /**
+     * AJAX: Reply to review
+     */
+    public static function reply_review() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $review_id = isset($_POST['review_id']) ? intval($_POST['review_id']) : 0;
+        $reply_text = isset($_POST['reply']) ? sanitize_textarea_field($_POST['reply']) : '';
+
+        if (!$review_id || empty($reply_text)) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        $result = CDV_Reviews::add_review_reply($review_id, get_current_user_id(), $reply_text);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array(
+            'message' => 'Risposta aggiunta con successo',
+            'reply' => $reply_text,
+            'reply_date' => current_time('mysql')
+        ));
+    }
+
+    /**
+     * AJAX: Report review
+     */
+    public static function report_review() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $review_id = isset($_POST['review_id']) ? intval($_POST['review_id']) : 0;
+        $reason = isset($_POST['reason']) ? sanitize_text_field($_POST['reason']) : '';
+
+        if (!$review_id || empty($reason)) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        $result = CDV_Reviews::report_review($review_id, get_current_user_id(), $reason);
+
+        if (is_wp_error($result)) {
+            wp_send_json_error(array('message' => $result->get_error_message()));
+        }
+
+        wp_send_json_success(array('message' => 'Recensione segnalata con successo'));
+    }
+
+    /**
+     * AJAX: Mark review as helpful
+     */
+    public static function mark_review_helpful() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $review_id = isset($_POST['review_id']) ? intval($_POST['review_id']) : 0;
+
+        if (!$review_id) {
+            wp_send_json_error(array('message' => 'ID recensione non valido'));
+        }
+
+        $result = CDV_Reviews::mark_review_helpful($review_id, get_current_user_id());
+
+        wp_send_json_success($result);
     }
 }
