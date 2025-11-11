@@ -83,6 +83,21 @@ while (have_posts()) : the_post();
                         </div>
                     <?php endif; ?>
 
+                    <!-- Travel Map -->
+                    <div class="travel-map-section">
+                        <h3>📍 Posizione</h3>
+                        <?php echo CDV_Travel_Maps::get_map_html($travel_id, '450px'); ?>
+                        <?php
+                        $destination = get_post_meta($travel_id, 'cdv_destination', true);
+                        $country = get_post_meta($travel_id, 'cdv_country', true);
+                        if ($destination || $country) :
+                        ?>
+                            <p class="map-location-text">
+                                <strong>Destinazione:</strong> <?php echo esc_html($destination); ?><?php echo $country ? ', ' . esc_html($country) : ''; ?>
+                            </p>
+                        <?php endif; ?>
+                    </div>
+
                     <!-- Participants Section -->
                     <?php if (!empty($participants)) : ?>
                         <div class="participants-section">
@@ -772,6 +787,33 @@ while (have_posts()) : the_post();
 
         .gallery-lightbox-close:hover {
             color: #ccc;
+        }
+
+        /* Travel Map Section */
+        .travel-map-section {
+            margin: 40px 0;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .travel-map-section h3 {
+            margin-bottom: 20px;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .map-location-text {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            color: #4a5568;
+        }
+
+        .map-placeholder {
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 

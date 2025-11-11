@@ -91,6 +91,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-private-messages.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-group-chat.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-travel-gallery.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-travel-maps.php';
 
         // REST API
         require_once CDV_PLUGIN_DIR . 'includes/api/class-rest-api.php';
@@ -130,6 +131,7 @@ class Compagni_Di_Viaggi {
         CDV_Travel_Stories::init();
         CDV_Private_Messages::init();
         CDV_Travel_Gallery::init();
+        CDV_Travel_Maps::init();
         CDV_REST_API::init();
         CDV_Ajax_Handlers::init();
 
