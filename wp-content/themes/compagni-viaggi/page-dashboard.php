@@ -82,6 +82,13 @@ $my_stories = new WP_Query(array(
 
 // Get unread messages count
 $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->ID);
+
+// Get pending reviews
+$pending_reviews = CDV_Reviews::get_pending_reviews($current_user->ID);
+$pending_reviews_count = count($pending_reviews);
+
+// Get received reviews
+$received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
 ?>
 
 <main class="site-main dashboard">
@@ -122,6 +129,12 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
                 Messaggi
                 <?php if ($unread_messages_count > 0) : ?>
                     <span class="badge-count"><?php echo $unread_messages_count; ?></span>
+                <?php endif; ?>
+            </button>
+            <button class="tab-button" data-tab="reviews">
+                Recensioni
+                <?php if ($pending_reviews_count > 0) : ?>
+                    <span class="badge-count"><?php echo $pending_reviews_count; ?></span>
                 <?php endif; ?>
             </button>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
@@ -424,6 +437,154 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
             </div>
         </div>
 
+        <!-- Tab: Recensioni -->
+        <div class="tab-content" id="tab-reviews">
+            <h2>Recensioni</h2>
+
+            <!-- Pending Reviews Section -->
+            <?php if (!empty($pending_reviews)) : ?>
+                <div class="reviews-section">
+                    <div class="section-header">
+                        <h3>Recensioni da Lasciare (<?php echo $pending_reviews_count; ?>)</h3>
+                        <p style="color: #6c757d; margin: 10px 0;">Lascia una recensione per i compagni di viaggio dei tuoi viaggi completati.</p>
+                    </div>
+
+                    <div class="pending-reviews-list">
+                        <?php foreach ($pending_reviews as $pending_review) :
+                            $travel = get_post($pending_review['travel_id']);
+                            $reviewed_user = get_userdata($pending_review['user_id']);
+                            if (!$travel || !$reviewed_user) continue;
+                        ?>
+                            <div class="pending-review-item">
+                                <div class="review-item-header">
+                                    <div class="user-avatar">
+                                        <?php echo get_avatar($reviewed_user->ID, 50); ?>
+                                    </div>
+                                    <div class="review-item-info">
+                                        <h4><?php echo esc_html($reviewed_user->display_name); ?></h4>
+                                        <p class="travel-title">
+                                            <i class="icon-map"></i>
+                                            <a href="<?php echo get_permalink($travel->ID); ?>" target="_blank">
+                                                <?php echo esc_html($travel->post_title); ?>
+                                            </a>
+                                        </p>
+                                        <p class="travel-dates">
+                                            <?php
+                                            $start_date = get_post_meta($travel->ID, 'cdv_start_date', true);
+                                            $end_date = get_post_meta($travel->ID, 'cdv_end_date', true);
+                                            if ($start_date && $end_date) {
+                                                echo date_i18n('d/m/Y', strtotime($start_date)) . ' - ' . date_i18n('d/m/Y', strtotime($end_date));
+                                            }
+                                            ?>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="review-item-actions">
+                                    <button class="btn btn-primary btn-write-review"
+                                            data-travel-id="<?php echo $pending_review['travel_id']; ?>"
+                                            data-user-id="<?php echo $pending_review['user_id']; ?>"
+                                            data-user-name="<?php echo esc_attr($reviewed_user->display_name); ?>"
+                                            data-travel-title="<?php echo esc_attr($travel->post_title); ?>">
+                                        Scrivi Recensione
+                                    </button>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php else : ?>
+                <div class="empty-state">
+                    <p>✅ Non hai recensioni in sospeso!</p>
+                    <p style="color: #6c757d;">Le recensioni da lasciare appariranno qui dopo aver completato un viaggio.</p>
+                </div>
+            <?php endif; ?>
+
+            <!-- Received Reviews Section -->
+            <div class="reviews-section" style="margin-top: 40px;">
+                <div class="section-header">
+                    <h3>Recensioni Ricevute (<?php echo count($received_reviews); ?>)</h3>
+                </div>
+
+                <?php if (!empty($received_reviews)) : ?>
+                    <div class="received-reviews-list">
+                        <?php foreach ($received_reviews as $review) :
+                            $reviewer = get_userdata($review->reviewer_id);
+                            $travel = get_post($review->travel_id);
+                            if (!$reviewer || !$travel) continue;
+
+                            $avg_score = round(($review->punctuality + $review->group_spirit + $review->respect + $review->adaptability) / 4, 1);
+                        ?>
+                            <div class="received-review-item">
+                                <div class="review-header">
+                                    <div class="reviewer-info">
+                                        <?php echo get_avatar($reviewer->ID, 40); ?>
+                                        <div>
+                                            <strong><?php echo esc_html($reviewer->display_name); ?></strong>
+                                            <p class="review-date"><?php echo date_i18n('d/m/Y', strtotime($review->created_at)); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="review-score">
+                                        <div class="score-number"><?php echo $avg_score; ?>/5</div>
+                                        <div class="score-stars">
+                                            <?php
+                                            $full_stars = floor($avg_score);
+                                            $half_star = ($avg_score - $full_stars) >= 0.5;
+                                            for ($i = 0; $i < 5; $i++) {
+                                                if ($i < $full_stars) {
+                                                    echo '<span class="star filled">★</span>';
+                                                } elseif ($i == $full_stars && $half_star) {
+                                                    echo '<span class="star half">★</span>';
+                                                } else {
+                                                    echo '<span class="star">☆</span>';
+                                                }
+                                            }
+                                            ?>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="review-travel-info">
+                                    <i class="icon-map"></i>
+                                    <a href="<?php echo get_permalink($travel->ID); ?>">
+                                        <?php echo esc_html($travel->post_title); ?>
+                                    </a>
+                                </div>
+
+                                <div class="review-scores-detail">
+                                    <div class="score-item">
+                                        <span class="score-label">Puntualità:</span>
+                                        <span class="score-value"><?php echo $review->punctuality; ?>/5</span>
+                                    </div>
+                                    <div class="score-item">
+                                        <span class="score-label">Spirito di Gruppo:</span>
+                                        <span class="score-value"><?php echo $review->group_spirit; ?>/5</span>
+                                    </div>
+                                    <div class="score-item">
+                                        <span class="score-label">Rispetto:</span>
+                                        <span class="score-value"><?php echo $review->respect; ?>/5</span>
+                                    </div>
+                                    <div class="score-item">
+                                        <span class="score-label">Adattabilità:</span>
+                                        <span class="score-value"><?php echo $review->adaptability; ?>/5</span>
+                                    </div>
+                                </div>
+
+                                <?php if (!empty($review->comment)) : ?>
+                                    <div class="review-comment">
+                                        <p><?php echo esc_html($review->comment); ?></p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <div class="empty-state">
+                        <p>Non hai ancora ricevuto recensioni</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
         <!-- Tab: Impostazioni -->
         <div class="tab-content" id="tab-settings">
             <h2>Impostazioni Profilo</h2>
@@ -505,6 +666,87 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
                 <p><strong>Elimina Account</strong> - Questa azione è irreversibile. Tutti i tuoi dati, viaggi e messaggi saranno eliminati permanentemente.</p>
                 <button type="button" class="btn btn-danger" id="delete-account-btn">Elimina Account</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="review-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Scrivi una Recensione</h2>
+            <p id="review-modal-subtitle" style="color: #6c757d; margin-bottom: 20px;"></p>
+
+            <form id="review-form">
+                <input type="hidden" id="review-travel-id" name="travel_id">
+                <input type="hidden" id="review-user-id" name="reviewed_id">
+
+                <div class="disclaimer-box" style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 25px; border-radius: 4px;">
+                    <p style="margin: 0; font-size: 14px;"><strong>⚠️ Importante:</strong> Le recensioni devono essere oneste, rispettose e basate sulla tua esperienza reale. Recensioni offensive o false possono portare alla rimozione del tuo account.</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Valuta il Compagno di Viaggio</label>
+                    <p style="font-size: 14px; color: #6c757d; margin-bottom: 15px;">Assegna un punteggio da 1 a 5 per ciascuna categoria</p>
+
+                    <div class="rating-group">
+                        <label for="punctuality">Puntualità</label>
+                        <div class="star-rating" data-field="punctuality">
+                            <input type="hidden" id="punctuality" name="punctuality" value="0" required>
+                            <span class="rating-star" data-value="1">★</span>
+                            <span class="rating-star" data-value="2">★</span>
+                            <span class="rating-star" data-value="3">★</span>
+                            <span class="rating-star" data-value="4">★</span>
+                            <span class="rating-star" data-value="5">★</span>
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label for="group_spirit">Spirito di Gruppo</label>
+                        <div class="star-rating" data-field="group_spirit">
+                            <input type="hidden" id="group_spirit" name="group_spirit" value="0" required>
+                            <span class="rating-star" data-value="1">★</span>
+                            <span class="rating-star" data-value="2">★</span>
+                            <span class="rating-star" data-value="3">★</span>
+                            <span class="rating-star" data-value="4">★</span>
+                            <span class="rating-star" data-value="5">★</span>
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label for="respect">Rispetto</label>
+                        <div class="star-rating" data-field="respect">
+                            <input type="hidden" id="respect" name="respect" value="0" required>
+                            <span class="rating-star" data-value="1">★</span>
+                            <span class="rating-star" data-value="2">★</span>
+                            <span class="rating-star" data-value="3">★</span>
+                            <span class="rating-star" data-value="4">★</span>
+                            <span class="rating-star" data-value="5">★</span>
+                        </div>
+                    </div>
+
+                    <div class="rating-group">
+                        <label for="adaptability">Adattabilità</label>
+                        <div class="star-rating" data-field="adaptability">
+                            <input type="hidden" id="adaptability" name="adaptability" value="0" required>
+                            <span class="rating-star" data-value="1">★</span>
+                            <span class="rating-star" data-value="2">★</span>
+                            <span class="rating-star" data-value="3">★</span>
+                            <span class="rating-star" data-value="4">★</span>
+                            <span class="rating-star" data-value="5">★</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="review-comment">Commento (opzionale)</label>
+                    <textarea id="review-comment" name="comment" rows="4" placeholder="Condividi la tua esperienza con questo compagno di viaggio..."></textarea>
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" class="btn btn-secondary modal-close">Annulla</button>
+                    <button type="submit" class="btn btn-primary">Invia Recensione</button>
+                </div>
+            </form>
         </div>
     </div>
 </main>
@@ -1197,6 +1439,245 @@ $unread_messages_count = CDV_Private_Messages::get_unread_count($current_user->I
         max-width: 85%;
     }
 }
+
+/* Reviews Section */
+.reviews-section {
+    margin-bottom: 30px;
+}
+
+.pending-reviews-list, .received-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.pending-review-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: box-shadow 0.3s;
+}
+
+.pending-review-item:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.review-item-header {
+    display: flex;
+    gap: 15px;
+    flex: 1;
+}
+
+.user-avatar img {
+    border-radius: 50%;
+}
+
+.review-item-info h4 {
+    margin: 0 0 5px 0;
+    color: #2d3748;
+}
+
+.review-item-info p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.review-item-info .travel-title a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.review-item-info .travel-title a:hover {
+    text-decoration: underline;
+}
+
+.received-review-item {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.reviewer-info {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.reviewer-info img {
+    border-radius: 50%;
+}
+
+.review-date {
+    font-size: 13px;
+    color: #6c757d;
+    margin: 0;
+}
+
+.review-score {
+    text-align: right;
+}
+
+.score-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.score-stars {
+    color: #ffc107;
+    font-size: 16px;
+}
+
+.score-stars .star.filled {
+    color: #ffc107;
+}
+
+.score-stars .star {
+    color: #ddd;
+}
+
+.review-travel-info {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.review-travel-info a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.review-scores-detail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.score-item {
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+}
+
+.score-label {
+    color: #6c757d;
+}
+
+.score-value {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.review-comment {
+    margin-top: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-left: 3px solid #667eea;
+    border-radius: 4px;
+}
+
+.review-comment p {
+    margin: 0;
+    font-style: italic;
+    color: #4a5568;
+}
+
+/* Review Modal */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid #888;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #000;
+}
+
+.rating-group {
+    margin-bottom: 20px;
+}
+
+.rating-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #2d3748;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    font-size: 32px;
+}
+
+.rating-star {
+    cursor: pointer;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.rating-star:hover,
+.rating-star.active {
+    color: #ffc107;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-state p:first-child {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+}
 </style>
 
 <script>
@@ -1771,6 +2252,156 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             error: function() {
                 alert('Errore di connessione');
+            }
+        });
+    });
+
+    // Review Modal Handling
+    const reviewModal = document.getElementById('review-modal');
+    const reviewForm = document.getElementById('review-form');
+    const modalCloseButtons = document.querySelectorAll('.modal-close');
+
+    // Open review modal
+    document.querySelectorAll('.btn-write-review').forEach(button => {
+        button.addEventListener('click', function() {
+            const travelId = this.getAttribute('data-travel-id');
+            const userId = this.getAttribute('data-user-id');
+            const userName = this.getAttribute('data-user-name');
+            const travelTitle = this.getAttribute('data-travel-title');
+
+            document.getElementById('review-travel-id').value = travelId;
+            document.getElementById('review-user-id').value = userId;
+            document.getElementById('review-modal-subtitle').textContent =
+                `Recensisci ${userName} per il viaggio: ${travelTitle}`;
+
+            // Reset form
+            reviewForm.reset();
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.classList.remove('active');
+            });
+
+            reviewModal.style.display = 'block';
+        });
+    });
+
+    // Close modal
+    modalCloseButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            reviewModal.style.display = 'none';
+        });
+    });
+
+    // Close modal on outside click
+    window.addEventListener('click', function(event) {
+        if (event.target === reviewModal) {
+            reviewModal.style.display = 'none';
+        }
+    });
+
+    // Star rating interaction
+    document.querySelectorAll('.star-rating').forEach(ratingGroup => {
+        const stars = ratingGroup.querySelectorAll('.rating-star');
+        const field = ratingGroup.getAttribute('data-field');
+        const hiddenInput = document.getElementById(field);
+
+        stars.forEach(star => {
+            star.addEventListener('click', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                hiddenInput.value = value;
+
+                // Update visual state
+                stars.forEach((s, index) => {
+                    if (index < value) {
+                        s.classList.add('active');
+                    } else {
+                        s.classList.remove('active');
+                    }
+                });
+            });
+
+            // Hover effect
+            star.addEventListener('mouseenter', function() {
+                const value = parseInt(this.getAttribute('data-value'));
+                stars.forEach((s, index) => {
+                    if (index < value) {
+                        s.style.color = '#ffc107';
+                    } else {
+                        s.style.color = '#ddd';
+                    }
+                });
+            });
+        });
+
+        // Reset on mouse leave
+        ratingGroup.addEventListener('mouseleave', function() {
+            const currentValue = parseInt(hiddenInput.value);
+            stars.forEach((s, index) => {
+                if (index < currentValue) {
+                    s.style.color = '#ffc107';
+                } else {
+                    s.style.color = '#ddd';
+                }
+            });
+        });
+    });
+
+    // Submit review
+    reviewForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const travelId = document.getElementById('review-travel-id').value;
+        const reviewedId = document.getElementById('review-user-id').value;
+        const punctuality = parseInt(document.getElementById('punctuality').value);
+        const groupSpirit = parseInt(document.getElementById('group_spirit').value);
+        const respect = parseInt(document.getElementById('respect').value);
+        const adaptability = parseInt(document.getElementById('adaptability').value);
+        const comment = document.getElementById('review-comment').value;
+
+        // Validate all ratings are set
+        if (!punctuality || !groupSpirit || !respect || !adaptability) {
+            alert('Per favore, assegna un punteggio per tutte e 4 le categorie');
+            return;
+        }
+
+        if (punctuality < 1 || groupSpirit < 1 || respect < 1 || adaptability < 1) {
+            alert('Per favore, assegna un punteggio per tutte e 4 le categorie');
+            return;
+        }
+
+        const submitButton = reviewForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.textContent = 'Invio...';
+
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_add_review',
+                nonce: cdvAjax.nonce,
+                travel_id: travelId,
+                reviewed_id: reviewedId,
+                punctuality: punctuality,
+                group_spirit: groupSpirit,
+                respect: respect,
+                adaptability: adaptability,
+                comment: comment
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Recensione inviata con successo! Grazie per il tuo feedback.');
+                    reviewModal.style.display = 'none';
+                    // Reload page to update reviews list
+                    location.reload();
+                } else {
+                    alert('Errore: ' + (response.data?.message || 'Si è verificato un errore'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Invia Recensione';
+                }
+            },
+            error: function() {
+                alert('Errore di connessione. Riprova più tardi.');
+                submitButton.disabled = false;
+                submitButton.textContent = 'Invia Recensione';
             }
         });
     });
