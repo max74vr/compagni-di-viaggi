@@ -241,6 +241,12 @@ while (have_posts()) : the_post();
                         </a>
                     </div>
 
+                    <!-- Wishlist Card -->
+                    <div class="sidebar-card wishlist-card">
+                        <?php echo CDV_Wishlist::get_wishlist_button_html($travel_id, 'btn btn-secondary wishlist-toggle-btn'); ?>
+                        <p class="wishlist-help-text">Salva questo viaggio per dopo</p>
+                    </div>
+
                     <!-- Join Card -->
                     <?php if (is_user_logged_in()) : ?>
                         <?php if ($is_organizer) : ?>
@@ -419,6 +425,86 @@ while (have_posts()) : the_post();
             margin-top: calc(var(--spacing-unit) * 2);
             color: var(--text-medium);
             font-size: 0.9rem;
+        }
+        /* Wishlist Card */
+        .wishlist-card {
+            text-align: center;
+        }
+        .wishlist-toggle-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 2px solid #e2e8f0;
+            background: white;
+            color: #4a5568;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .wishlist-toggle-btn:hover {
+            border-color: #f56565;
+            background: #fff5f5;
+            color: #f56565;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.2);
+        }
+        .wishlist-toggle-btn.wishlist-active {
+            border-color: #f56565;
+            background: #f56565;
+            color: white;
+        }
+        .wishlist-toggle-btn.wishlist-active:hover {
+            background: #e53e3e;
+            border-color: #e53e3e;
+        }
+        .wishlist-toggle-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .wishlist-icon {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+        .wishlist-active .wishlist-icon {
+            animation: heartBeat 0.5s ease;
+        }
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.3); }
+            50% { transform: scale(1.1); }
+        }
+        .wishlist-help-text {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        /* Notification Toast */
+        .cdv-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            display: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            max-width: 300px;
+        }
+        .cdv-notification.success {
+            border-left: 4px solid #48bb78;
+            color: #22543d;
+        }
+        .cdv-notification.error {
+            border-left: 4px solid #f56565;
+            color: #742a2a;
         }
         .travel-details-list {
             display: flex;
@@ -1087,6 +1173,70 @@ while (have_posts()) : the_post();
                 lightbox.fadeOut(300);
             }
         });
+
+        // Wishlist toggle functionality
+        $('.wishlist-btn').on('click', function(e) {
+            e.preventDefault();
+            const btn = $(this);
+            const travelId = btn.data('travel-id');
+
+            // Disable button during request
+            btn.prop('disabled', true);
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_toggle_wishlist',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const action = response.data.action;
+                        const inWishlist = response.data.in_wishlist;
+
+                        // Update button appearance
+                        if (inWishlist) {
+                            btn.addClass('wishlist-active');
+                            btn.find('.wishlist-icon').text('♥');
+                            btn.find('.wishlist-text').text('Salvato');
+                        } else {
+                            btn.removeClass('wishlist-active');
+                            btn.find('.wishlist-icon').text('♡');
+                            btn.find('.wishlist-text').text('Salva');
+                        }
+
+                        // Show notification
+                        showNotification(response.data.message, 'success');
+                    } else {
+                        showNotification(response.data.message || 'Errore durante l\'operazione', 'error');
+                    }
+                },
+                error: function() {
+                    showNotification('Errore di connessione', 'error');
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                }
+            });
+        });
+
+        // Simple notification function
+        function showNotification(message, type) {
+            const notification = $('<div class="cdv-notification ' + type + '">' + message + '</div>');
+            $('body').append(notification);
+
+            // Fade in
+            notification.fadeIn(300);
+
+            // Auto remove after 3 seconds
+            setTimeout(function() {
+                notification.fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
     });
     </script>
 
