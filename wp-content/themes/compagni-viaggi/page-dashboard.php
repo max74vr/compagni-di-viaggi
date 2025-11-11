@@ -613,7 +613,7 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                         $start_date = get_post_meta($travel_id, 'cdv_start_date', true);
                         $budget = get_post_meta($travel_id, 'cdv_budget', true);
                         $max_participants = get_post_meta($travel_id, 'cdv_max_participants', true);
-                        $participants_count = CDV_Participants::get_participants_count($travel_id, 'accepted');
+                        $participants_count = CDV_Participants::get_participant_count($travel_id, 'accepted');
                     ?>
                         <div class="wishlist-card">
                             <?php if (has_post_thumbnail()) : ?>
@@ -1795,6 +1795,13 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
 .empty-state p:first-child {
     font-size: 1.2rem;
     margin-bottom: 10px;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: calc(var(--spacing-unit) * 3);
+    opacity: 0.8;
 }
 
 /* Wishlist Tab Styles */
