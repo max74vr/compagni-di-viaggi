@@ -1208,7 +1208,7 @@ while (have_posts()) : the_post();
             // Check if cdvAjax is defined
             if (typeof cdvAjax === 'undefined') {
                 console.error('cdvAjax is not defined');
-                alert('Errore di configurazione. Ricarica la pagina e riprova.');
+                showNotification('Errore di configurazione. Ricarica la pagina e riprova.', 'error');
                 return;
             }
 
@@ -1217,7 +1217,7 @@ while (have_posts()) : the_post();
             var message = $('#contact-message').val();
 
             if (!message.trim()) {
-                alert('Inserisci un messaggio');
+                showNotification('Inserisci un messaggio', 'error');
                 return;
             }
 
@@ -1244,10 +1244,10 @@ while (have_posts()) : the_post();
                 success: function(response) {
                     console.log('Response received:', response);
                     if (response.success) {
-                        alert('Messaggio inviato con successo! L\'organizzatore ti risponderà presto.');
+                        showNotification('Messaggio inviato con successo! L\'organizzatore ti risponderà presto.', 'success');
                         $('#contact-message').val('');
                     } else {
-                        alert(response.data.message || 'Errore durante l\'invio del messaggio');
+                        showNotification(response.data.message || 'Errore durante l\'invio del messaggio', 'error');
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
@@ -1264,11 +1264,11 @@ while (have_posts()) : the_post();
                     } else if (jqXHR.status === 404) {
                         errorMsg = 'Pagina non trovata [404]';
                     } else if (jqXHR.status === 500) {
-                        errorMsg = 'Errore interno del server [500]';
+                        errorMsg = 'Errore interno del server [500]. Riprova tra qualche istante.';
                     } else if (textStatus === 'timeout') {
                         errorMsg = 'La richiesta ha impiegato troppo tempo. Il messaggio potrebbe essere stato inviato.';
                     }
-                    alert(errorMsg);
+                    showNotification(errorMsg, 'error');
                 },
                 complete: function() {
                     $btn.prop('disabled', false).text(originalText);

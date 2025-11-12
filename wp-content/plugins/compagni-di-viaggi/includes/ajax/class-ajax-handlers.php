@@ -970,16 +970,18 @@ class CDV_Ajax_Handlers {
 
         // Create notification for organizer
         if (class_exists('CDV_Notifications')) {
-            CDV_Notifications::create_notification(
+            CDV_Notifications::create(
                 $organizer_id,
                 'message',
+                'Nuovo messaggio',
                 sprintf(
                     '%s ti ha inviato un messaggio riguardo "%s": %s',
                     $sender->user_login,
                     $travel->post_title,
                     wp_trim_words($message, 15)
                 ),
-                get_permalink($travel_id)
+                get_permalink($travel_id),
+                $travel_id
             );
         }
 
