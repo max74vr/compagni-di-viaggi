@@ -448,8 +448,16 @@ add_action('wp_head', 'cdv_output_page_custom_css', 100);
  * Advanced Search and Filters for Viaggi Archive
  */
 function cdv_filter_viaggi_archive($query) {
-    // Only modify main query on viaggio archive pages
-    if (!is_admin() && $query->is_main_query() && is_post_type_archive('viaggio')) {
+    // Only modify main query on viaggio archive pages OR search with post_type=viaggio
+    $is_viaggio_query = is_post_type_archive('viaggio') ||
+                        (is_search() && isset($_GET['post_type']) && $_GET['post_type'] === 'viaggio');
+
+    if (!is_admin() && $query->is_main_query() && $is_viaggio_query) {
+
+        // Force post_type to viaggio for search queries
+        if (is_search() && isset($_GET['post_type']) && $_GET['post_type'] === 'viaggio') {
+            $query->set('post_type', 'viaggio');
+        }
 
         // Meta query array
         $meta_query = array('relation' => 'AND');

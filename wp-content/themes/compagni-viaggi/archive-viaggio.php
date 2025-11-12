@@ -20,7 +20,10 @@ get_header();
             <aside class="filters-sidebar">
                 <h3>Filtra Viaggi</h3>
 
-                <form method="get" action="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="filters-form">
+                <form method="get" action="<?php echo esc_url(home_url('/')); ?>" class="filters-form">
+                    <!-- Mantieni il post_type viaggio durante la ricerca -->
+                    <input type="hidden" name="post_type" value="viaggio">
+
                     <div class="filters-form-scroll">
                         <div class="filter-group">
                             <label for="search">Cerca</label>
