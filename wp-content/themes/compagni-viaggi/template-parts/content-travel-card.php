@@ -7,11 +7,10 @@
 <article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
     <?php
     $show_image = !is_front_page(); // Non mostrare immagine in home
-    $has_thumbnail = has_post_thumbnail();
     $taxonomy_image_url = false;
 
-    // Se non ha immagine, cerca l'immagine del tipo di viaggio
-    if ($show_image && !$has_thumbnail && class_exists('CDV_Taxonomy_Images')) {
+    // PRIORITÀ: Cerca prima l'immagine del tipo di viaggio (invece della featured image)
+    if ($show_image && class_exists('CDV_Taxonomy_Images')) {
         $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
         if (!empty($travel_types)) {
             // Ottieni immagine random se ci sono più tipi
@@ -20,16 +19,10 @@
     }
     ?>
 
-    <?php if ($show_image && $has_thumbnail) : ?>
+    <?php if ($show_image && $taxonomy_image_url) : ?>
         <div class="card-image">
             <a href="<?php the_permalink(); ?>">
-                <?php the_post_thumbnail('travel-card'); ?>
-            </a>
-        </div>
-    <?php elseif ($show_image && $taxonomy_image_url) : ?>
-        <div class="card-image">
-            <a href="<?php the_permalink(); ?>">
-                <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
+                <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" loading="lazy" />
             </a>
         </div>
     <?php elseif ($show_image) : ?>

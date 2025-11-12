@@ -16,10 +16,21 @@ while (have_posts()) : the_post();
     ?>
 
     <main class="site-main single-travel">
-        <!-- Hero Image -->
-        <?php if (has_post_thumbnail()) : ?>
+        <!-- Hero Image from Taxonomy -->
+        <?php
+        $hero_image_url = false;
+
+        // PRIORITÀ: Cerca l'immagine del tipo di viaggio (invece della featured image)
+        if (class_exists('CDV_Taxonomy_Images')) {
+            $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
+            if (!empty($travel_types)) {
+                $hero_image_url = CDV_Taxonomy_Images::get_random_term_image($travel_types, 'travel-hero');
+            }
+        }
+
+        if ($hero_image_url) : ?>
             <div class="travel-hero">
-                <?php the_post_thumbnail('travel-hero'); ?>
+                <img src="<?php echo esc_url($hero_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
             </div>
         <?php endif; ?>
 
@@ -745,15 +756,25 @@ while (have_posts()) : the_post();
             .message-bubble {
                 max-width: 85%;
             }
+            /* Gallery full width on mobile */
+            .travel-gallery-section {
+                max-width: 100%;
+                padding: 20px;
+            }
+            .travel-gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
         }
 
-        /* Photo Gallery Styles */
+        /* Photo Gallery Styles - 50% width */
         .travel-gallery-section {
             margin: 40px 0;
             padding: 30px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-width: 50%;
         }
 
         .travel-gallery-section h3 {
@@ -764,8 +785,8 @@ while (have_posts()) : the_post();
 
         .travel-gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
             margin-bottom: 20px;
         }
 
