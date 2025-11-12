@@ -319,10 +319,10 @@ function cdv_pagination() {
 }
 
 /**
- * Custom excerpt length
+ * Custom excerpt length - max 3 lines
  */
 function cdv_excerpt_length($length) {
-    return 30;
+    return 15;
 }
 add_filter('excerpt_length', 'cdv_excerpt_length');
 

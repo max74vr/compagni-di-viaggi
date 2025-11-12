@@ -4,81 +4,30 @@
  */
 ?>
 
-<article id="post-<?php the_ID(); ?>" <?php post_class('card'); ?>>
-    <?php
-    $show_image = !is_front_page(); // Non mostrare immagine in home
-    $has_thumbnail = has_post_thumbnail();
-    $taxonomy_image_url = false;
-
-    // PRIORITÀ: Prima cerca l'immagine del tipo di viaggio (taxonomy)
-    if ($show_image && class_exists('CDV_Taxonomy_Images')) {
-        $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
-        if (!empty($travel_types)) {
-            // Ottieni immagine random se ci sono più tipi
-            $taxonomy_image_url = CDV_Taxonomy_Images::get_random_term_image($travel_types, 'travel-card');
-        }
-    }
-    ?>
-
-    <?php if ($show_image && $taxonomy_image_url) : ?>
-        <!-- Immagine dalla tassonomia tipo_viaggio (PRIORITARIA) -->
-        <div class="card-image">
-            <a href="<?php the_permalink(); ?>">
-                <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
-            </a>
-            <?php if (is_user_logged_in()) : ?>
-                <button class="wishlist-btn <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
-                        data-travel-id="<?php the_ID(); ?>"
-                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
-                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
-                </button>
-            <?php endif; ?>
-        </div>
-    <?php elseif ($show_image && $has_thumbnail) : ?>
-        <!-- Fallback: Immagine caricata dall'utente (featured image) -->
-        <div class="card-image">
-            <a href="<?php the_permalink(); ?>">
-                <?php the_post_thumbnail('travel-card'); ?>
-            </a>
-            <?php if (is_user_logged_in()) : ?>
-                <button class="wishlist-btn <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
-                        data-travel-id="<?php the_ID(); ?>"
-                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
-                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
-                </button>
-            <?php endif; ?>
-        </div>
-    <?php elseif ($show_image) : ?>
-        <!-- Nessuna immagine disponibile -->
-        <div class="card-image card-image-placeholder">
-            <a href="<?php the_permalink(); ?>">
-                <div class="placeholder-content">
-                    <span class="placeholder-icon">✈️</span>
-                    <span class="placeholder-text">Nessuna immagine</span>
-                </div>
-            </a>
-            <?php if (is_user_logged_in()) : ?>
-                <button class="wishlist-btn <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
-                        data-travel-id="<?php the_ID(); ?>"
-                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
-                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
-                </button>
-            <?php endif; ?>
-        </div>
-    <?php endif; ?>
+<article id="post-<?php the_ID(); ?>" <?php post_class('card card-text-only'); ?>>
 
     <div class="card-content">
         <div class="card-header">
-            <?php
-            $is_expired = get_query_var('is_expired', false);
-            if ($is_expired) :
-            ?>
-                <span class="badge badge-expired" style="background: #dc3545; color: white; padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5); border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
-                    Scaduto
-                </span>
+            <div class="card-badges">
+                <?php
+                $is_expired = get_query_var('is_expired', false);
+                if ($is_expired) :
+                ?>
+                    <span class="badge badge-expired" style="background: #dc3545; color: white; padding: calc(var(--spacing-unit) * 0.5) calc(var(--spacing-unit) * 1.5); border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+                        Scaduto
+                    </span>
+                <?php endif; ?>
+                <?php cdv_travel_type_badges(); ?>
+                <?php if (!$is_expired) echo cdv_get_travel_status_label(); ?>
+            </div>
+
+            <?php if (is_user_logged_in()) : ?>
+                <button class="wishlist-btn-inline <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
+                        data-travel-id="<?php the_ID(); ?>"
+                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
+                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
+                </button>
             <?php endif; ?>
-            <?php cdv_travel_type_badges(); ?>
-            <?php if (!$is_expired) echo cdv_get_travel_status_label(); ?>
         </div>
 
         <h3 class="card-title">
@@ -102,59 +51,63 @@
 </article>
 
 <style>
-.card-image {
-    width: 100%;
-    aspect-ratio: 4/3;
-    overflow: hidden;
-    border-radius: 8px 8px 0 0;
-    position: relative;
+/* Text-only card styles */
+.card-text-only .card-content {
+    padding: calc(var(--spacing-unit) * 3);
 }
 
-.card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s ease;
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-bottom: calc(var(--spacing-unit) * 2);
 }
 
-.card:hover .card-image img {
-    transform: scale(1.05);
+.card-badges {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 1);
+    flex-wrap: wrap;
+    flex: 1;
 }
 
-.wishlist-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
+/* Wishlist button inline style */
+.wishlist-btn-inline {
     background: white;
-    border: none;
+    border: 2px solid #e0e0e0;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     transition: all 0.3s ease;
-    z-index: 10;
+    flex-shrink: 0;
 }
 
-.wishlist-btn:hover {
+.wishlist-btn-inline:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    border-color: #f56565;
+    background: #fff5f5;
+}
+
+.wishlist-btn-inline.active {
+    border-color: #f56565;
+    background: #fff5f5;
 }
 
 .wishlist-icon {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     line-height: 1;
     transition: transform 0.2s ease;
 }
 
-.wishlist-btn:active .wishlist-icon {
+.wishlist-btn-inline:active .wishlist-icon {
     transform: scale(0.9);
 }
 
-.wishlist-btn.active .wishlist-icon {
+.wishlist-btn-inline.active .wishlist-icon {
     animation: heartBeat 0.5s ease;
 }
 
@@ -163,49 +116,6 @@
     25% { transform: scale(1.3); }
     50% { transform: scale(1.1); }
     75% { transform: scale(1.2); }
-}
-
-.card-image-placeholder {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.card-image-placeholder a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    text-decoration: none;
-}
-
-.placeholder-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: calc(var(--spacing-unit) * 1);
-    color: white;
-    text-align: center;
-}
-
-.placeholder-icon {
-    font-size: 4rem;
-    opacity: 0.8;
-}
-
-.placeholder-text {
-    font-size: 0.9rem;
-    font-weight: 500;
-    opacity: 0.9;
-}
-
-.card-header {
-    display: flex;
-    gap: calc(var(--spacing-unit) * 1);
-    margin-bottom: calc(var(--spacing-unit) * 2);
-    flex-wrap: wrap;
 }
 
 .travel-meta {
@@ -320,7 +230,7 @@
 <script>
 jQuery(document).ready(function($) {
     // Wishlist toggle - delegate to handle dynamically loaded cards
-    $(document).on('click', '.wishlist-btn', function(e) {
+    $(document).on('click', '.wishlist-btn, .wishlist-btn-inline', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
