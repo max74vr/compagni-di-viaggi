@@ -140,10 +140,13 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
             <button class="tab-button" data-tab="notifications">
                 🔔 Notifiche
                 <?php
-                $notifications_count = CDV_Notifications::get_unread_count(get_current_user_id());
-                if ($notifications_count > 0) : ?>
-                    <span class="badge-count"><?php echo $notifications_count; ?></span>
-                <?php endif; ?>
+                if (class_exists('CDV_Notifications')) {
+                    $notifications_count = CDV_Notifications::get_unread_count(get_current_user_id());
+                    if ($notifications_count > 0) : ?>
+                        <span class="badge-count"><?php echo $notifications_count; ?></span>
+                    <?php endif;
+                }
+                ?>
             </button>
             <button class="tab-button" data-tab="wishlist">
                 💝 Wishlist

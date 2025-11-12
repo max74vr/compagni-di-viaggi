@@ -54,11 +54,15 @@
                 <a href="<?php echo esc_url(home_url('/dashboard?tab=notifications')); ?>" class="btn-header btn-header-icon notifications-btn" title="Notifiche">
                     🔔
                     <?php
-                    $unread_count = CDV_Notifications::get_unread_count(get_current_user_id());
-                    if ($unread_count > 0) :
+                    if (class_exists('CDV_Notifications')) {
+                        $unread_count = CDV_Notifications::get_unread_count(get_current_user_id());
+                        if ($unread_count > 0) :
+                        ?>
+                            <span class="notifications-badge"><?php echo $unread_count; ?></span>
+                        <?php
+                        endif;
+                    }
                     ?>
-                        <span class="notifications-badge"><?php echo $unread_count; ?></span>
-                    <?php endif; ?>
                 </a>
                 <a href="<?php echo esc_url(home_url('/dashboard')); ?>" class="btn-header btn-header-secondary">
                     Dashboard
