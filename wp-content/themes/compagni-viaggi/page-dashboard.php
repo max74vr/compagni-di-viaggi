@@ -156,6 +156,9 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     <span class="badge-count"><?php echo $wishlist_count; ?></span>
                 <?php endif; ?>
             </button>
+            <button class="tab-button" data-tab="referral">
+                🎁 Invita Amici
+            </button>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
         </div>
 
@@ -710,6 +713,91 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                     </a>
                 </div>
             <?php endif; ?>
+        </div>
+
+        <!-- Tab: Invita Amici (Referral) -->
+        <div class="tab-content" id="tab-referral">
+            <div class="section-header">
+                <h2>🎁 Invita Amici e Guadagna Punti</h2>
+                <p>Condividi il tuo codice referral con gli amici e guadagna punti quando si iscrivono!</p>
+            </div>
+
+            <div class="referral-stats-container">
+                <div class="stats-loading">
+                    <p>Caricamento statistiche referral...</p>
+                </div>
+            </div>
+
+            <div class="referral-code-section">
+                <h3>📋 Il Tuo Codice Referral</h3>
+                <div class="referral-code-box">
+                    <div class="code-display">
+                        <span id="referral-code" class="referral-code">Caricamento...</span>
+                        <button id="copy-referral-code-btn" class="btn btn-sm btn-secondary" title="Copia codice">
+                            📋 Copia
+                        </button>
+                    </div>
+                </div>
+
+                <div class="referral-link-box">
+                    <label>🔗 Link di Invito:</label>
+                    <div class="link-display">
+                        <input type="text" id="referral-link" readonly value="Caricamento...">
+                        <button id="copy-referral-link-btn" class="btn btn-sm btn-primary" title="Copia link">
+                            📋 Copia Link
+                        </button>
+                        <button id="share-referral-btn" class="btn btn-sm btn-success" title="Condividi">
+                            💬 Condividi
+                        </button>
+                    </div>
+                </div>
+
+                <div class="referral-share-buttons">
+                    <p><strong>Condividi su:</strong></p>
+                    <div class="social-share-ref"></div>
+                </div>
+            </div>
+
+            <div class="referral-rewards-section">
+                <h3>🏆 Come Funziona</h3>
+                <div class="rewards-info">
+                    <div class="reward-item">
+                        <span class="reward-icon">🎯</span>
+                        <div class="reward-details">
+                            <h4>Invita un Amico</h4>
+                            <p>Condividi il tuo codice referral con amici e conoscenti</p>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <span class="reward-icon">✅</span>
+                        <div class="reward-details">
+                            <h4>L'Amico si Registra</h4>
+                            <p>Quando si iscrive usando il tuo codice, ottieni 20 punti</p>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <span class="reward-icon">🎁</span>
+                        <div class="reward-details">
+                            <h4>L'Amico Partecipa a un Viaggio</h4>
+                            <p>Quando completa la sua prima partecipazione, guadagni altri 30 punti!</p>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <span class="reward-icon">⭐</span>
+                        <div class="reward-details">
+                            <h4>Migliora la Tua Reputazione</h4>
+                            <p>I punti referral aumentano la tua reputazione e visibilità</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="referral-history-section">
+                <h3>👥 I Tuoi Referral</h3>
+                <div id="referral-history-container">
+                    <p class="loading-text">Caricamento...</p>
+                </div>
+            </div>
         </div>
 
         <!-- Tab: Impostazioni -->
@@ -2032,6 +2120,242 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
         font-size: 1.5rem;
     }
 }
+
+/* Referral System Styles */
+.referral-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: calc(var(--spacing-unit) * 3);
+    margin: calc(var(--spacing-unit) * 4) 0;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    text-align: center;
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.stat-card.stat-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card.stat-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card.stat-primary {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: calc(var(--spacing-unit) * 1);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: calc(var(--spacing-unit) * 0.5);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.referral-code-section {
+    background: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin: calc(var(--spacing-unit) * 3) 0;
+}
+
+.referral-code-box {
+    margin: calc(var(--spacing-unit) * 2) 0;
+}
+
+.code-display {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 2);
+    padding: calc(var(--spacing-unit) * 2);
+    background: #f5f5f5;
+    border-radius: var(--border-radius);
+}
+
+.referral-code {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-family: monospace;
+    letter-spacing: 2px;
+    color: var(--primary-color);
+}
+
+.referral-link-box {
+    margin: calc(var(--spacing-unit) * 3) 0;
+}
+
+.link-display {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 1);
+    margin-top: calc(var(--spacing-unit) * 1);
+}
+
+.link-display input {
+    flex: 1;
+    padding: calc(var(--spacing-unit) * 1.5);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-family: monospace;
+    font-size: 0.9rem;
+}
+
+.referral-share-buttons {
+    margin-top: calc(var(--spacing-unit) * 3);
+}
+
+.social-share-ref {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing-unit) * 1.5);
+    margin-top: calc(var(--spacing-unit) * 1.5);
+}
+
+.referral-rewards-section {
+    background: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin: calc(var(--spacing-unit) * 3) 0;
+}
+
+.rewards-info {
+    display: grid;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 2);
+}
+
+.reward-item {
+    display: flex;
+    align-items: flex-start;
+    gap: calc(var(--spacing-unit) * 2);
+    padding: calc(var(--spacing-unit) * 2);
+    background: #f9f9f9;
+    border-radius: var(--border-radius);
+}
+
+.reward-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.reward-details h4 {
+    margin: 0 0 calc(var(--spacing-unit) * 0.5) 0;
+    color: var(--text-dark);
+}
+
+.reward-details p {
+    margin: 0;
+    color: var(--text-medium);
+    font-size: 0.9rem;
+}
+
+.referral-history-section {
+    background: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    margin: calc(var(--spacing-unit) * 3) 0;
+}
+
+.referral-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 2);
+}
+
+.referral-item {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing-unit) * 2);
+    padding: calc(var(--spacing-unit) * 2);
+    background: #f9f9f9;
+    border-radius: var(--border-radius);
+}
+
+.referral-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.referral-details {
+    flex: 1;
+}
+
+.referral-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: calc(var(--spacing-unit) * 0.5);
+}
+
+.referral-date {
+    font-size: 0.85rem;
+    color: var(--text-medium);
+}
+
+.referral-status {
+    padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.referral-status.status-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.referral-status.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.referral-points {
+    padding: calc(var(--spacing-unit) * 1) calc(var(--spacing-unit) * 2);
+    background: var(--primary-color);
+    color: white;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .referral-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .link-display {
+        flex-direction: column;
+    }
+
+    .referral-item {
+        flex-wrap: wrap;
+    }
+}
 </style>
 
 <script>
@@ -3022,7 +3346,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Check if we should open notifications tab on page load
+    // Check if we should open specific tab on page load
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'notifications') {
         const notifTab = document.querySelector('[data-tab="notifications"]');
@@ -3030,6 +3354,164 @@ document.addEventListener('DOMContentLoaded', function() {
             notifTab.click();
         }
     }
+    if (urlParams.get('tab') === 'referral') {
+        const referralTab = document.querySelector('[data-tab="referral"]');
+        if (referralTab) {
+            referralTab.click();
+        }
+    }
+
+    // Referral System
+    function loadReferralStats() {
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_referral_stats',
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const stats = response.data;
+
+                    // Update code and link
+                    document.getElementById('referral-code').textContent = stats.code;
+                    document.getElementById('referral-link').value = stats.link;
+
+                    // Build stats HTML
+                    const statsHTML = `
+                        <div class="referral-stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-value">${stats.total}</div>
+                                <div class="stat-label">Referral Totali</div>
+                            </div>
+                            <div class="stat-card stat-success">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-value">${stats.completed}</div>
+                                <div class="stat-label">Completati</div>
+                            </div>
+                            <div class="stat-card stat-warning">
+                                <div class="stat-icon">⏳</div>
+                                <div class="stat-value">${stats.pending}</div>
+                                <div class="stat-label">In Attesa</div>
+                            </div>
+                            <div class="stat-card stat-primary">
+                                <div class="stat-icon">🏆</div>
+                                <div class="stat-value">${stats.current_points}</div>
+                                <div class="stat-label">Punti Totali</div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.querySelector('.referral-stats-container').innerHTML = statsHTML;
+
+                    // Build referral history
+                    if (stats.recent && stats.recent.length > 0) {
+                        let historyHTML = '<div class="referral-list">';
+                        stats.recent.forEach(ref => {
+                            const statusClass = ref.status === 'completed' ? 'success' : 'pending';
+                            const statusIcon = ref.status === 'completed' ? '✅' : '⏳';
+                            const statusText = ref.status === 'completed' ? 'Completato' : 'In Attesa';
+                            const date = new Date(ref.created_at).toLocaleDateString('it-IT');
+
+                            historyHTML += `
+                                <div class="referral-item">
+                                    <div class="referral-avatar">
+                                        ${ref.display_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div class="referral-details">
+                                        <div class="referral-name">${ref.display_name}</div>
+                                        <div class="referral-date">Registrato il ${date}</div>
+                                    </div>
+                                    <div class="referral-status status-${statusClass}">
+                                        ${statusIcon} ${statusText}
+                                    </div>
+                                    ${ref.reward_given ? '<div class="referral-points">+' + ref.reward_points + ' punti</div>' : ''}
+                                </div>
+                            `;
+                        });
+                        historyHTML += '</div>';
+                        document.getElementById('referral-history-container').innerHTML = historyHTML;
+                    } else {
+                        document.getElementById('referral-history-container').innerHTML = `
+                            <div class="empty-state">
+                                <p>Non hai ancora invitato nessuno. Condividi il tuo link!</p>
+                            </div>
+                        `;
+                    }
+
+                    // Build social share buttons
+                    const shareHTML = `
+                        <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(stats.link)}"
+                           target="_blank" class="btn btn-sm" style="background: #1877f2; color: white;">
+                            Facebook
+                        </a>
+                        <a href="https://twitter.com/intent/tweet?url=${encodeURIComponent(stats.link)}&text=${encodeURIComponent('Unisciti a Compagni di Viaggi!')}"
+                           target="_blank" class="btn btn-sm" style="background: #1da1f2; color: white;">
+                            Twitter
+                        </a>
+                        <a href="https://wa.me/?text=${encodeURIComponent('Unisciti a Compagni di Viaggi! ' + stats.link)}"
+                           target="_blank" class="btn btn-sm" style="background: #25d366; color: white;">
+                            WhatsApp
+                        </a>
+                        <a href="mailto:?subject=${encodeURIComponent('Unisciti a Compagni di Viaggi!')}&body=${encodeURIComponent('Ho trovato questa fantastica piattaforma per trovare compagni di viaggio! Iscriviti usando il mio link: ' + stats.link)}"
+                           class="btn btn-sm" style="background: #ea4335; color: white;">
+                            Email
+                        </a>
+                    `;
+                    document.querySelector('.social-share-ref').innerHTML = shareHTML;
+                }
+            }
+        });
+    }
+
+    // Copy referral code
+    document.getElementById('copy-referral-code-btn').addEventListener('click', function() {
+        const code = document.getElementById('referral-code').textContent;
+        navigator.clipboard.writeText(code).then(() => {
+            this.textContent = '✅ Copiato!';
+            setTimeout(() => {
+                this.textContent = '📋 Copia';
+            }, 2000);
+        });
+    });
+
+    // Copy referral link
+    document.getElementById('copy-referral-link-btn').addEventListener('click', function() {
+        const link = document.getElementById('referral-link');
+        link.select();
+        document.execCommand('copy');
+        this.textContent = '✅ Copiato!';
+        setTimeout(() => {
+            this.textContent = '📋 Copia Link';
+        }, 2000);
+    });
+
+    // Share referral (native share API if available)
+    document.getElementById('share-referral-btn').addEventListener('click', function() {
+        const link = document.getElementById('referral-link').value;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Unisciti a Compagni di Viaggi!',
+                text: 'Ho trovato questa fantastica piattaforma per trovare compagni di viaggio!',
+                url: link
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link copiato negli appunti!');
+            });
+        }
+    });
+
+    // Load referral stats when referral tab is opened
+    document.querySelector('[data-tab="referral"]').addEventListener('click', function() {
+        if (document.querySelector('.referral-stats-container .stats-loading')) {
+            loadReferralStats();
+        }
+    });
 });
 </script>
 

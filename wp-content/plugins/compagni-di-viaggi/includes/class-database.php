@@ -146,8 +146,11 @@ class CDV_Database {
         // Table: notifications
         CDV_Notifications::create_table();
 
+        // Table: referrals
+        CDV_Referral_System::create_table();
+
         // Update version
-        update_option('cdv_db_version', '1.4.0');
+        update_option('cdv_db_version', '1.5.0');
     }
 
     /**

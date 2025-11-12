@@ -95,6 +95,7 @@ class Compagni_Di_Viaggi {
         require_once CDV_PLUGIN_DIR . 'includes/class-wishlist.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-notifications.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-social-sharing.php';
+        require_once CDV_PLUGIN_DIR . 'includes/class-referral-system.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-gdpr.php';
         require_once CDV_PLUGIN_DIR . 'includes/class-performance.php';
 
@@ -140,6 +141,7 @@ class Compagni_Di_Viaggi {
         CDV_Wishlist::init();
         CDV_Notifications::init();
         CDV_Social_Sharing::init();
+        CDV_Referral_System::init();
         CDV_GDPR::init();
         CDV_Performance::init();
         CDV_REST_API::init();
