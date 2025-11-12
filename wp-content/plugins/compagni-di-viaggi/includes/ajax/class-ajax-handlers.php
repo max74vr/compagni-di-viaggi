@@ -671,8 +671,11 @@ class CDV_Ajax_Handlers {
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         require_once(ABSPATH . 'wp-admin/includes/media.php');
 
-        // Delete old profile image if exists
-        $old_attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+        // Delete old profile image if exists - check both meta keys
+        $old_attachment_id = get_user_meta($user_id, 'cdv_profile_image', true);
+        if (!$old_attachment_id) {
+            $old_attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+        }
         if ($old_attachment_id) {
             wp_delete_attachment($old_attachment_id, true);
         }
@@ -684,11 +687,13 @@ class CDV_Ajax_Handlers {
             wp_send_json_error(array('message' => 'Errore durante il caricamento: ' . $attachment_id->get_error_message()));
         }
 
-        // Save attachment ID to user meta
-        update_user_meta($user_id, 'cdv_profile_image_id', $attachment_id);
+        // Save attachment ID to user meta (use cdv_profile_image for consistency)
+        update_user_meta($user_id, 'cdv_profile_image', $attachment_id);
+        // Remove old meta key if it exists
+        delete_user_meta($user_id, 'cdv_profile_image_id');
 
-        // Get image URL
-        $image_url = wp_get_attachment_url($attachment_id);
+        // Get image URL - use medium size for cropped version
+        $image_url = wp_get_attachment_image_url($attachment_id, 'medium');
 
         wp_send_json_success(array(
             'message' => 'Immagine profilo aggiornata con successo',
@@ -708,8 +713,11 @@ class CDV_Ajax_Handlers {
 
         $user_id = get_current_user_id();
 
-        // Get attachment ID
-        $attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+        // Get attachment ID - check both possible meta keys
+        $attachment_id = get_user_meta($user_id, 'cdv_profile_image', true);
+        if (!$attachment_id) {
+            $attachment_id = get_user_meta($user_id, 'cdv_profile_image_id', true);
+        }
 
         if (!$attachment_id) {
             wp_send_json_error(array('message' => 'Nessuna foto profilo personalizzata da rimuovere'));
@@ -722,9 +730,10 @@ class CDV_Ajax_Handlers {
             wp_send_json_error(array('message' => 'Errore durante la rimozione dell\'immagine'));
         }
 
-        // Remove user meta
-        delete_user_meta($user_id, 'cdv_profile_image_id');
+        // Remove all user meta related to profile image
         delete_user_meta($user_id, 'cdv_profile_image');
+        delete_user_meta($user_id, 'cdv_profile_image_id');
+        delete_user_meta($user_id, 'cdv_profile_image_approved');
 
         wp_send_json_success(array(
             'message' => 'Foto profilo rimossa con successo. Verrà utilizzato il Gravatar predefinito.',

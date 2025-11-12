@@ -55,7 +55,8 @@ class CDV_Custom_Avatars {
         $image_approved = get_user_meta($user->ID, 'cdv_profile_image_approved', true);
 
         if ($image_id && $image_approved === '1') {
-            $custom_url = wp_get_attachment_url($image_id);
+            // Use medium size (300x300) for better quality and cropped display
+            $custom_url = wp_get_attachment_image_url($image_id, 'medium');
             if ($custom_url) {
                 return $custom_url;
             }
@@ -80,7 +81,8 @@ class CDV_Custom_Avatars {
         $image_approved = get_user_meta($user->ID, 'cdv_profile_image_approved', true);
 
         if ($image_id && $image_approved === '1') {
-            $custom_url = wp_get_attachment_url($image_id);
+            // Use medium size (300x300) for better quality and cropped display
+            $custom_url = wp_get_attachment_image_url($image_id, 'medium');
             if ($custom_url) {
                 return sprintf(
                     '<img alt="%s" src="%s" class="avatar avatar-%d photo cdv-custom-avatar" height="%d" width="%d" loading="lazy" decoding="async" />',
@@ -330,7 +332,8 @@ class CDV_Custom_Avatars {
         $approved = get_user_meta($user_id, 'cdv_profile_image_approved', true);
 
         if ($image_id && $approved === '1') {
-            $custom_url = wp_get_attachment_url($image_id);
+            // Use medium size (300x300) for better quality and cropped display
+            $custom_url = wp_get_attachment_image_url($image_id, 'medium');
             if ($custom_url) {
                 return $custom_url;
             }

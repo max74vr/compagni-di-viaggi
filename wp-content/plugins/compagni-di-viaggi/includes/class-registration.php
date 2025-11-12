@@ -439,9 +439,12 @@ class CDV_Registration {
 
             error_log('CDV: Profile image upload completed for user ' . $user_id);
 
+            // Get image URL - use medium size for cropped version
+            $image_url = wp_get_attachment_image_url($attachment_id, 'medium');
+
             wp_send_json_success(array(
                 'message' => 'Immagine caricata con successo',
-                'image_url' => wp_get_attachment_url($attachment_id),
+                'image_url' => $image_url,
             ));
 
         } catch (Exception $e) {
