@@ -1205,6 +1205,13 @@ while (have_posts()) : the_post();
         $('#contact-organizer-form').on('submit', function(e) {
             e.preventDefault();
 
+            // Check if cdvAjax is defined
+            if (typeof cdvAjax === 'undefined') {
+                console.error('cdvAjax is not defined');
+                alert('Errore di configurazione. Ricarica la pagina e riprova.');
+                return;
+            }
+
             var $btn = $(this).find('button[type="submit"]');
             var originalText = $btn.text();
             var message = $('#contact-message').val();
@@ -1213,6 +1220,12 @@ while (have_posts()) : the_post();
                 alert('Inserisci un messaggio');
                 return;
             }
+
+            console.log('Sending contact message...', {
+                url: cdvAjax.ajaxurl,
+                travel_id: <?php echo $travel_id; ?>,
+                organizer_id: <?php echo $author_id; ?>
+            });
 
             $.ajax({
                 url: cdvAjax.ajaxurl,
@@ -1224,10 +1237,12 @@ while (have_posts()) : the_post();
                     organizer_id: <?php echo $author_id; ?>,
                     message: message
                 },
+                timeout: 30000, // 30 second timeout
                 beforeSend: function() {
                     $btn.prop('disabled', true).text('Invio in corso...');
                 },
                 success: function(response) {
+                    console.log('Response received:', response);
                     if (response.success) {
                         alert('Messaggio inviato con successo! L\'organizzatore ti risponderà presto.');
                         $('#contact-message').val('');
@@ -1235,8 +1250,25 @@ while (have_posts()) : the_post();
                         alert(response.data.message || 'Errore durante l\'invio del messaggio');
                     }
                 },
-                error: function() {
-                    alert('Errore di connessione');
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX Error:', {
+                        status: jqXHR.status,
+                        statusText: jqXHR.statusText,
+                        responseText: jqXHR.responseText,
+                        textStatus: textStatus,
+                        errorThrown: errorThrown
+                    });
+                    var errorMsg = 'Errore di connessione';
+                    if (jqXHR.status === 0) {
+                        errorMsg = 'Nessuna connessione. Verifica la connessione internet.';
+                    } else if (jqXHR.status === 404) {
+                        errorMsg = 'Pagina non trovata [404]';
+                    } else if (jqXHR.status === 500) {
+                        errorMsg = 'Errore interno del server [500]';
+                    } else if (textStatus === 'timeout') {
+                        errorMsg = 'La richiesta ha impiegato troppo tempo. Il messaggio potrebbe essere stato inviato.';
+                    }
+                    alert(errorMsg);
                 },
                 complete: function() {
                     $btn.prop('disabled', false).text(originalText);

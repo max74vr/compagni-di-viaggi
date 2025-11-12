@@ -996,7 +996,13 @@ class CDV_Ajax_Handlers {
             home_url('/dashboard')
         );
 
-        wp_mail($organizer_email, $subject, $email_message);
+        // Try to send email, but don't fail if it doesn't work
+        $email_sent = wp_mail($organizer_email, $subject, $email_message);
+
+        // Log if email failed but still return success since notification was created
+        if (!$email_sent) {
+            error_log('CDV: Failed to send contact organizer email to ' . $organizer_email);
+        }
 
         wp_send_json_success(array(
             'message' => 'Messaggio inviato con successo'
