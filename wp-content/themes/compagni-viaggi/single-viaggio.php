@@ -16,8 +16,22 @@ while (have_posts()) : the_post();
     ?>
 
     <main class="site-main single-travel">
-        <!-- Hero Image -->
-        <?php if (has_post_thumbnail()) : ?>
+        <!-- Hero Image - Priorità alle immagini della tassonomia tipo_viaggio -->
+        <?php
+        $taxonomy_hero_url = false;
+        if (class_exists('CDV_Taxonomy_Images')) {
+            $travel_types = wp_get_post_terms($travel_id, 'tipo_viaggio', array('fields' => 'ids'));
+            if (!empty($travel_types)) {
+                $taxonomy_hero_url = CDV_Taxonomy_Images::get_random_term_image($travel_types, 'travel-hero');
+            }
+        }
+        ?>
+
+        <?php if ($taxonomy_hero_url) : ?>
+            <div class="travel-hero">
+                <img src="<?php echo esc_url($taxonomy_hero_url); ?>" alt="<?php the_title_attribute(); ?>" />
+            </div>
+        <?php elseif (has_post_thumbnail()) : ?>
             <div class="travel-hero">
                 <?php the_post_thumbnail('travel-hero'); ?>
             </div>
@@ -211,6 +225,16 @@ while (have_posts()) : the_post();
                     <div class="travel-description">
                         <?php the_content(); ?>
                     </div>
+
+                    <!-- Featured Image caricata dall'utente - Mostrata dopo la descrizione -->
+                    <?php if (has_post_thumbnail() && $taxonomy_hero_url) : ?>
+                        <div class="travel-user-image">
+                            <h3>📸 Immagine del Viaggio</h3>
+                            <div class="user-image-wrapper">
+                                <?php the_post_thumbnail('large'); ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
 
                     <!-- Social Sharing -->
                     <div class="travel-share-section">
@@ -1075,6 +1099,42 @@ while (have_posts()) : the_post();
 
         .map-placeholder {
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* User Uploaded Image Section - 50% width */
+        .travel-user-image {
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .travel-user-image h3 {
+            margin: 0 0 20px 0;
+            color: #2d3748;
+            font-size: 1.5rem;
+        }
+
+        .user-image-wrapper {
+            width: 50%;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .user-image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Responsive: full width on mobile */
+        @media (max-width: 768px) {
+            .user-image-wrapper {
+                width: 100%;
+            }
         }
     </style>
 

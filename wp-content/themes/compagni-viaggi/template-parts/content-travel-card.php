@@ -10,8 +10,8 @@
     $has_thumbnail = has_post_thumbnail();
     $taxonomy_image_url = false;
 
-    // Se non ha immagine, cerca l'immagine del tipo di viaggio
-    if ($show_image && !$has_thumbnail && class_exists('CDV_Taxonomy_Images')) {
+    // PRIORITÀ: Prima cerca l'immagine del tipo di viaggio (taxonomy)
+    if ($show_image && class_exists('CDV_Taxonomy_Images')) {
         $travel_types = wp_get_post_terms(get_the_ID(), 'tipo_viaggio', array('fields' => 'ids'));
         if (!empty($travel_types)) {
             // Ottieni immagine random se ci sono più tipi
@@ -20,20 +20,8 @@
     }
     ?>
 
-    <?php if ($show_image && $has_thumbnail) : ?>
-        <div class="card-image">
-            <a href="<?php the_permalink(); ?>">
-                <?php the_post_thumbnail('travel-card'); ?>
-            </a>
-            <?php if (is_user_logged_in()) : ?>
-                <button class="wishlist-btn <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
-                        data-travel-id="<?php the_ID(); ?>"
-                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
-                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
-                </button>
-            <?php endif; ?>
-        </div>
-    <?php elseif ($show_image && $taxonomy_image_url) : ?>
+    <?php if ($show_image && $taxonomy_image_url) : ?>
+        <!-- Immagine dalla tassonomia tipo_viaggio (PRIORITARIA) -->
         <div class="card-image">
             <a href="<?php the_permalink(); ?>">
                 <img src="<?php echo esc_url($taxonomy_image_url); ?>" alt="<?php the_title_attribute(); ?>" />
@@ -46,7 +34,22 @@
                 </button>
             <?php endif; ?>
         </div>
+    <?php elseif ($show_image && $has_thumbnail) : ?>
+        <!-- Fallback: Immagine caricata dall'utente (featured image) -->
+        <div class="card-image">
+            <a href="<?php the_permalink(); ?>">
+                <?php the_post_thumbnail('travel-card'); ?>
+            </a>
+            <?php if (is_user_logged_in()) : ?>
+                <button class="wishlist-btn <?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'active' : ''; ?>"
+                        data-travel-id="<?php the_ID(); ?>"
+                        title="<?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? 'Rimuovi dalla wishlist' : 'Aggiungi alla wishlist'; ?>">
+                    <span class="wishlist-icon"><?php echo CDV_Wishlist::is_in_wishlist(get_current_user_id(), get_the_ID()) ? '❤️' : '🤍'; ?></span>
+                </button>
+            <?php endif; ?>
+        </div>
     <?php elseif ($show_image) : ?>
+        <!-- Nessuna immagine disponibile -->
         <div class="card-image card-image-placeholder">
             <a href="<?php the_permalink(); ?>">
                 <div class="placeholder-content">
