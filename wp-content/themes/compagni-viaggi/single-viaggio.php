@@ -352,11 +352,22 @@ while (have_posts()) : the_post();
                                                 } ?>
                                             </div>
                                         </a>
-                                        <?php if (is_user_logged_in() && get_current_user_id() != $user->ID && ($is_participant || $is_organizer)) : ?>
-                                            <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $user->ID . '&travel_id=' . $travel_id); ?>" class="btn btn-sm btn-primary participant-message-btn">
-                                                Invia Messaggio
-                                            </a>
-                                        <?php endif; ?>
+                                        <div class="participant-actions">
+                                            <?php if (is_user_logged_in() && get_current_user_id() != $user->ID && ($is_participant || $is_organizer)) : ?>
+                                                <a href="<?php echo home_url('/dashboard?tab=messages&user_id=' . $user->ID . '&travel_id=' . $travel_id); ?>" class="btn btn-sm btn-primary participant-message-btn">
+                                                    Invia Messaggio
+                                                </a>
+                                            <?php endif; ?>
+
+                                            <?php if ($is_organizer) : ?>
+                                                <button class="btn btn-sm btn-danger btn-remove-participant"
+                                                        data-travel-id="<?php echo $travel_id; ?>"
+                                                        data-user-id="<?php echo $user->ID; ?>"
+                                                        data-user-name="<?php echo esc_attr($user->user_login); ?>">
+                                                    Rimuovi
+                                                </button>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 <?php endforeach; ?>
                             </div>
@@ -470,6 +481,10 @@ while (have_posts()) : the_post();
                             <div class="sidebar-card success-card">
                                 <p><strong>✓ Sei un partecipante</strong></p>
                                 <p>Hai accesso alla chat di gruppo</p>
+                                <button id="leave-travel-btn" class="btn-danger" style="width: 100%; margin-top: 1rem;"
+                                        data-travel-id="<?php echo $travel_id; ?>">
+                                    Lascia il Viaggio
+                                </button>
                             </div>
                         <?php elseif ($has_requested) : ?>
                             <div class="sidebar-card warning-card">
@@ -1283,6 +1298,79 @@ while (have_posts()) : the_post();
                     } else {
                         alert(response.data.message || 'Errore');
                     }
+                }
+            });
+        });
+
+        // Remove participant (organizer action)
+        $('.btn-remove-participant').on('click', function() {
+            var btn = $(this);
+            var travelId = btn.data('travel-id');
+            var userId = btn.data('user-id');
+            var userName = btn.data('user-name');
+
+            if (!confirm('Sei sicuro di voler rimuovere ' + userName + ' dal viaggio?')) {
+                return;
+            }
+
+            btn.prop('disabled', true).text('Rimozione...');
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_remove_participant',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId,
+                    user_id: userId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Partecipante rimosso con successo');
+                        location.reload();
+                    } else {
+                        alert(response.data.message || 'Errore durante la rimozione');
+                        btn.prop('disabled', false).text('Rimuovi');
+                    }
+                },
+                error: function() {
+                    alert('Errore di connessione');
+                    btn.prop('disabled', false).text('Rimuovi');
+                }
+            });
+        });
+
+        // Leave travel (participant action)
+        $('#leave-travel-btn').on('click', function() {
+            var btn = $(this);
+            var travelId = btn.data('travel-id');
+
+            if (!confirm('Sei sicuro di voler lasciare questo viaggio? Questa azione non può essere annullata.')) {
+                return;
+            }
+
+            btn.prop('disabled', true).text('Uscita in corso...');
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_leave_travel',
+                    nonce: cdvAjax.nonce,
+                    travel_id: travelId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Hai lasciato il viaggio con successo');
+                        location.reload();
+                    } else {
+                        alert(response.data.message || 'Errore durante l\'uscita dal viaggio');
+                        btn.prop('disabled', false).text('Lascia il Viaggio');
+                    }
+                },
+                error: function() {
+                    alert('Errore di connessione');
+                    btn.prop('disabled', false).text('Lascia il Viaggio');
                 }
             });
         });

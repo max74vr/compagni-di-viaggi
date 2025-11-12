@@ -46,6 +46,10 @@ class CDV_Ajax_Handlers {
         // Contact Organizer
         add_action('wp_ajax_cdv_contact_organizer', array(__CLASS__, 'contact_organizer'));
 
+        // Participant Management
+        add_action('wp_ajax_cdv_remove_participant', array(__CLASS__, 'remove_participant'));
+        add_action('wp_ajax_cdv_leave_travel', array(__CLASS__, 'leave_travel'));
+
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
     }
@@ -997,5 +1001,158 @@ class CDV_Ajax_Handlers {
         wp_send_json_success(array(
             'message' => 'Messaggio inviato con successo'
         ));
+    }
+
+    /**
+     * AJAX: Remove participant (organizer action)
+     */
+    public static function remove_participant() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $user_id = isset($_POST['user_id']) ? intval($_POST['user_id']) : 0;
+        $current_user_id = get_current_user_id();
+
+        // Validate inputs
+        if (!$travel_id || !$user_id) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        // Check if current user is the organizer
+        $travel = get_post($travel_id);
+        if (!$travel || $travel->post_type !== 'viaggio') {
+            wp_send_json_error(array('message' => 'Viaggio non trovato'));
+        }
+
+        if ($travel->post_author != $current_user_id) {
+            wp_send_json_error(array('message' => 'Solo l\'organizzatore può rimuovere partecipanti'));
+        }
+
+        // Don't allow removing yourself
+        if ($user_id == $current_user_id) {
+            wp_send_json_error(array('message' => 'Non puoi rimuovere te stesso'));
+        }
+
+        // Remove participant
+        if (class_exists('CDV_Participants')) {
+            $result = CDV_Participants::remove_participant($travel_id, $user_id);
+
+            if (is_wp_error($result)) {
+                wp_send_json_error(array('message' => $result->get_error_message()));
+            }
+
+            // Create notification for removed user
+            $removed_user = get_userdata($user_id);
+            if ($removed_user && class_exists('CDV_Notifications')) {
+                CDV_Notifications::create_notification(
+                    $user_id,
+                    'travel_update',
+                    sprintf(
+                        'Sei stato rimosso dal viaggio "%s"',
+                        $travel->post_title
+                    ),
+                    get_permalink($travel_id)
+                );
+            }
+
+            // Send email notification
+            if ($removed_user) {
+                $subject = sprintf('[Compagni di Viaggi] Rimosso dal viaggio "%s"', $travel->post_title);
+                $message = sprintf(
+                    "Ciao %s,\n\nSei stato rimosso dal viaggio \"%s\" dall'organizzatore.\n\nPuoi visualizzare altri viaggi qui:\n%s\n\nGrazie,\nIl team di Compagni di Viaggi",
+                    $removed_user->user_login,
+                    $travel->post_title,
+                    get_post_type_archive_link('viaggio')
+                );
+                wp_mail($removed_user->user_email, $subject, $message);
+            }
+
+            wp_send_json_success(array('message' => 'Partecipante rimosso con successo'));
+        }
+
+        wp_send_json_error(array('message' => 'Errore durante la rimozione'));
+    }
+
+    /**
+     * AJAX: Leave travel (participant action)
+     */
+    public static function leave_travel() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $user_id = get_current_user_id();
+
+        // Validate inputs
+        if (!$travel_id) {
+            wp_send_json_error(array('message' => 'ID viaggio non valido'));
+        }
+
+        // Check if travel exists
+        $travel = get_post($travel_id);
+        if (!$travel || $travel->post_type !== 'viaggio') {
+            wp_send_json_error(array('message' => 'Viaggio non trovato'));
+        }
+
+        // Don't allow organizer to leave their own travel
+        if ($travel->post_author == $user_id) {
+            wp_send_json_error(array('message' => 'L\'organizzatore non può lasciare il proprio viaggio'));
+        }
+
+        // Check if user is actually a participant
+        if (class_exists('CDV_Participants') && !CDV_Participants::is_participant($travel_id, $user_id, 'accepted')) {
+            wp_send_json_error(array('message' => 'Non sei un partecipante di questo viaggio'));
+        }
+
+        // Remove participant
+        if (class_exists('CDV_Participants')) {
+            $result = CDV_Participants::remove_participant($travel_id, $user_id);
+
+            if (is_wp_error($result)) {
+                wp_send_json_error(array('message' => $result->get_error_message()));
+            }
+
+            // Create notification for organizer
+            $organizer_id = $travel->post_author;
+            $user = get_userdata($user_id);
+
+            if (class_exists('CDV_Notifications')) {
+                CDV_Notifications::create_notification(
+                    $organizer_id,
+                    'travel_update',
+                    sprintf(
+                        '%s ha lasciato il viaggio "%s"',
+                        $user->user_login,
+                        $travel->post_title
+                    ),
+                    get_permalink($travel_id)
+                );
+            }
+
+            // Send email to organizer
+            $organizer = get_userdata($organizer_id);
+            if ($organizer) {
+                $subject = sprintf('[Compagni di Viaggi] Un partecipante ha lasciato "%s"', $travel->post_title);
+                $message = sprintf(
+                    "Ciao %s,\n\n%s ha lasciato il viaggio \"%s\".\n\nPuoi visualizzare il viaggio qui:\n%s\n\nGrazie,\nIl team di Compagni di Viaggi",
+                    $organizer->user_login,
+                    $user->user_login,
+                    $travel->post_title,
+                    get_permalink($travel_id)
+                );
+                wp_mail($organizer->user_email, $subject, $message);
+            }
+
+            wp_send_json_success(array('message' => 'Hai lasciato il viaggio con successo'));
+        }
+
+        wp_send_json_error(array('message' => 'Errore durante l\'uscita dal viaggio'));
     }
 }
