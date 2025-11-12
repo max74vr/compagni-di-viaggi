@@ -212,6 +212,16 @@ while (have_posts()) : the_post();
                         <?php the_content(); ?>
                     </div>
 
+                    <!-- Social Sharing -->
+                    <div class="travel-share-section">
+                        <h3>💬 Condividi questo viaggio</h3>
+                        <?php
+                        if (class_exists('CDV_Social_Sharing')) {
+                            echo CDV_Social_Sharing::render_share_buttons($travel_id);
+                        }
+                        ?>
+                    </div>
+
                     <!-- Photo Gallery -->
                     <?php
                     $gallery_images = CDV_Travel_Gallery::get_gallery_images($travel_id);
