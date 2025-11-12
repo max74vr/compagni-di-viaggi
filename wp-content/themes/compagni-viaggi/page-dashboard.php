@@ -159,6 +159,15 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
             <button class="tab-button" data-tab="referral">
                 🎁 Invita Amici
             </button>
+            <?php
+            // Show statistics tab only if user has created travels
+            $user_travels_count = count_user_posts($current_user->ID, 'viaggio');
+            if ($user_travels_count > 0) :
+            ?>
+                <button class="tab-button" data-tab="statistics">
+                    📊 Statistiche
+                </button>
+            <?php endif; ?>
             <button class="tab-button" data-tab="settings">Impostazioni</button>
         </div>
 
@@ -799,6 +808,35 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
                 </div>
             </div>
         </div>
+
+        <!-- Tab: Statistiche (Statistics for Organizers) -->
+        <?php if ($user_travels_count > 0) : ?>
+        <div class="tab-content" id="tab-statistics">
+            <div class="section-header">
+                <h2>📊 Le Tue Statistiche</h2>
+                <p>Analisi dettagliata delle performance dei tuoi viaggi</p>
+            </div>
+
+            <div class="stats-loading-container">
+                <p>Caricamento statistiche...</p>
+            </div>
+
+            <!-- Overview Stats (will be filled by JavaScript) -->
+            <div id="overview-stats-container"></div>
+
+            <!-- Monthly Trends Chart -->
+            <div id="monthly-trends-container" style="margin: 30px 0;"></div>
+
+            <!-- Travel Performance -->
+            <div id="travel-performance-container" style="margin: 30px 0;"></div>
+
+            <!-- Popular Destinations -->
+            <div id="popular-destinations-container" style="margin: 30px 0;"></div>
+
+            <!-- Participant Demographics -->
+            <div id="demographics-container" style="margin: 30px 0;"></div>
+        </div>
+        <?php endif; ?>
 
         <!-- Tab: Impostazioni -->
         <div class="tab-content" id="tab-settings">
@@ -2356,6 +2394,133 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
         flex-wrap: wrap;
     }
 }
+
+/* Organizer Statistics Styles */
+.stats-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: calc(var(--spacing-unit) * 3);
+    margin: calc(var(--spacing-unit) * 4) 0;
+}
+
+.stat-overview-card {
+    background: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    border-left: 4px solid var(--primary-color);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: calc(var(--spacing-unit) * 1);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: calc(var(--spacing-unit) * 0.5);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-medium);
+    font-weight: 500;
+}
+
+.travel-perf-list {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 2);
+}
+
+.travel-perf-item {
+    background: white;
+    padding: calc(var(--spacing-unit) * 3);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.travel-perf-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: calc(var(--spacing-unit) * 1.5);
+    font-size: 1.1rem;
+}
+
+.travel-perf-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: calc(var(--spacing-unit) * 2);
+    font-size: 0.9rem;
+    color: var(--text-medium);
+}
+
+.destinations-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 2);
+}
+
+.destination-item {
+    background: white;
+    padding: calc(var(--spacing-unit) * 2.5);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.dest-name {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: calc(var(--spacing-unit) * 1);
+    font-size: 1.05rem;
+}
+
+.dest-stats {
+    display: flex;
+    gap: calc(var(--spacing-unit) * 1);
+    font-size: 0.85rem;
+    color: var(--text-medium);
+}
+
+.demographics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: calc(var(--spacing-unit) * 2);
+    margin-top: calc(var(--spacing-unit) * 2);
+}
+
+.demo-card {
+    background: white;
+    padding: calc(var(--spacing-unit) * 2);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.stats-loading-container {
+    text-align: center;
+    padding: calc(var(--spacing-unit) * 4);
+    color: var(--text-medium);
+}
+
+@media (max-width: 768px) {
+    .stats-overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .travel-perf-stats {
+        flex-direction: column;
+        gap: calc(var(--spacing-unit) * 1);
+    }
+}
 </style>
 
 <script>
@@ -3512,6 +3677,135 @@ document.addEventListener('DOMContentLoaded', function() {
             loadReferralStats();
         }
     });
+
+    // Organizer Statistics
+    function loadOrganizerStats() {
+        jQuery.ajax({
+            url: cdvAjax.ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'cdv_get_organizer_stats',
+                nonce: cdvAjax.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    const stats = response.data;
+
+                    // Overview stats grid
+                    const overviewHTML = `
+                        <div class="stats-overview-grid">
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">🗺️</div>
+                                <div class="stat-number">${stats.overview.total_travels}</div>
+                                <div class="stat-label">Viaggi Creati</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">✅</div>
+                                <div class="stat-number">${stats.overview.active_travels}</div>
+                                <div class="stat-label">Viaggi Attivi</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-number">${stats.overview.total_participants}</div>
+                                <div class="stat-label">Partecipanti Totali</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">⏳</div>
+                                <div class="stat-number">${stats.overview.pending_requests}</div>
+                                <div class="stat-label">Richieste Pendenti</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">⭐</div>
+                                <div class="stat-number">${stats.overview.average_rating.toFixed(1)}</div>
+                                <div class="stat-label">Valutazione Media</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">💬</div>
+                                <div class="stat-number">${stats.overview.total_reviews}</div>
+                                <div class="stat-label">Recensioni Ricevute</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-number">€${Math.round(stats.overview.total_revenue).toLocaleString()}</div>
+                                <div class="stat-label">Ricavi Totali</div>
+                            </div>
+                            <div class="stat-overview-card">
+                                <div class="stat-icon">📈</div>
+                                <div class="stat-number">${stats.overview.this_month_participants}</div>
+                                <div class="stat-label">Partecipanti Questo Mese</div>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('overview-stats-container').innerHTML = overviewHTML;
+
+                    // Travel performance
+                    if (stats.travel_performance && stats.travel_performance.length > 0) {
+                        let perfHTML = '<h3>🎯 Performance Viaggi</h3><div class="travel-perf-list">';
+                        stats.travel_performance.forEach(travel => {
+                            perfHTML += `
+                                <div class="travel-perf-item">
+                                    <div class="travel-perf-title">${travel.post_title}</div>
+                                    <div class="travel-perf-stats">
+                                        <span>👥 ${travel.accepted_count}/${travel.max_participants || 0}</span>
+                                        <span>📊 ${travel.fill_rate}% pieno</span>
+                                        <span>💰 €${Math.round(travel.potential_revenue || 0).toLocaleString()}</span>
+                                        ${travel.pending_count > 0 ? '<span class="badge-warning">⏳ ' + travel.pending_count + ' in attesa</span>' : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        perfHTML += '</div>';
+                        document.getElementById('travel-performance-container').innerHTML = perfHTML;
+                    }
+
+                    // Popular destinations
+                    if (stats.popular_destinations && stats.popular_destinations.length > 0) {
+                        let destHTML = '<h3>🌍 Destinazioni Più Popolari</h3><div class="destinations-list">';
+                        stats.popular_destinations.forEach(dest => {
+                            destHTML += `
+                                <div class="destination-item">
+                                    <div class="dest-name">${dest.destination}</div>
+                                    <div class="dest-stats">
+                                        <span>${dest.travel_count} viagg${dest.travel_count === 1 ? 'io' : 'i'}</span>
+                                        <span>•</span>
+                                        <span>${dest.total_participants} partecipanti</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        destHTML += '</div>';
+                        document.getElementById('popular-destinations-container').innerHTML = destHTML;
+                    }
+
+                    // Demographics
+                    if (stats.demographics && stats.demographics.total > 0) {
+                        let demoHTML = '<h3>👥 Demografia Partecipanti</h3>';
+                        demoHTML += '<div class="demographics-grid">';
+                        demoHTML += '<div class="demo-card"><strong>Totale Partecipanti:</strong> ' + stats.demographics.total + '</div>';
+                        demoHTML += '<div class="demo-card"><strong>Viaggiatori Abituali:</strong> ' + stats.demographics.repeat_travelers + '</div>';
+                        demoHTML += '</div>';
+                        document.getElementById('demographics-container').innerHTML = demoHTML;
+                    }
+
+                    // Hide loading
+                    document.querySelector('.stats-loading-container').style.display = 'none';
+                }
+            },
+            error: function() {
+                document.querySelector('.stats-loading-container').innerHTML = '<p>Errore nel caricamento delle statistiche.</p>';
+            }
+        });
+    }
+
+    // Load statistics when statistics tab is opened
+    const statsTab = document.querySelector('[data-tab="statistics"]');
+    if (statsTab) {
+        statsTab.addEventListener('click', function() {
+            if (document.querySelector('.stats-loading-container')) {
+                loadOrganizerStats();
+            }
+        });
+    }
 });
 </script>
 
