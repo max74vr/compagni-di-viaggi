@@ -43,6 +43,9 @@ class CDV_Ajax_Handlers {
         add_action('wp_ajax_cdv_send_group_message', array(__CLASS__, 'send_group_message'));
         add_action('wp_ajax_cdv_get_group_messages', array(__CLASS__, 'get_group_messages'));
 
+        // Contact Organizer
+        add_action('wp_ajax_cdv_contact_organizer', array(__CLASS__, 'contact_organizer'));
+
         // For non-logged-in users (if needed)
         // add_action('wp_ajax_nopriv_action_name', array(__CLASS__, 'method_name'));
     }
@@ -917,5 +920,82 @@ class CDV_Ajax_Handlers {
         $result = CDV_Reviews::mark_review_helpful($review_id, get_current_user_id());
 
         wp_send_json_success($result);
+    }
+
+    /**
+     * AJAX: Contact organizer
+     */
+    public static function contact_organizer() {
+        check_ajax_referer('cdv_ajax_nonce', 'nonce');
+
+        if (!is_user_logged_in()) {
+            wp_send_json_error(array('message' => 'Devi essere autenticato'));
+        }
+
+        $travel_id = isset($_POST['travel_id']) ? intval($_POST['travel_id']) : 0;
+        $organizer_id = isset($_POST['organizer_id']) ? intval($_POST['organizer_id']) : 0;
+        $message = isset($_POST['message']) ? sanitize_textarea_field($_POST['message']) : '';
+        $sender_id = get_current_user_id();
+
+        // Validate inputs
+        if (!$travel_id || !$organizer_id) {
+            wp_send_json_error(array('message' => 'Dati non validi'));
+        }
+
+        if (empty($message)) {
+            wp_send_json_error(array('message' => 'Il messaggio non può essere vuoto'));
+        }
+
+        // Check if user is trying to message themselves
+        if ($sender_id === $organizer_id) {
+            wp_send_json_error(array('message' => 'Non puoi inviare messaggi a te stesso'));
+        }
+
+        // Get travel and organizer info
+        $travel = get_post($travel_id);
+        if (!$travel || $travel->post_type !== 'viaggio') {
+            wp_send_json_error(array('message' => 'Viaggio non trovato'));
+        }
+
+        $sender = get_userdata($sender_id);
+        $organizer = get_userdata($organizer_id);
+
+        if (!$sender || !$organizer) {
+            wp_send_json_error(array('message' => 'Utente non trovato'));
+        }
+
+        // Create notification for organizer
+        if (class_exists('CDV_Notifications')) {
+            CDV_Notifications::create_notification(
+                $organizer_id,
+                'message',
+                sprintf(
+                    '%s ti ha inviato un messaggio riguardo "%s": %s',
+                    $sender->user_login,
+                    $travel->post_title,
+                    wp_trim_words($message, 15)
+                ),
+                get_permalink($travel_id)
+            );
+        }
+
+        // Send email to organizer
+        $organizer_email = $organizer->user_email;
+        $subject = sprintf('[Compagni di Viaggi] Messaggio da %s riguardo "%s"', $sender->user_login, $travel->post_title);
+
+        $email_message = sprintf(
+            "Ciao %s,\n\n%s ti ha inviato un messaggio riguardo il viaggio \"%s\":\n\n%s\n\nPuoi rispondere accedendo al tuo account:\n%s\n\nGrazie,\nIl team di Compagni di Viaggi",
+            $organizer->user_login,
+            $sender->user_login,
+            $travel->post_title,
+            $message,
+            home_url('/dashboard')
+        );
+
+        wp_mail($organizer_email, $subject, $email_message);
+
+        wp_send_json_success(array(
+            'message' => 'Messaggio inviato con successo'
+        ));
     }
 }

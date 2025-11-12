@@ -158,7 +158,7 @@ while (have_posts()) : the_post();
 
                             <?php if ($budget) : ?>
                                 <div class="detail-item">
-                                    <strong>💰 Budget:</strong>
+                                    <strong>💰 Budget indicativo:</strong>
                                     <span>€<?php echo number_format($budget, 0, ',', '.'); ?></span>
                                 </div>
                             <?php endif; ?>
@@ -486,6 +486,23 @@ while (have_posts()) : the_post();
                                     </div>
                                     <button type="submit" class="btn-primary" style="width: 100%;">
                                         Richiedi di Partecipare
+                                    </button>
+                                </form>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Contact Organizer Form - Available to all logged users -->
+                        <?php if (is_user_logged_in() && !$is_organizer) : ?>
+                            <div class="sidebar-card contact-card">
+                                <h3>💬 Chiedi Informazioni</h3>
+                                <p style="font-size: 0.9rem; color: #666; margin-bottom: 1rem;">Hai domande? Contatta l'organizzatore</p>
+                                <form id="contact-organizer-form">
+                                    <div class="form-group">
+                                        <label for="contact-message">Il tuo messaggio</label>
+                                        <textarea id="contact-message" rows="4" placeholder="Scrivi la tua domanda o richiesta di informazioni..." required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn-secondary" style="width: 100%;">
+                                        Invia Messaggio
                                     </button>
                                 </form>
                             </div>
@@ -1165,6 +1182,49 @@ while (have_posts()) : the_post();
                 },
                 error: function() {
                     alert('Errore di connessione');
+                }
+            });
+        });
+
+        // Contact organizer form
+        $('#contact-organizer-form').on('submit', function(e) {
+            e.preventDefault();
+
+            var $btn = $(this).find('button[type="submit"]');
+            var originalText = $btn.text();
+            var message = $('#contact-message').val();
+
+            if (!message.trim()) {
+                alert('Inserisci un messaggio');
+                return;
+            }
+
+            $.ajax({
+                url: cdvAjax.ajaxurl,
+                type: 'POST',
+                data: {
+                    action: 'cdv_contact_organizer',
+                    nonce: cdvAjax.nonce,
+                    travel_id: <?php echo $travel_id; ?>,
+                    organizer_id: <?php echo $author_id; ?>,
+                    message: message
+                },
+                beforeSend: function() {
+                    $btn.prop('disabled', true).text('Invio in corso...');
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Messaggio inviato con successo! L\'organizzatore ti risponderà presto.');
+                        $('#contact-message').val('');
+                    } else {
+                        alert(response.data.message || 'Errore durante l\'invio del messaggio');
+                    }
+                },
+                error: function() {
+                    alert('Errore di connessione');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).text(originalText);
                 }
             });
         });
