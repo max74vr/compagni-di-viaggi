@@ -16,7 +16,9 @@ get_header();
 
                 <!-- Search Box -->
                 <div class="search-box">
-                    <form class="search-form" action="<?php echo esc_url(home_url('/viaggi')); ?>" method="get">
+                    <form class="search-form" action="<?php echo esc_url(home_url('/')); ?>" method="get">
+                        <input type="hidden" name="post_type" value="viaggio">
+
                         <div class="form-group">
                             <label for="destination">Destinazione</label>
                             <input type="text" id="destination" name="s" placeholder="Dove vuoi andare?">

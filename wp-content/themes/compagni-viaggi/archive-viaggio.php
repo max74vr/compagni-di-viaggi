@@ -9,8 +9,13 @@ get_header();
 <main class="site-main">
     <div class="page-header">
         <div class="container">
-            <h1>Tutti i Viaggi</h1>
-            <p>Esplora tutti i viaggi disponibili e trova la tua prossima avventura</p>
+            <?php if (is_search() && get_search_query()) : ?>
+                <h1>Risultati per: "<?php echo esc_html(get_search_query()); ?>"</h1>
+                <p>Trovati <strong><?php echo $wp_query->found_posts; ?></strong> viaggi<?php if ($wp_query->found_posts != 1) : ?><?php endif; ?></p>
+            <?php else : ?>
+                <h1>Tutti i Viaggi</h1>
+                <p>Esplora tutti i viaggi disponibili e trova la tua prossima avventura</p>
+            <?php endif; ?>
         </div>
     </div>
 

@@ -740,3 +740,22 @@ function cdv_filter_viaggi_archive($query) {
     }
 }
 add_action('pre_get_posts', 'cdv_filter_viaggi_archive');
+
+/**
+ * Force use of archive-viaggio.php template for viaggio searches
+ * This ensures searches from hero section and travels page show results
+ * in the travels archive page instead of the generic search page
+ */
+function cdv_force_viaggio_archive_template($template) {
+    // Check if this is a search with post_type=viaggio
+    if (is_search() && isset($_GET['post_type']) && $_GET['post_type'] === 'viaggio') {
+        // Get the archive-viaggio.php template
+        $archive_template = locate_template('archive-viaggio.php');
+        if ($archive_template) {
+            return $archive_template;
+        }
+    }
+
+    return $template;
+}
+add_filter('template_include', 'cdv_force_viaggio_archive_template');
