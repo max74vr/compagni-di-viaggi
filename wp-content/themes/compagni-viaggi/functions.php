@@ -552,6 +552,138 @@ function cdv_filter_viaggi_archive($query) {
             );
         }
 
+        // Advanced Filters
+
+        // Filter by transport methods
+        if (!empty($_GET['transport']) && is_array($_GET['transport'])) {
+            $transport_query = array('relation' => 'OR');
+            foreach ($_GET['transport'] as $transport) {
+                $transport_query[] = array(
+                    'key' => 'cdv_transport',
+                    'value' => sanitize_text_field($transport),
+                    'compare' => 'LIKE'
+                );
+            }
+            $meta_query[] = $transport_query;
+        }
+
+        // Filter by accommodation
+        if (!empty($_GET['accommodation'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_accommodation',
+                'value' => sanitize_text_field($_GET['accommodation']),
+                'compare' => '='
+            );
+        }
+
+        // Filter by difficulty
+        if (!empty($_GET['difficulty'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_difficulty',
+                'value' => sanitize_text_field($_GET['difficulty']),
+                'compare' => '='
+            );
+        }
+
+        // Filter by meals
+        if (!empty($_GET['meals'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_meals',
+                'value' => sanitize_text_field($_GET['meals']),
+                'compare' => '='
+            );
+        }
+
+        // Filter by guide type
+        if (!empty($_GET['guide'])) {
+            $meta_query[] = array(
+                'key' => 'cdv_guide',
+                'value' => sanitize_text_field($_GET['guide']),
+                'compare' => '='
+            );
+        }
+
+        // Filter by organizer rating
+        if (!empty($_GET['min_rating'])) {
+            $min_rating = floatval($_GET['min_rating']);
+            // This will be a custom query - we need to join with user meta
+            // For now, we'll add it as a meta_query and handle it via filter
+            add_filter('posts_where', function($where) use ($min_rating) {
+                global $wpdb;
+                $where .= $wpdb->prepare(" AND {$wpdb->posts}.post_author IN (
+                    SELECT user_id FROM {$wpdb->usermeta}
+                    WHERE meta_key = 'cdv_reputation_score'
+                    AND CAST(meta_value AS DECIMAL(3,2)) >= %f
+                )", $min_rating);
+                return $where;
+            });
+        }
+
+        // Filter by trip duration
+        if (!empty($_GET['duration'])) {
+            $duration = sanitize_text_field($_GET['duration']);
+
+            // Calculate duration in days between start and end date
+            switch ($duration) {
+                case '1-3':
+                    $meta_query[] = array(
+                        'key' => 'cdv_duration_days',
+                        'value' => array(1, 3),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '4-7':
+                    $meta_query[] = array(
+                        'key' => 'cdv_duration_days',
+                        'value' => array(4, 7),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '8-14':
+                    $meta_query[] = array(
+                        'key' => 'cdv_duration_days',
+                        'value' => array(8, 14),
+                        'compare' => 'BETWEEN',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+                case '15+':
+                    $meta_query[] = array(
+                        'key' => 'cdv_duration_days',
+                        'value' => 15,
+                        'compare' => '>=',
+                        'type' => 'NUMERIC'
+                    );
+                    break;
+            }
+        }
+
+        // Filter: Only travels with available spots
+        if (!empty($_GET['solo_posti_disponibili'])) {
+            // This requires custom SQL to compare current participants vs max participants
+            add_filter('posts_where', function($where) {
+                global $wpdb;
+                $participants_table = $wpdb->prefix . 'cdv_participants';
+
+                $where .= " AND {$wpdb->posts}.ID IN (
+                    SELECT p.ID
+                    FROM {$wpdb->posts} p
+                    LEFT JOIN {$wpdb->postmeta} pm ON p.ID = pm.post_id AND pm.meta_key = 'cdv_max_participants'
+                    LEFT JOIN (
+                        SELECT travel_id, COUNT(*) as participant_count
+                        FROM {$participants_table}
+                        WHERE status = 'accepted'
+                        GROUP BY travel_id
+                    ) pt ON p.ID = pt.travel_id
+                    WHERE CAST(pm.meta_value AS UNSIGNED) > COALESCE(pt.participant_count, 0)
+                )";
+
+                return $where;
+            });
+        }
+
         // Apply meta query if we have filters
         if (count($meta_query) > 1) {
             $query->set('meta_query', $meta_query);
@@ -605,6 +737,20 @@ function cdv_filter_viaggi_archive($query) {
                 $query->set('meta_key', 'cdv_max_participants');
                 $query->set('orderby', 'meta_value_num');
                 $query->set('order', 'DESC');
+                break;
+
+            case 'rating':
+                // Sort by organizer reputation score
+                add_filter('posts_orderby', function($orderby) {
+                    global $wpdb;
+                    return "(
+                        SELECT CAST(meta_value AS DECIMAL(3,2))
+                        FROM {$wpdb->usermeta}
+                        WHERE user_id = {$wpdb->posts}.post_author
+                        AND meta_key = 'cdv_reputation_score'
+                        LIMIT 1
+                    ) DESC";
+                });
                 break;
 
             default: // 'date'
