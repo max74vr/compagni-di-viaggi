@@ -30,6 +30,9 @@ $my_travels = new WP_Query(array(
     'order' => 'DESC',
 ));
 
+// Count user's travels for statistics tab visibility
+$user_travels_count = $my_travels->post_count;
+
 // Query viaggi a cui partecipo
 global $wpdb;
 $participants_table = $wpdb->prefix . 'cdv_travel_participants';
@@ -159,11 +162,7 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
             <button class="tab-button" data-tab="referral">
                 🎁 Invita Amici
             </button>
-            <?php
-            // Show statistics tab only if user has created travels
-            $user_travels_count = count_user_posts($current_user->ID, 'viaggio');
-            if ($user_travels_count > 0) :
-            ?>
+            <?php if ($user_travels_count > 0) : ?>
                 <button class="tab-button" data-tab="statistics">
                     📊 Statistiche
                 </button>
@@ -1051,12 +1050,12 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
 }
 
 .tab-button {
-    padding: 1rem 1.5rem;
+    padding: 1rem 1rem;
     background: none;
     border: none;
     border-bottom: 3px solid transparent;
     cursor: pointer;
-    font-size: 1rem;
+    font-size: 0.85rem;
     color: #666;
     transition: all 0.3s;
     position: relative;
