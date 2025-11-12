@@ -454,34 +454,15 @@ function cdv_filter_viaggi_archive($query) {
         // Meta query array
         $meta_query = array('relation' => 'AND');
 
-        // Filter by date range
-        if (!empty($_GET['date_from']) || !empty($_GET['date_to'])) {
-            $date_meta = array('relation' => 'AND');
-
-            if (!empty($_GET['date_from'])) {
-                $date_from = sanitize_text_field($_GET['date_from']) . '-01'; // YYYY-MM-01
-                $date_meta[] = array(
-                    'key' => 'cdv_start_date',
-                    'value' => $date_from,
-                    'compare' => '>=',
-                    'type' => 'DATE'
-                );
-            }
-
-            if (!empty($_GET['date_to'])) {
-                // Get last day of the month
-                $date_to = sanitize_text_field($_GET['date_to']);
-                $last_day = date('t', strtotime($date_to . '-01'));
-                $date_to_full = $date_to . '-' . $last_day;
-                $date_meta[] = array(
-                    'key' => 'cdv_start_date',
-                    'value' => $date_to_full,
-                    'compare' => '<=',
-                    'type' => 'DATE'
-                );
-            }
-
-            $meta_query[] = $date_meta;
+        // Filter by start date (from)
+        if (!empty($_GET['date_from'])) {
+            $date_from = sanitize_text_field($_GET['date_from']) . '-01'; // YYYY-MM-01
+            $meta_query[] = array(
+                'key' => 'cdv_start_date',
+                'value' => $date_from,
+                'compare' => '>=',
+                'type' => 'DATE'
+            );
         }
 
         // Filter by budget range
@@ -698,16 +679,6 @@ function cdv_filter_viaggi_archive($query) {
                     'terms' => sanitize_text_field($_GET['tipo_viaggio'])
                 )
             ));
-        }
-
-        if (!empty($_GET['destinazione'])) {
-            $tax_query = $query->get('tax_query') ?: array();
-            $tax_query[] = array(
-                'taxonomy' => 'destinazione',
-                'field' => 'slug',
-                'terms' => sanitize_text_field($_GET['destinazione'])
-            );
-            $query->set('tax_query', $tax_query);
         }
 
         // Sorting

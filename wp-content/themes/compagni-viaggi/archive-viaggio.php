@@ -45,45 +45,8 @@ get_header();
                     </div>
 
                     <div class="filter-group">
-                        <label for="destinazione">Destinazione</label>
-                        <select id="destinazione" name="destinazione">
-                            <option value="">Tutte</option>
-                            <?php
-                            $destinations = get_terms(array(
-                                'taxonomy' => 'destinazione',
-                                'hide_empty' => false,
-                            ));
-                            foreach ($destinations as $dest) {
-                                $selected = isset($_GET['destinazione']) && $_GET['destinazione'] === $dest->slug ? 'selected' : '';
-                                echo '<option value="' . esc_attr($dest->slug) . '" ' . $selected . '>' . esc_html($dest->name) . '</option>';
-                            }
-                            ?>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Periodo di Partenza</label>
-                        <input type="month" name="date_from" value="<?php echo isset($_GET['date_from']) ? esc_attr($_GET['date_from']) : ''; ?>" placeholder="Da">
-                        <input type="month" name="date_to" value="<?php echo isset($_GET['date_to']) ? esc_attr($_GET['date_to']) : ''; ?>" placeholder="A" style="margin-top: 8px;">
-                    </div>
-
-                    <div class="filter-group">
-                        <label>Budget per Persona (€)</label>
-                        <div style="display: flex; flex-direction: column; gap: 8px;">
-                            <input type="number" name="budget_min" value="<?php echo isset($_GET['budget_min']) ? esc_attr($_GET['budget_min']) : ''; ?>" placeholder="Min €" min="0" style="width: 100%;">
-                            <input type="number" name="budget_max" value="<?php echo isset($_GET['budget_max']) ? esc_attr($_GET['budget_max']) : ''; ?>" placeholder="Max €" min="0" style="width: 100%;">
-                        </div>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="max_participants">Numero Partecipanti</label>
-                        <select id="max_participants" name="max_participants">
-                            <option value="">Tutti</option>
-                            <option value="2-5" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '2-5'); ?>>2-5 persone</option>
-                            <option value="6-10" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '6-10'); ?>>6-10 persone</option>
-                            <option value="11-20" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '11-20'); ?>>11-20 persone</option>
-                            <option value="20+" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '20+'); ?>>Più di 20</option>
-                        </select>
+                        <label for="date_from">A partire da</label>
+                        <input type="month" id="date_from" name="date_from" value="<?php echo isset($_GET['date_from']) ? esc_attr($_GET['date_from']) : ''; ?>" placeholder="Seleziona mese">
                     </div>
 
                     <div class="filter-group">
@@ -177,6 +140,25 @@ get_header();
                         </div>
 
                         <div class="filter-group">
+                            <label>Budget per Persona (€)</label>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <input type="number" name="budget_min" value="<?php echo isset($_GET['budget_min']) ? esc_attr($_GET['budget_min']) : ''; ?>" placeholder="Min €" min="0" style="width: 100%;">
+                                <input type="number" name="budget_max" value="<?php echo isset($_GET['budget_max']) ? esc_attr($_GET['budget_max']) : ''; ?>" placeholder="Max €" min="0" style="width: 100%;">
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="max_participants">Numero Partecipanti</label>
+                            <select id="max_participants" name="max_participants">
+                                <option value="">Tutti</option>
+                                <option value="2-5" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '2-5'); ?>>2-5 persone</option>
+                                <option value="6-10" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '6-10'); ?>>6-10 persone</option>
+                                <option value="11-20" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '11-20'); ?>>11-20 persone</option>
+                                <option value="20+" <?php selected(isset($_GET['max_participants']) && $_GET['max_participants'] === '20+'); ?>>Più di 20</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
                             <label>Valutazione Organizzatore</label>
                             <select name="min_rating">
                                 <option value="">Tutte</option>
@@ -222,12 +204,11 @@ get_header();
                     <div class="filters-form-actions">
                         <button type="submit" class="btn-primary" style="width: 100%;">Applica Filtri</button>
 
-                        <?php if (!empty($_GET['s']) || !empty($_GET['tipo_viaggio']) || !empty($_GET['destinazione']) ||
-                                  !empty($_GET['date_from']) || !empty($_GET['date_to']) || !empty($_GET['budget_min']) ||
-                                  !empty($_GET['budget_max']) || !empty($_GET['max_participants']) || !empty($_GET['travel_status']) ||
-                                  !empty($_GET['transport']) || !empty($_GET['accommodation']) || !empty($_GET['difficulty']) ||
-                                  !empty($_GET['meals']) || !empty($_GET['guide']) || !empty($_GET['min_rating']) ||
-                                  !empty($_GET['duration']) || !empty($_GET['solo_posti_disponibili']) ||
+                        <?php if (!empty($_GET['s']) || !empty($_GET['tipo_viaggio']) || !empty($_GET['date_from']) ||
+                                  !empty($_GET['budget_min']) || !empty($_GET['budget_max']) || !empty($_GET['max_participants']) ||
+                                  !empty($_GET['travel_status']) || !empty($_GET['transport']) || !empty($_GET['accommodation']) ||
+                                  !empty($_GET['difficulty']) || !empty($_GET['meals']) || !empty($_GET['guide']) ||
+                                  !empty($_GET['min_rating']) || !empty($_GET['duration']) || !empty($_GET['solo_posti_disponibili']) ||
                                   (isset($_GET['orderby']) && $_GET['orderby'] !== 'date')) : ?>
                             <a href="<?php echo esc_url(get_post_type_archive_link('viaggio')); ?>" class="btn-secondary" style="width: 100%; text-align: center;">
                                 Reset Filtri
