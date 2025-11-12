@@ -217,8 +217,18 @@ class CDV_Email_Verification {
             return $user;
         }
 
-        // Gli amministratori possono sempre fare login
-        if (in_array('administrator', $user->roles)) {
+        // Gli amministratori e i ruoli privilegiati possono sempre fare login
+        if (user_can($user, 'manage_options') ||
+            in_array('administrator', (array) $user->roles) ||
+            in_array('editor', (array) $user->roles)) {
+            // Assicurati che abbiano i meta necessari settati
+            if (get_user_meta($user->ID, 'cdv_email_verified', true) !== 'yes') {
+                update_user_meta($user->ID, 'cdv_email_verified', 'yes');
+                update_user_meta($user->ID, 'cdv_email_verified_date', current_time('mysql'));
+            }
+            if (get_user_meta($user->ID, 'cdv_user_approved', true) !== '1') {
+                update_user_meta($user->ID, 'cdv_user_approved', '1');
+            }
             return $user;
         }
 
