@@ -3511,7 +3511,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Check if we should open specific tab on page load
-    const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('tab') === 'notifications') {
         const notifTab = document.querySelector('[data-tab="notifications"]');
         if (notifTab) {
