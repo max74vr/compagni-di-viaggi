@@ -43,6 +43,17 @@
 
         // Accept cookies function
         function acceptCookies(type, analytics, marketing) {
+            // Set cookies immediately on client-side as well
+            setCookie('cdv_cookies_accepted', '1', 365);
+            setCookie('cdv_analytics_consent', analytics ? '1' : '0', 365);
+            setCookie('cdv_marketing_consent', marketing ? '1' : '0', 365);
+
+            // Hide banner immediately
+            $cookieBanner.fadeOut(300, function() {
+                $(this).remove();
+            });
+
+            // Send to server for logging
             $.ajax({
                 url: cdvGDPR.ajaxurl,
                 type: 'POST',
@@ -55,10 +66,6 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        $cookieBanner.fadeOut(300, function() {
-                            $(this).remove();
-                        });
-
                         // Reload analytics scripts if accepted
                         if (analytics) {
                             loadAnalytics();
@@ -69,6 +76,14 @@
                     console.error('Error saving cookie preferences');
                 }
             });
+        }
+
+        // Helper function to set cookies
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            const secure = window.location.protocol === 'https:' ? '; secure' : '';
+            document.cookie = name + '=' + value + '; expires=' + expires.toUTCString() + '; path=/' + secure + '; SameSite=Lax';
         }
 
         // Load analytics scripts (placeholder)
