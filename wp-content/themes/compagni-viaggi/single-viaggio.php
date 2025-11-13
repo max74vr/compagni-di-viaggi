@@ -473,7 +473,7 @@ while (have_posts()) : the_post();
                         <?php if ($is_organizer) : ?>
                             <div class="sidebar-card">
                                 <p><strong>Questo è il tuo viaggio!</strong></p>
-                                <a href="<?php echo get_edit_post_link(); ?>" class="btn-primary" style="width: 100%; text-align: center;">
+                                <a href="<?php echo home_url('/modifica-viaggio/?travel_id=' . $travel_id); ?>" class="btn-primary" style="width: 100%; text-align: center;">
                                     Modifica Viaggio
                                 </a>
                             </div>
