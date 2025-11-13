@@ -742,6 +742,9 @@ class CDV_Ajax_Handlers {
             wp_send_json_error(array('message' => 'Errore durante l\'aggiornamento del viaggio'));
         }
 
+        // Clean post cache to ensure permalink is regenerated correctly
+        clean_post_cache($travel_id);
+
         // Update meta data
         update_post_meta($travel_id, 'cdv_destination', $destination);
         update_post_meta($travel_id, 'cdv_country', $country);
@@ -812,9 +815,20 @@ class CDV_Ajax_Handlers {
             }
         }
 
+        // Get the permalink - force refresh
+        $permalink = get_permalink($travel_id);
+
+        // If permalink still has query string parameters, build it manually using the post slug
+        if (strpos($permalink, '?') !== false) {
+            $updated_post = get_post($travel_id);
+            if ($updated_post && !empty($updated_post->post_name)) {
+                $permalink = home_url('/viaggio/' . $updated_post->post_name . '/');
+            }
+        }
+
         wp_send_json_success(array(
             'message' => 'Viaggio aggiornato con successo!',
-            'redirect_url' => get_permalink($travel_id),
+            'redirect_url' => $permalink,
         ));
     }
 
