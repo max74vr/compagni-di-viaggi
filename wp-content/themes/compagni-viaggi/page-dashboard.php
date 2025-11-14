@@ -107,7 +107,18 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
         </div>
 
         <!-- Tab Navigation -->
-        <div class="dashboard-tabs">
+        <!-- Mobile Tab Toggle Button -->
+        <button class="mobile-tab-toggle" id="mobile-tab-toggle">
+            <span class="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+            </span>
+            <span class="current-tab-label">I Miei Viaggi</span>
+            <span class="dropdown-arrow">▼</span>
+        </button>
+
+        <div class="dashboard-tabs" id="dashboard-tabs">
             <button class="tab-button active" data-tab="my-travels">
                 I Miei Viaggi (<?php echo $my_travels->post_count; ?>)
             </button>
@@ -1039,6 +1050,55 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
     color: #666;
 }
 
+/* Mobile Tab Toggle Button - Hidden on desktop */
+.mobile-tab-toggle {
+    display: none;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    font-size: 1rem;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.hamburger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 24px;
+}
+
+.hamburger-icon span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    transition: all 0.3s;
+}
+
+.current-tab-label {
+    flex: 1;
+    text-align: left;
+    margin-left: 1rem;
+    font-weight: 500;
+}
+
+.dropdown-arrow {
+    transition: transform 0.3s;
+    color: var(--primary-color);
+}
+
+.mobile-tab-toggle.active .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
 .dashboard-tabs {
     display: flex;
     gap: 1rem;
@@ -1345,6 +1405,56 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+
+    /* Show mobile toggle button */
+    .mobile-tab-toggle {
+        display: flex;
+    }
+
+    /* Hide desktop tabs by default, show as dropdown when active */
+    .dashboard-tabs {
+        display: none;
+        flex-direction: column;
+        padding: 0;
+        border-radius: 12px;
+        gap: 0;
+        position: absolute;
+        z-index: 1000;
+        width: calc(100% - 2rem);
+        max-height: 70vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .dashboard-tabs.mobile-open {
+        display: flex;
+    }
+
+    .tab-button {
+        border-bottom: 1px solid #f0f0f0;
+        border-radius: 0;
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.95rem;
+    }
+
+    .tab-button:first-child {
+        border-radius: 12px 12px 0 0;
+    }
+
+    .tab-button:last-child {
+        border-radius: 0 0 12px 12px;
+        border-bottom: none;
+    }
+
+    .tab-button.active {
+        background: #f8f9fa;
+        border-bottom-color: #f0f0f0;
+    }
+
+    .tab-button:hover {
+        background: #f8f9fa;
     }
 
     .travel-item, .request-item {
@@ -2524,6 +2634,27 @@ $received_reviews = CDV_Reviews::get_user_reviews($current_user->ID, 20);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Mobile tab navigation
+    const mobileToggle = document.getElementById('mobile-tab-toggle');
+    const dashboardTabs = document.getElementById('dashboard-tabs');
+    const currentTabLabel = document.querySelector('.current-tab-label');
+
+    if (mobileToggle) {
+        mobileToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dashboardTabs.classList.toggle('mobile-open');
+            mobileToggle.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dashboardTabs.contains(e.target) && !mobileToggle.contains(e.target)) {
+                dashboardTabs.classList.remove('mobile-open');
+                mobileToggle.classList.remove('active');
+            }
+        });
+    }
+
     // Tab switching
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
@@ -2537,6 +2668,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             this.classList.add('active');
             document.getElementById('tab-' + tabId).classList.add('active');
+
+            // Update mobile toggle label
+            if (currentTabLabel) {
+                currentTabLabel.textContent = this.textContent.trim();
+            }
+
+            // Close mobile menu after selection
+            if (dashboardTabs) {
+                dashboardTabs.classList.remove('mobile-open');
+            }
+            if (mobileToggle) {
+                mobileToggle.classList.remove('active');
+            }
         });
     });
 

@@ -162,24 +162,16 @@ class CDV_GDPR {
         $analytics = isset($_POST['analytics']) ? (bool)$_POST['analytics'] : false;
         $marketing = isset($_POST['marketing']) ? (bool)$_POST['marketing'] : false;
 
-        // Cookie options for better browser compatibility
-        $cookie_options = array(
-            'expires' => time() + YEAR_IN_SECONDS,
-            'path' => '/',
-            'domain' => '', // Use default domain
-            'secure' => is_ssl(), // Only send over HTTPS if site uses SSL
-            'httponly' => false, // Allow JavaScript to read these cookies
-            'samesite' => 'Lax' // Prevent CSRF while allowing normal navigation
-        );
+        $expiry = time() + YEAR_IN_SECONDS;
+        $path = COOKIEPATH ? COOKIEPATH : '/';
+        $domain = COOKIE_DOMAIN ? COOKIE_DOMAIN : '';
+        $secure = is_ssl();
+        $httponly = false;
 
-        // Set cookie consent (1 year)
-        setcookie('cdv_cookies_accepted', '1', $cookie_options);
-
-        $cookie_options_analytics = $cookie_options;
-        setcookie('cdv_analytics_consent', $analytics ? '1' : '0', $cookie_options_analytics);
-
-        $cookie_options_marketing = $cookie_options;
-        setcookie('cdv_marketing_consent', $marketing ? '1' : '0', $cookie_options_marketing);
+        // Set cookie consent (1 year) - using traditional syntax for maximum compatibility
+        setcookie('cdv_cookies_accepted', '1', $expiry, $path, $domain, $secure, $httponly);
+        setcookie('cdv_analytics_consent', $analytics ? '1' : '0', $expiry, $path, $domain, $secure, $httponly);
+        setcookie('cdv_marketing_consent', $marketing ? '1' : '0', $expiry, $path, $domain, $secure, $httponly);
 
         // Also set cookies in $_COOKIE superglobal for immediate availability
         $_COOKIE['cdv_cookies_accepted'] = '1';
@@ -198,7 +190,14 @@ class CDV_GDPR {
             ));
         }
 
-        wp_send_json_success(array('message' => 'Preferenze salvate'));
+        wp_send_json_success(array(
+            'message' => 'Preferenze salvate',
+            'cookies_set' => array(
+                'cdv_cookies_accepted' => '1',
+                'path' => $path,
+                'domain' => $domain
+            )
+        ));
     }
 
     /**

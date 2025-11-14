@@ -10,6 +10,9 @@
         const $cookieBanner = $('#cdv-cookie-banner');
         const $cookieModal = $('#cdv-cookie-modal');
 
+        // Debug: Log all cookies
+        console.log('Current cookies:', document.cookie);
+
         // Accept all cookies
         $('#cdv-accept-cookies').on('click', function() {
             acceptCookies('all', true, true);
@@ -83,7 +86,31 @@
             const expires = new Date();
             expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
             const secure = window.location.protocol === 'https:' ? '; secure' : '';
-            document.cookie = name + '=' + value + '; expires=' + expires.toUTCString() + '; path=/' + secure + '; SameSite=Lax';
+
+            // Get the path from the current page or use root
+            const path = '/';
+
+            // Set cookie with all necessary attributes
+            const cookieString = name + '=' + encodeURIComponent(value) +
+                               '; expires=' + expires.toUTCString() +
+                               '; path=' + path +
+                               secure +
+                               '; SameSite=Lax';
+
+            document.cookie = cookieString;
+
+            // Log for debugging
+            console.log('Cookie set:', name, '=', value, 'expires in', days, 'days');
+        }
+
+        // Function to check if cookie exists
+        function getCookie(name) {
+            const value = '; ' + document.cookie;
+            const parts = value.split('; ' + name + '=');
+            if (parts.length === 2) {
+                return decodeURIComponent(parts.pop().split(';').shift());
+            }
+            return null;
         }
 
         // Load analytics scripts (placeholder)
